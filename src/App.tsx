@@ -13,6 +13,11 @@ import Tenants from "./pages/Tenants";
 import Payments from "./pages/Payments";
 import Complaints from "./pages/Complaints";
 import Notices from "./pages/Notices";
+import TenantDashboard from "./pages/TenantDashboard";
+import Marketplace from "./pages/Marketplace";
+import TenantPayments from "./pages/TenantPayments";
+import TenantComplaints from "./pages/TenantComplaints";
+import TenantNotices from "./pages/TenantNotices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            {/* Owner routes */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/properties" element={<Properties />} />
             <Route path="/dashboard/rooms" element={<Rooms />} />
@@ -34,6 +40,12 @@ const App = () => (
             <Route path="/dashboard/payments" element={<Payments />} />
             <Route path="/dashboard/complaints" element={<Complaints />} />
             <Route path="/dashboard/notices" element={<Notices />} />
+            {/* Tenant routes */}
+            <Route path="/tenant" element={<TenantDashboard />} />
+            <Route path="/tenant/marketplace" element={<Marketplace />} />
+            <Route path="/tenant/payments" element={<TenantPayments />} />
+            <Route path="/tenant/complaints" element={<TenantComplaints />} />
+            <Route path="/tenant/notices" element={<TenantNotices />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
