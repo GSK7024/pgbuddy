@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Building2, Home, Users, CreditCard, BarChart3,
+  Building2, Home, Users, CreditCard, BarChart3, Receipt,
   Settings, LogOut, Menu, X, MessageSquare, BellDot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ const sidebarLinks = [
   { name: "Rooms", href: "/dashboard/rooms", icon: Home },
   { name: "Tenants", href: "/dashboard/tenants", icon: Users },
   { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
+  { name: "Expenses", href: "/dashboard/expenses", icon: Receipt },
   { name: "Complaints", href: "/dashboard/complaints", icon: MessageSquare },
   { name: "Notices", href: "/dashboard/notices", icon: BellDot },
 ];
