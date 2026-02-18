@@ -35,23 +35,15 @@ const Auth = () => {
 
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName },
+            data: { full_name: fullName, role },
           },
         });
         if (error) throw error;
-
-        if (data.user) {
-          // Insert user role
-          const { error: roleError } = await supabase
-            .from("user_roles")
-            .insert({ user_id: data.user.id, role });
-          if (roleError) throw roleError;
-        }
 
         toast({
           title: "Account created!",
