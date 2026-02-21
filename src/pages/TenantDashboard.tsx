@@ -169,10 +169,7 @@ const TenantDashboard = () => {
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <Home className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No room assigned</h3>
-              <p className="text-muted-foreground mb-4">Browse available PGs and find your perfect room</p>
-              <Button asChild className="gradient-primary">
-                <Link to="/tenant/marketplace">Browse PGs</Link>
-              </Button>
+              <p className="text-muted-foreground">Your PG owner will assign you a room. Contact them if you haven't been assigned yet.</p>
             </CardContent>
           </Card>
         )}
@@ -198,9 +195,9 @@ const TenantDashboard = () => {
             </Link>
           </Button>
           <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
-            <Link to="/tenant/marketplace">
+            <Link to="/tenant">
               <Home className="w-5 h-5 text-primary" />
-              <span className="text-xs">Browse PGs</span>
+              <span className="text-xs">My Room</span>
             </Link>
           </Button>
         </div>
