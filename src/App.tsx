@@ -20,6 +20,8 @@ import TenantPayments from "./pages/TenantPayments";
 import TenantComplaints from "./pages/TenantComplaints";
 import TenantNotices from "./pages/TenantNotices";
 import ResetPassword from "./pages/ResetPassword";
+import BrowsePG from "./pages/BrowsePG";
+import ListPG from "./pages/ListPG";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/browse" element={<BrowsePG />} />
+            <Route path="/list-pg" element={<ListPG />} />
             {/* Owner routes */}
             <Route path="/dashboard" element={<ProtectedRoute requiredRole="owner"><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/properties" element={<ProtectedRoute requiredRole="owner"><Properties /></ProtectedRoute>} />
