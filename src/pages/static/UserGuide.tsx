@@ -97,6 +97,46 @@ const UserGuide = () => {
   );
 };
 
+const VideoSection = ({ title, description, videos }: { title: string; description: string; videos: VideoTutorial[] }) => {
+  const [playingId, setPlayingId] = useState<string | null>(null);
+
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+      <div className="flex items-center gap-3 mb-2">
+        <Video className="w-6 h-6 text-primary" />
+        <h2 className="text-xl font-bold text-foreground">{title}</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-6">{description}</p>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {videos.map((video) => (
+          <div key={video.videoId} className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 transition-colors">
+            <div className="relative aspect-video bg-muted flex items-center justify-center">
+              {playingId === video.videoId ? (
+                <div className="w-full h-full flex items-center justify-center bg-muted">
+                  <p className="text-xs text-muted-foreground text-center px-4">Video tutorial coming soon.<br />Check back for updates!</p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setPlayingId(video.videoId)}
+                  className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/50 to-transparent group cursor-pointer"
+                >
+                  <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <Play className="w-6 h-6 text-primary-foreground ml-1" />
+                  </div>
+                </button>
+              )}
+            </div>
+            <div className="p-3">
+              <h3 className="font-semibold text-sm text-foreground">{video.title}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{video.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const GuideSection = ({ section, warningLabel, tipLabel }: { section: GuideSectionType; warningLabel: string; tipLabel: string }) => (
   <div>
     <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
