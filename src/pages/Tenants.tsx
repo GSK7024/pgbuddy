@@ -504,13 +504,16 @@ const Tenants = () => {
                     </h4>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
                       {rentHistory.map(h => (
-                        <div key={h.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-xs">
-                          <div>
-                            <span className="text-muted-foreground">₹{Number(h.old_rent ?? 0).toLocaleString()}</span>
-                            <span className="mx-1.5">→</span>
-                            <span className="font-semibold">₹{Number(h.new_rent).toLocaleString()}</span>
+                        <div key={h.id} className="p-2 rounded-lg bg-muted/50 text-xs space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-muted-foreground">₹{Number(h.old_rent ?? 0).toLocaleString()}</span>
+                              <span className="mx-1.5">→</span>
+                              <span className="font-semibold">₹{Number(h.new_rent).toLocaleString()}</span>
+                            </div>
+                            <span className="text-muted-foreground">{new Date(h.changed_at).toLocaleDateString()}</span>
                           </div>
-                          <span className="text-muted-foreground">{new Date(h.changed_at).toLocaleDateString()}</span>
+                          {h.notes && <p className="text-muted-foreground italic">{h.notes}</p>}
                         </div>
                       ))}
                     </div>
