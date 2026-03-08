@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/browse" element={<BrowsePG />} />
             <Route path="/list-pg" element={<ListPG />} />
+            <Route path="/pg/:id" element={<PropertyDetail />} />
             {/* Owner routes */}
             <Route path="/dashboard" element={<ProtectedRoute requiredRole="owner"><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/properties" element={<ProtectedRoute requiredRole="owner"><Properties /></ProtectedRoute>} />
