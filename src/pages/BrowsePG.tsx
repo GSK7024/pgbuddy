@@ -151,7 +151,7 @@ const BrowsePG = () => {
       const [propRes, photosRes, reviewsRes] = await Promise.all([
         supabase
           .from("properties")
-          .select("id, name, address, city, locality, description, amenities, gender_preference, contact_phone, rooms(id, room_number, room_type, rent_amount, capacity, is_vacant)")
+          .select("id, name, address, city, locality, description, amenities, gender_preference, contact_phone, is_featured, rooms(id, room_number, room_type, rent_amount, capacity, is_vacant)")
           .eq("is_active", true)
           .order("created_at", { ascending: false }),
         supabase.from("property_photos").select("property_id, url, is_cover").eq("is_cover", true),
