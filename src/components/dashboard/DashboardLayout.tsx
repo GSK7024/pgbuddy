@@ -79,21 +79,46 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         ))}
       </nav>
       <div className="p-4 border-t border-border space-y-1">
-        {bottomLinks.map((link) => (
-          <Link
-            key={link.name}
-            to={link.href}
-            onClick={onClick}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              currentPath === link.href
-                ? "gradient-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        {/* Subscription with plan badge */}
+        <Link
+          to="/dashboard/subscription"
+          onClick={onClick}
+          className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            currentPath === "/dashboard/subscription"
+              ? "gradient-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <span className="flex items-center gap-3">
+            <Crown className="w-4 h-4" />
+            Subscription
+          </span>
+          <Badge
+            variant="secondary"
+            className={`text-[10px] px-1.5 py-0 ${
+              currentPlan === "Free"
+                ? "bg-muted text-muted-foreground"
+                : currentPlan === "Pro"
+                ? "bg-primary/10 text-primary"
+                : "bg-warning/10 text-warning"
             }`}
           >
-            <link.icon className="w-4 h-4" />
-            {link.name}
-          </Link>
-        ))}
+            {currentPlan}
+          </Badge>
+        </Link>
+        {/* Profile */}
+        <Link
+          to="/dashboard/profile"
+          onClick={onClick}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            currentPath === "/dashboard/profile"
+              ? "gradient-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <User className="w-4 h-4" />
+          Profile
+        </Link>
         <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
           <LogOut className="w-4 h-4" />
           Sign Out
