@@ -863,6 +863,112 @@ const Tenants = () => {
                 {detailTenant.is_active && (
                   <>
                     <Separator />
+
+                    {/* Transfer & Swap */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold flex items-center gap-2 text-sm">
+                        <ArrowLeftRight className="w-4 h-4 text-primary" /> Room Transfer / Swap
+                      </h4>
+
+                      {/* Transfer to different room */}
+                      {!transferOpen && !swapOpen && (
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => {
+                            setTransferPropertyId(detailTenant.property_id);
+                            setTransferRoomId("");
+                            setTransferOpen(true);
+                          }}>
+                            <MoveRight className="w-3.5 h-3.5" /> Transfer Room
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => {
+                            setSwapTargetId("");
+                            setSwapOpen(true);
+                          }}>
+                            <ArrowLeftRight className="w-3.5 h-3.5" /> Swap Tenants
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Transfer Form */}
+                      {transferOpen && (
+                        <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium">Transfer to a new room</p>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setTransferOpen(false)}>
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Property</Label>
+                            <Select value={transferPropertyId} onValueChange={(v) => { setTransferPropertyId(v); setTransferRoomId(""); }}>
+                              <SelectTrigger className="h-9"><SelectValue placeholder="Select property" /></SelectTrigger>
+                              <SelectContent>
+                                {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">New Room ({transferAvailableRooms.length} available)</Label>
+                            <Select value={transferRoomId} onValueChange={setTransferRoomId}>
+                              <SelectTrigger className="h-9"><SelectValue placeholder="Select room" /></SelectTrigger>
+                              <SelectContent>
+                                {transferAvailableRooms.map(r => {
+                                  const active = getActiveCountForRoom(r.id);
+                                  return (
+                                    <SelectItem key={r.id} value={r.id}>
+                                      Room {r.room_number} ({active}/{r.capacity} occupied) – ₹{Number(r.rent_amount).toLocaleString()}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button size="sm" className="w-full gradient-primary" disabled={!transferRoomId || transferring} onClick={handleTransfer}>
+                            {transferring ? "Transferring..." : "Confirm Transfer"}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Swap Form */}
+                      {swapOpen && (
+                        <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium">Swap with another tenant</p>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSwapOpen(false)}>
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Select tenant to swap with</Label>
+                            <Select value={swapTargetId} onValueChange={setSwapTargetId}>
+                              <SelectTrigger className="h-9"><SelectValue placeholder="Choose tenant" /></SelectTrigger>
+                              <SelectContent>
+                                {swappableTenants.map(a => (
+                                  <SelectItem key={a.id} value={a.id}>
+                                    {a.profiles?.full_name || "Unknown"} – {(a as any).properties?.name}, Room {(a as any).rooms?.room_number}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {swapTargetId && (() => {
+                            const target = assignments.find(a => a.id === swapTargetId);
+                            if (!target) return null;
+                            return (
+                              <div className="text-xs text-muted-foreground p-2 rounded bg-muted/50 space-y-0.5">
+                                <p><strong>{detailTenant.profiles?.full_name}</strong> → {(target as any).properties?.name}, Room {(target as any).rooms?.room_number}</p>
+                                <p><strong>{target.profiles?.full_name}</strong> → {(detailTenant as any).properties?.name}, Room {(detailTenant as any).rooms?.room_number}</p>
+                              </div>
+                            );
+                          })()}
+                          <Button size="sm" className="w-full gradient-primary" disabled={!swapTargetId || swapping} onClick={handleSwap}>
+                            {swapping ? "Swapping..." : "Confirm Swap"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <Separator />
                     <Button variant="outline" size="sm" className="w-full text-destructive" onClick={() => handleDeactivate(detailTenant.id, detailTenant.room_id)}>
                       Mark as Moved Out
                     </Button>
