@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2, Home, Users, CreditCard, BarChart3, Receipt,
-  LogOut, Menu, X, MessageSquare, BellDot, Settings, Megaphone, QrCode, Share2, User, Crown,
+  LogOut, Menu, X, MessageSquare, BellDot, Settings, Megaphone, QrCode, Share2, User, Crown, Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -23,6 +23,7 @@ const sidebarLinks = [
   { name: "Complaints", href: "/dashboard/complaints", icon: MessageSquare },
   { name: "Notices", href: "/dashboard/notices", icon: BellDot },
   { name: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
+  { name: "Manage Listing", href: "/dashboard/listing", icon: Camera },
 ];
 
 const bottomLinks = [
