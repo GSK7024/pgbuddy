@@ -77,6 +77,10 @@ const Rooms = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!propertyId) {
+      toast({ title: "Error", description: "Please select a property", variant: "destructive" });
+      return;
+    }
     const payload = {
       property_id: propertyId,
       room_number: roomNumber,
