@@ -75,6 +75,7 @@ const Tenants = () => {
   const [tenantNotes, setTenantNotes] = useState("");
   const [detailRent, setDetailRent] = useState("");
   const [rentChangeNote, setRentChangeNote] = useState("");
+  const [tenantPhone, setTenantPhone] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
 
   const fetchData = async () => {
@@ -221,6 +222,7 @@ const Tenants = () => {
     setIdProofNumber(a.id_proof_number ?? "");
     setTenantNotes(a.notes ?? "");
     setDetailRent(String(a.custom_rent ?? (a as any).rooms?.rent_amount ?? ""));
+    setTenantPhone(a.profiles?.phone ?? "");
     // Fetch documents and rent history in parallel
     const [docsRes, historyRes] = await Promise.all([
       supabase.storage.from("tenant-documents").list(a.id),
@@ -253,6 +255,11 @@ const Tenants = () => {
       notes: tenantNotes || null,
       custom_rent: rentValue,
     }).eq("id", detailTenant.id);
+
+    // Update tenant phone in profiles
+    if (!error && tenantPhone !== (detailTenant.profiles?.phone ?? "")) {
+      await supabase.from("profiles").update({ phone: tenantPhone.trim() || null }).eq("user_id", detailTenant.tenant_id);
+    }
 
     // Log rent change if different
     if (!error && Number(oldRent) !== Number(newRent)) {
@@ -460,10 +467,10 @@ const Tenants = () => {
                     <span className="text-muted-foreground block">Room</span>
                     <span className="font-medium">{(detailTenant as any).rooms?.room_number}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block">Phone</span>
-                    <span className="font-medium">{detailTenant.profiles?.phone || "—"}</span>
-                  </div>
+                   <div>
+                     <span className="text-muted-foreground block">Phone</span>
+                     <Input className="h-8 text-sm" value={tenantPhone} onChange={e => setTenantPhone(e.target.value)} placeholder="+91 XXXXXXXXXX" />
+                   </div>
                   <div>
                     <span className="text-muted-foreground block">Move-in</span>
                     <span className="font-medium">{detailTenant.move_in_date}</span>
