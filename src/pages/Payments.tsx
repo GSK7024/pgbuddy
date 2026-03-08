@@ -157,6 +157,21 @@ const Payments = () => {
 
   const selectedAssign = assignments.find(a => a.id === selectedAssignment);
 
+  const sendWhatsAppReminder = (payment: Payment) => {
+    const phone = payment.tenant_phone?.replace(/[^0-9]/g, "");
+    if (!phone) {
+      toast({ title: "No phone number", description: "This tenant doesn't have a phone number on their profile.", variant: "destructive" });
+      return;
+    }
+    const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
+    const tenantName = payment.tenant_name || "Tenant";
+    const propertyName = (payment as any).properties?.name || "your PG";
+    const roomNumber = (payment as any).rooms?.room_number || "";
+    const message = `Hi ${tenantName},\n\nThis is a friendly reminder that your rent of ₹${Number(payment.amount).toLocaleString()} for ${payment.month} (${propertyName}, Room ${roomNumber}) is pending.\n\nPlease make the payment at your earliest convenience.\n\nThank you!`;
+    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
