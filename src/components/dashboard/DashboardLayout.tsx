@@ -97,7 +97,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         >
           <span className="flex items-center gap-3">
             <Crown className="w-4 h-4" />
-            Subscription
+            {t("sidebar.subscription")}
           </span>
           <Badge
             variant="secondary"
