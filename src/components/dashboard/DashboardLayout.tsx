@@ -32,8 +32,25 @@ const bottomLinks = [
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [currentPlan, setCurrentPlan] = useState<string>("Free");
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchPlan = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("subscription_plans(name)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if ((data as any)?.subscription_plans?.name) {
+        setCurrentPlan((data as any).subscription_plans.name);
+      }
+    };
+    fetchPlan();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
