@@ -219,9 +219,12 @@ const Tenants = () => {
   };
 
   const saveDetails = async () => {
-    if (!detailTenant) return;
+    if (!detailTenant || !user) return;
     setSavingDetails(true);
     const rentValue = detailRent ? parseFloat(detailRent) : null;
+    const oldRent = detailTenant.custom_rent ?? (detailTenant as any).rooms?.rent_amount ?? 0;
+    const newRent = rentValue ?? (detailTenant as any).rooms?.rent_amount ?? 0;
+
     const { error } = await supabase.from("tenant_assignments").update({
       emergency_contact_name: emergencyName || null,
       emergency_contact_phone: emergencyPhone || null,
@@ -230,6 +233,19 @@ const Tenants = () => {
       notes: tenantNotes || null,
       custom_rent: rentValue,
     }).eq("id", detailTenant.id);
+
+    // Log rent change if different
+    if (!error && Number(oldRent) !== Number(newRent)) {
+      await supabase.from("rent_history").insert({
+        assignment_id: detailTenant.id,
+        old_rent: Number(oldRent),
+        new_rent: Number(newRent),
+        changed_by: user.id,
+      });
+      // Refresh history
+      const { data: hist } = await supabase.from("rent_history").select("id, old_rent, new_rent, changed_at, notes").eq("assignment_id", detailTenant.id).order("changed_at", { ascending: false });
+      setRentHistory(hist ?? []);
+    }
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
