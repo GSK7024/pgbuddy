@@ -30,6 +30,9 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const sidebarLinks = getSidebarLinks(t);
+  const bottomLinks = getBottomLinks(t);
 
   const handleSignOut = async () => {
     await signOut();
