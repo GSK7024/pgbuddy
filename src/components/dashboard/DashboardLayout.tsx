@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Building2, Home, Users, CreditCard, BarChart3, Receipt,
   LogOut, Menu, X, MessageSquare, BellDot, Settings, Megaphone, QrCode, Share2, User, Crown, Camera, UtensilsCrossed, Gift,
+  FileText, UserCheck, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
