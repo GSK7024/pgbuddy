@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Upload, QrCode, Building2, Phone } from "lucide-react";
+import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Upload, QrCode, Building2, Phone, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import TenantLayout from "@/components/dashboard/TenantLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import RentReceipt from "@/components/RentReceipt";
 
 interface Payment {
   id: string;
@@ -247,11 +248,18 @@ const TenantPayments = () => {
                       )}
                     </div>
                   )}
-                  {p.status === "paid" && p.proof_url && (
+                  {p.status === "paid" && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
-                      <CheckCircle className="w-3 h-3 text-success" />
-                      <span>Proof attached</span>
-                      <a href={p.proof_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">View</a>
+                      {p.proof_url && (
+                        <>
+                          <CheckCircle className="w-3 h-3 text-success" />
+                          <span>Proof attached</span>
+                          <a href={p.proof_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">View</a>
+                        </>
+                      )}
+                      <div className="ml-auto">
+                        <RentReceipt payment={p} />
+                      </div>
                     </div>
                   )}
                 </CardContent>

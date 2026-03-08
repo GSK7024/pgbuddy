@@ -319,6 +319,18 @@ const BrowsePG = () => {
               ))}
             </div>
           )}
+
+          {/* City links for SEO */}
+          <div className="max-w-5xl mx-auto pt-8">
+            <h2 className="text-lg font-semibold mb-4 text-center">Browse PGs by City</h2>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {["Mumbai", "Pune", "Bangalore", "Delhi", "Hyderabad", "Chennai", "Kolkata", "Ahmedabad", "Nagpur", "Nashik"].map(c => (
+                <Link key={c} to={`/pgs/${c.toLowerCase()}`}>
+                  <Badge variant="outline" className="cursor-pointer hover:bg-primary/10 transition-colors">{c}</Badge>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       <Footer />

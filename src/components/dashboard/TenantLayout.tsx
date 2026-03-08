@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
-  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star, UtensilsCrossed,
+  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star, UtensilsCrossed, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("tenant.browsePgs"), href: "/tenant/marketplace", icon: Search },
   { name: t("tenant.reviews"), href: "/tenant/reviews", icon: Star },
   { name: t("tenant.mealMenu"), href: "/tenant/meal-menu", icon: UtensilsCrossed },
+  { name: "Community Chat", href: "/tenant/chat", icon: MessageCircle },
 ];
 
 const getBottomLinks = (t: (k: string) => string) => [
