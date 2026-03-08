@@ -927,6 +927,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ഘട്ടം", needHelp: "കൂടുതൽ സഹായം വേണോ?",
     needHelpDesc: "support@pgmanager.in ലേക്ക് ഇമെയിൽ അയക്കുക.",
     warningLabel: "⚠️ പ്രധാനം", tipLabel: "💡 നുറുങ്ങ്", importantLabel: "പ്രധാനം",
+    videoSectionTitle: "📹 വീഡിയോ ട്യൂട്ടോറിയലുകൾ",
+    videoSectionDesc: "പൂർണ്ണ ഫ്ലോ മനസ്സിലാക്കാൻ ഈ വീഡിയോകൾ കാണുക.",
+    ownerVideos: [
+      { title: "PG പ്രോപ്പർട്ടി സെറ്റപ്പ്", description: "അക്കൗണ്ട്, പ്രോപ്പർട്ടി, മുറികൾ.", videoId: "owner-setup-demo" },
+      { title: "വാടകക്കാരെ ക്ഷണിക്കുക", description: "ക്ഷണ കോഡ് അയയ്ക്കുക, പേയ്മെന്റ് ട്രാക്ക്.", videoId: "owner-tenants-demo" },
+      { title: "പേയ്മെന്റ് ട്രാക്കിംഗ്", description: "വാടക പേയ്മെന്റുകൾ ട്രാക്ക് ചെയ്യുക.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "വാടകക്കാരനായി ചേരുക", description: "സൈൻ അപ്പ്, ക്ഷണ കോഡ് നൽകുക.", videoId: "tenant-onboard-demo" },
+      { title: "വാടക അടയ്ക്കുക", description: "വാടക കാണുക, തെളിവ് അപ്‌ലോഡ്.", videoId: "tenant-payment-demo" },
+      { title: "വാടകക്കാരൻ ഫീച്ചറുകൾ", description: "പരാതികൾ, ഭക്ഷണം, അറിയിപ്പുകൾ, ചാറ്റ്.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. അക്കൗണ്ട് & ലോഗിൻ", steps: [
         { title: "വെബ്‌സൈറ്റ് തുറക്കുക", desc: "'Sign Up' ക്ലിക്ക് ചെയ്യുക.", image: "/guide/signup-page.jpg" },
