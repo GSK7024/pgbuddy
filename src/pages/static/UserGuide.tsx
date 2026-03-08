@@ -6,7 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Language } from "@/i18n/translations";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
-import { guideTranslations, GuideStep, GuideSection as GuideSectionType } from "./guideTranslations";
+import { guideTranslations, GuideStep, GuideSection as GuideSectionType, VideoTutorial } from "./guideTranslations";
 
 const languageNames: Record<Language, string> = {
   en: "English", hi: "हिंदी", mr: "मराठी", ta: "தமிழ்", te: "తెలుగు",
