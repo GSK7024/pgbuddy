@@ -47,6 +47,15 @@ import Documents from "./pages/Documents";
 import VisitorLog from "./pages/VisitorLog";
 import UtilityBills from "./pages/UtilityBills";
 import TenantUtilityBills from "./pages/TenantUtilityBills";
+import AboutUs from "./pages/static/AboutUs";
+import Careers from "./pages/static/Careers";
+import Blog from "./pages/static/Blog";
+import Contact from "./pages/static/Contact";
+import HelpCenter from "./pages/static/HelpCenter";
+import FAQs from "./pages/static/FAQs";
+import PrivacyPolicy from "./pages/static/PrivacyPolicy";
+import TermsOfService from "./pages/static/TermsOfService";
+import Pricing from "./pages/static/Pricing";
 
 const queryClient = new QueryClient();
 
