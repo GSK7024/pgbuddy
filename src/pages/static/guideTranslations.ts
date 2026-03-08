@@ -50,6 +50,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ Important",
     tipLabel: "💡 Tip",
     importantLabel: "Important",
+    videoSectionTitle: "📹 Video Tutorials",
+    videoSectionDesc: "Watch these step-by-step walkthrough videos to understand the complete flow.",
+    ownerVideos: [
+      { title: "How to Set Up Your PG Property", description: "Complete walkthrough of creating your account, adding properties, rooms, and managing settings.", videoId: "owner-setup-demo" },
+      { title: "How to Invite & Manage Tenants", description: "Learn how to send invite codes, track tenant payments, and handle complaints.", videoId: "owner-tenants-demo" },
+      { title: "Payment Tracking & Reports", description: "See how to track rent payments, approve proofs, and generate reports.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "How to Join Your PG as a Tenant", description: "Step-by-step guide to signing up, entering your invite code, and accessing your dashboard.", videoId: "tenant-onboard-demo" },
+      { title: "Paying Rent & Uploading Proof", description: "Learn how to view your rent, upload payment proof, and download receipts.", videoId: "tenant-payment-demo" },
+      { title: "Using Tenant Features", description: "Explore complaints, meal menus, announcements, community chat, and more.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. Account Creation & Login",
