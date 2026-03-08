@@ -78,10 +78,17 @@ const PropertyCard = ({ property, index }: { property: PropertyListing; index: n
               </div>
               <span className="text-[10px] opacity-70">/month</span>
             </div>
-            {/* Badge */}
-            <Badge className="absolute top-3 right-3 bg-success text-white">
-              {vacantRooms.length} room{vacantRooms.length !== 1 ? "s" : ""}
-            </Badge>
+            {/* Badges */}
+            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+              {property.is_featured && (
+                <Badge className="bg-warning text-warning-foreground gap-1">
+                  <Crown className="w-3 h-3" /> Featured
+                </Badge>
+              )}
+              <Badge className="bg-success text-white">
+                {vacantRooms.length} room{vacantRooms.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
           </div>
 
           <CardContent className="p-4 space-y-2.5">
