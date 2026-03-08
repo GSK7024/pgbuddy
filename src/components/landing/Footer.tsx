@@ -17,6 +17,7 @@ const Footer = () => {
     ],
     support: [
       { name: "Help Center", href: "/help" },
+      { name: "User Guide", href: "/guide" },
       { name: "FAQs", href: "/faqs" },
       { name: "Privacy Policy", href: "/privacy" },
       { name: "Terms of Service", href: "/terms" },
