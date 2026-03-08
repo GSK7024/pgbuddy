@@ -38,7 +38,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [currentPlan, setCurrentPlan] = useState<string>("Free");
+  const sidebarLinks = getSidebarLinks(t);
 
   useEffect(() => {
     if (!user) return;
