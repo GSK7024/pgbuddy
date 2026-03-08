@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          priority: string
+          property_id: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          priority?: string
+          property_id: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          priority?: string
+          property_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complaints: {
         Row: {
           category: string
@@ -94,6 +132,53 @@ export type Database = {
             foreignKeyName: "expenses_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_info: {
+        Row: {
+          account_holder: string | null
+          account_number: string | null
+          bank_name: string | null
+          created_at: string
+          id: string
+          ifsc_code: string | null
+          property_id: string
+          qr_code_url: string | null
+          updated_at: string
+          upi_id: string | null
+        }
+        Insert: {
+          account_holder?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          ifsc_code?: string | null
+          property_id: string
+          qr_code_url?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Update: {
+          account_holder?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          ifsc_code?: string | null
+          property_id?: string
+          qr_code_url?: string | null
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_info_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
@@ -190,6 +275,8 @@ export type Database = {
           id: string
           month: string
           payment_date: string | null
+          proof_uploaded_at: string | null
+          proof_url: string | null
           property_id: string
           room_id: string
           status: string
@@ -202,6 +289,8 @@ export type Database = {
           id?: string
           month: string
           payment_date?: string | null
+          proof_uploaded_at?: string | null
+          proof_url?: string | null
           property_id: string
           room_id: string
           status?: string
@@ -214,6 +303,8 @@ export type Database = {
           id?: string
           month?: string
           payment_date?: string | null
+          proof_uploaded_at?: string | null
+          proof_url?: string | null
           property_id?: string
           room_id?: string
           status?: string
@@ -331,6 +422,63 @@ export type Database = {
           },
           {
             foreignKeyName: "tenant_assignments_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_invitations: {
+        Row: {
+          claimed_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          invite_code: string
+          property_id: string
+          room_id: string
+          status: string
+          tenant_email: string | null
+          tenant_name: string | null
+          tenant_phone: string | null
+        }
+        Insert: {
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          property_id: string
+          room_id: string
+          status?: string
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_phone?: string | null
+        }
+        Update: {
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          property_id?: string
+          room_id?: string
+          status?: string
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_invitations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_invitations_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
