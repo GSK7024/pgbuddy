@@ -75,6 +75,7 @@ const Tenants = () => {
   const [tenantNotes, setTenantNotes] = useState("");
   const [detailRent, setDetailRent] = useState("");
   const [rentChangeNote, setRentChangeNote] = useState("");
+  const [tenantPhone, setTenantPhone] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
 
   const fetchData = async () => {
