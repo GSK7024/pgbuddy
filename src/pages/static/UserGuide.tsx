@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, BookOpen, Building2, User, ChevronRight, HelpCircle, Globe, AlertTriangle, Lightbulb } from "lucide-react";
+import { ArrowLeft, BookOpen, Building2, User, ChevronRight, HelpCircle, Globe, AlertTriangle, Lightbulb, Play, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Language } from "@/i18n/translations";
