@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -7,7 +7,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const sidebarLinks = [
   { name: "Overview", href: "/dashboard", icon: BarChart3 },
@@ -30,8 +32,25 @@ const bottomLinks = [
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [currentPlan, setCurrentPlan] = useState<string>("Free");
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchPlan = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("subscription_plans(name)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if ((data as any)?.subscription_plans?.name) {
+        setCurrentPlan((data as any).subscription_plans.name);
+      }
+    };
+    fetchPlan();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -60,21 +79,46 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         ))}
       </nav>
       <div className="p-4 border-t border-border space-y-1">
-        {bottomLinks.map((link) => (
-          <Link
-            key={link.name}
-            to={link.href}
-            onClick={onClick}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              currentPath === link.href
-                ? "gradient-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        {/* Subscription with plan badge */}
+        <Link
+          to="/dashboard/subscription"
+          onClick={onClick}
+          className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            currentPath === "/dashboard/subscription"
+              ? "gradient-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <span className="flex items-center gap-3">
+            <Crown className="w-4 h-4" />
+            Subscription
+          </span>
+          <Badge
+            variant="secondary"
+            className={`text-[10px] px-1.5 py-0 ${
+              currentPlan === "Free"
+                ? "bg-muted text-muted-foreground"
+                : currentPlan === "Pro"
+                ? "bg-primary/10 text-primary"
+                : "bg-warning/10 text-warning"
             }`}
           >
-            <link.icon className="w-4 h-4" />
-            {link.name}
-          </Link>
-        ))}
+            {currentPlan}
+          </Badge>
+        </Link>
+        {/* Profile */}
+        <Link
+          to="/dashboard/profile"
+          onClick={onClick}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            currentPath === "/dashboard/profile"
+              ? "gradient-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <User className="w-4 h-4" />
+          Profile
+        </Link>
         <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
           <LogOut className="w-4 h-4" />
           Sign Out
