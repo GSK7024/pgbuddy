@@ -642,6 +642,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ முக்கியம்",
     tipLabel: "💡 குறிப்பு",
     importantLabel: "முக்கியம்",
+    videoSectionTitle: "📹 வீடியோ வழிகாட்டிகள்",
+    videoSectionDesc: "முழு செயல்முறையை புரிந்துகொள்ள இந்த வீடியோக்களைப் பாருங்கள்.",
+    ownerVideos: [
+      { title: "PG சொத்தை எவ்வாறு அமைப்பது", description: "கணக்கு உருவாக்கம், சொத்து சேர்த்தல், அறைகள்.", videoId: "owner-setup-demo" },
+      { title: "குடியிருப்பாளர்களை அழைப்பது", description: "அழைப்புக் குறியீடு அனுப்புதல், கட்டணம் கண்காணிப்பு.", videoId: "owner-tenants-demo" },
+      { title: "கட்டண கண்காணிப்பு", description: "வாடகை கட்டணம் கண்காணிக்கவும்.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "குடியிருப்பாளராக சேர்வது", description: "பதிவு செய்து அழைப்புக் குறியீடு உள்ளிடவும்.", videoId: "tenant-onboard-demo" },
+      { title: "வாடகை செலுத்துதல்", description: "வாடகை பார்க்கவும், ஆதாரம் பதிவேற்றவும்.", videoId: "tenant-payment-demo" },
+      { title: "குடியிருப்பாளர் அம்சங்கள்", description: "புகார்கள், உணவு, அறிவிப்புகள், அரட்டை.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. கணக்கு உருவாக்கம் & உள்நுழைவு",
