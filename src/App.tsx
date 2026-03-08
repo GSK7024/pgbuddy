@@ -50,6 +50,7 @@ import UtilityBills from "./pages/UtilityBills";
 import TenantUtilityBills from "./pages/TenantUtilityBills";
 import TenantAnalytics from "./pages/TenantAnalytics";
 import AuditLogs from "./pages/AuditLogs";
+import StaffManagement from "./pages/StaffManagement";
 import AboutUs from "./pages/static/AboutUs";
 import Careers from "./pages/static/Careers";
 import Blog from "./pages/static/Blog";
