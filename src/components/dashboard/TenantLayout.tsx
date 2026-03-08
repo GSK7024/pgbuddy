@@ -48,7 +48,7 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <>
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {sidebarLinks.map((link) => (
           <Link
             key={link.name}
