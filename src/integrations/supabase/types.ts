@@ -994,6 +994,8 @@ export type Database = {
           current_reading: number | null
           id: string
           previous_reading: number | null
+          proof_uploaded_at: string | null
+          proof_url: string | null
           property_id: string
           rate_per_unit: number
           room_id: string
@@ -1009,6 +1011,8 @@ export type Database = {
           current_reading?: number | null
           id?: string
           previous_reading?: number | null
+          proof_uploaded_at?: string | null
+          proof_url?: string | null
           property_id: string
           rate_per_unit?: number
           room_id: string
@@ -1024,6 +1028,8 @@ export type Database = {
           current_reading?: number | null
           id?: string
           previous_reading?: number | null
+          proof_uploaded_at?: string | null
+          proof_url?: string | null
           property_id?: string
           rate_per_unit?: number
           room_id?: string
