@@ -3,13 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2, Home, Users, CreditCard, BarChart3, Receipt,
-  LogOut, Menu, X, MessageSquare, BellDot, Settings, Megaphone, QrCode, Share2, User, Crown, Camera,
+  LogOut, Menu, X, MessageSquare, BellDot, Settings, Megaphone, QrCode, Share2, User, Crown, Camera, UtensilsCrossed,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const sidebarLinks = [
   { name: "Overview", href: "/dashboard", icon: BarChart3 },
