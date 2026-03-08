@@ -261,7 +261,9 @@ const Tenants = () => {
         old_rent: Number(oldRent),
         new_rent: Number(newRent),
         changed_by: user.id,
+        notes: rentChangeNote.trim() || null,
       });
+      setRentChangeNote("");
       // Refresh history
       const { data: hist } = await supabase.from("rent_history").select("id, old_rent, new_rent, changed_at, notes").eq("assignment_id", detailTenant.id).order("changed_at", { ascending: false });
       setRentHistory(hist ?? []);
