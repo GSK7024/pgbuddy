@@ -23,6 +23,8 @@ interface Payment {
   proof_uploaded_at: string | null;
   rooms?: { room_number: string };
   properties?: { name: string };
+  tenant_phone?: string | null;
+  tenant_name?: string | null;
 }
 
 interface ActiveAssignment {
