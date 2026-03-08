@@ -46,6 +46,7 @@ import TenantDocuments from "./pages/TenantDocuments";
 import Documents from "./pages/Documents";
 import VisitorLog from "./pages/VisitorLog";
 import UtilityBills from "./pages/UtilityBills";
+import TenantUtilityBills from "./pages/TenantUtilityBills";
 
 const queryClient = new QueryClient();
 
