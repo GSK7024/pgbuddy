@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Building2, Home, CreditCard, MessageSquare, BellDot,
-  LogOut, Menu, X, Search, LayoutDashboard,
+  Building2, CreditCard, MessageSquare, BellDot,
+  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,7 +13,12 @@ const sidebarLinks = [
   { name: "Payments", href: "/tenant/payments", icon: CreditCard },
   { name: "Complaints", href: "/tenant/complaints", icon: MessageSquare },
   { name: "Vacancy Notice", href: "/tenant/notices", icon: BellDot },
+  { name: "Announcements", href: "/tenant/announcements", icon: Megaphone },
   { name: "Browse PGs", href: "/tenant/marketplace", icon: Search },
+];
+
+const bottomLinks = [
+  { name: "Profile", href: "/tenant/profile", icon: User },
 ];
 
 const TenantLayout = ({ children }: { children: React.ReactNode }) => {
@@ -28,6 +33,49 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
 
   const currentPath = window.location.pathname;
 
+  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+    <>
+      <nav className="flex-1 p-4 space-y-1">
+        {sidebarLinks.map((link) => (
+          <Link
+            key={link.name}
+            to={link.href}
+            onClick={onClick}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              currentPath === link.href
+                ? "gradient-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <link.icon className="w-4 h-4" />
+            {link.name}
+          </Link>
+        ))}
+      </nav>
+      <div className="p-4 border-t border-border space-y-1">
+        {bottomLinks.map((link) => (
+          <Link
+            key={link.name}
+            to={link.href}
+            onClick={onClick}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              currentPath === link.href
+                ? "gradient-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <link.icon className="w-4 h-4" />
+            {link.name}
+          </Link>
+        ))}
+        <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </Button>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
@@ -40,28 +88,7 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
             <span className="text-lg font-bold gradient-text">PG Manager</span>
           </Link>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {sidebarLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                currentPath === link.href
-                  ? "gradient-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <link.icon className="w-4 h-4" />
-              {link.name}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-border">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </Button>
-        </div>
+        <NavLinks />
       </aside>
 
       {/* Mobile Header */}
@@ -85,32 +112,10 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
           <motion.aside
             initial={{ x: -280 }}
             animate={{ x: 0 }}
-            className="w-64 h-full bg-card border-r border-border p-4 pt-20"
+            className="w-64 h-full bg-card border-r border-border flex flex-col pt-16"
             onClick={(e) => e.stopPropagation()}
           >
-            <nav className="space-y-1">
-              {sidebarLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    currentPath === link.href
-                      ? "gradient-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <link.icon className="w-4 h-4" />
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-            <div className="mt-4 pt-4 border-t border-border">
-              <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
-            </div>
+            <NavLinks onClick={() => setSidebarOpen(false)} />
           </motion.aside>
         </div>
       )}

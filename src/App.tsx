@@ -15,11 +15,18 @@ import Payments from "./pages/Payments";
 import Complaints from "./pages/Complaints";
 import Notices from "./pages/Notices";
 import Expenses from "./pages/Expenses";
+import PaymentSettings from "./pages/PaymentSettings";
+import Announcements from "./pages/Announcements";
+import TenantInvitations from "./pages/TenantInvitations";
 import TenantDashboard from "./pages/TenantDashboard";
 import TenantPayments from "./pages/TenantPayments";
 import TenantComplaints from "./pages/TenantComplaints";
 import TenantNotices from "./pages/TenantNotices";
+import TenantAnnouncements from "./pages/TenantAnnouncements";
 import Marketplace from "./pages/Marketplace";
+import ProfileSettings from "./pages/ProfileSettings";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+import TenantLayout from "./components/dashboard/TenantLayout";
 import ResetPassword from "./pages/ResetPassword";
 import BrowsePG from "./pages/BrowsePG";
 import ListPG from "./pages/ListPG";
@@ -49,12 +56,18 @@ const App = () => (
             <Route path="/dashboard/complaints" element={<ProtectedRoute requiredRole="owner"><Complaints /></ProtectedRoute>} />
             <Route path="/dashboard/notices" element={<ProtectedRoute requiredRole="owner"><Notices /></ProtectedRoute>} />
             <Route path="/dashboard/expenses" element={<ProtectedRoute requiredRole="owner"><Expenses /></ProtectedRoute>} />
+            <Route path="/dashboard/payment-settings" element={<ProtectedRoute requiredRole="owner"><PaymentSettings /></ProtectedRoute>} />
+            <Route path="/dashboard/announcements" element={<ProtectedRoute requiredRole="owner"><Announcements /></ProtectedRoute>} />
+            <Route path="/dashboard/invitations" element={<ProtectedRoute requiredRole="owner"><TenantInvitations /></ProtectedRoute>} />
+            <Route path="/dashboard/profile" element={<ProtectedRoute requiredRole="owner"><ProfileSettings Layout={DashboardLayout} /></ProtectedRoute>} />
             {/* Tenant routes */}
             <Route path="/tenant" element={<ProtectedRoute requiredRole="tenant"><TenantDashboard /></ProtectedRoute>} />
             <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
             <Route path="/tenant/complaints" element={<ProtectedRoute requiredRole="tenant"><TenantComplaints /></ProtectedRoute>} />
             <Route path="/tenant/notices" element={<ProtectedRoute requiredRole="tenant"><TenantNotices /></ProtectedRoute>} />
+            <Route path="/tenant/announcements" element={<ProtectedRoute requiredRole="tenant"><TenantAnnouncements /></ProtectedRoute>} />
             <Route path="/tenant/marketplace" element={<ProtectedRoute requiredRole="tenant"><Marketplace /></ProtectedRoute>} />
+            <Route path="/tenant/profile" element={<ProtectedRoute requiredRole="tenant"><ProfileSettings Layout={TenantLayout} /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
