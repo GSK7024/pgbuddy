@@ -321,6 +321,16 @@ const Tenants = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Assign Tenant to Room</DialogTitle></DialogHeader>
+              {tenantLimit !== -1 && assignments.filter(a => a.is_active).length >= tenantLimit ? (
+                <div className="space-y-4 text-center py-4">
+                  <p className="text-sm text-muted-foreground">
+                    You've reached your limit of <strong>{tenantLimit} tenants</strong> on your current plan.
+                  </p>
+                  <Button asChild className="gradient-primary">
+                    <Link to="/dashboard/subscription">Upgrade Plan</Link>
+                  </Button>
+                </div>
+              ) : (
               <form onSubmit={handleAssign} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Tenant Email *</Label>
