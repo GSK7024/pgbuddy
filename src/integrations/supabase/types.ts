@@ -260,6 +260,97 @@ export type Database = {
           },
         ]
       }
+      move_out_requests: {
+        Row: {
+          actual_move_out_date: string | null
+          assignment_id: string
+          checklist: Json | null
+          created_at: string
+          deductions: Json | null
+          deposit_amount: number
+          id: string
+          processed_by: string | null
+          property_id: string
+          reason: string | null
+          refund_amount: number
+          refund_date: string | null
+          refund_notes: string | null
+          refund_status: string
+          requested_move_out_date: string
+          room_id: string
+          status: string
+          tenant_id: string
+          total_deductions: number
+          updated_at: string
+        }
+        Insert: {
+          actual_move_out_date?: string | null
+          assignment_id: string
+          checklist?: Json | null
+          created_at?: string
+          deductions?: Json | null
+          deposit_amount?: number
+          id?: string
+          processed_by?: string | null
+          property_id: string
+          reason?: string | null
+          refund_amount?: number
+          refund_date?: string | null
+          refund_notes?: string | null
+          refund_status?: string
+          requested_move_out_date: string
+          room_id: string
+          status?: string
+          tenant_id: string
+          total_deductions?: number
+          updated_at?: string
+        }
+        Update: {
+          actual_move_out_date?: string | null
+          assignment_id?: string
+          checklist?: Json | null
+          created_at?: string
+          deductions?: Json | null
+          deposit_amount?: number
+          id?: string
+          processed_by?: string | null
+          property_id?: string
+          reason?: string | null
+          refund_amount?: number
+          refund_date?: string | null
+          refund_notes?: string | null
+          refund_status?: string
+          requested_move_out_date?: string
+          room_id?: string
+          status?: string
+          tenant_id?: string
+          total_deductions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "move_out_requests_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "move_out_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "move_out_requests_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
