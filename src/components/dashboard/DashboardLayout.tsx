@@ -23,6 +23,7 @@ const sidebarLinks = [
   { name: "Complaints", href: "/dashboard/complaints", icon: MessageSquare },
   { name: "Notices", href: "/dashboard/notices", icon: BellDot },
   { name: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
+  { name: "Manage Listing", href: "/dashboard/listing", icon: Camera },
 ];
 
 const bottomLinks = [
