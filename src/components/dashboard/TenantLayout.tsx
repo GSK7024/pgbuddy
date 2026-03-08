@@ -76,9 +76,12 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
             {link.name}
           </Link>
         ))}
+        <div className="flex items-center justify-between px-3 py-1">
+          <LanguageSwitcher />
+        </div>
         <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
           <LogOut className="w-4 h-4" />
-          Sign Out
+          {t("nav.signOut")}
         </Button>
       </div>
     </>
