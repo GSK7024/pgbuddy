@@ -45,13 +45,16 @@
     /* Gradient tokens */
     --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(217 91% 60%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(339 90% 60%) 0%, hsl(262 83% 58%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58% / 0.1) 0%, hsl(217 91% 60% / 0.1) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58% / 0.08) 0%, hsl(217 91% 60% / 0.08) 50%, hsl(339 90% 60% / 0.05) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(262 83% 58% / 0.03) 0%, hsl(217 91% 60% / 0.05) 100%);
 
     /* Shadow tokens */
     --shadow-sm: 0 2px 8px -2px hsl(262 83% 58% / 0.1);
-    --shadow-md: 0 8px 24px -4px hsl(262 83% 58% / 0.15);
-    --shadow-lg: 0 16px 48px -8px hsl(262 83% 58% / 0.2);
-    --shadow-glow: 0 0 40px hsl(262 83% 58% / 0.3);
+    --shadow-md: 0 8px 24px -4px hsl(262 83% 58% / 0.12);
+    --shadow-lg: 0 16px 48px -8px hsl(262 83% 58% / 0.18);
+    --shadow-glow: 0 0 40px hsl(262 83% 58% / 0.25);
+    --shadow-card: 0 1px 3px hsl(250 20% 10% / 0.04), 0 4px 12px hsl(250 20% 10% / 0.06);
+    --shadow-card-hover: 0 4px 16px hsl(262 83% 58% / 0.1), 0 8px 32px hsl(262 83% 58% / 0.08);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 250 10% 25%;
@@ -100,12 +103,15 @@
 
     --gradient-primary: linear-gradient(135deg, hsl(262 83% 65%) 0%, hsl(217 91% 65%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(339 90% 65%) 0%, hsl(262 83% 65%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(262 83% 65% / 0.15) 0%, hsl(217 91% 65% / 0.15) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(262 83% 65% / 0.12) 0%, hsl(217 91% 65% / 0.12) 50%, hsl(339 90% 65% / 0.08) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(262 83% 65% / 0.05) 0%, hsl(217 91% 65% / 0.08) 100%);
 
     --shadow-sm: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
     --shadow-md: 0 8px 24px -4px hsl(0 0% 0% / 0.4);
     --shadow-lg: 0 16px 48px -8px hsl(0 0% 0% / 0.5);
     --shadow-glow: 0 0 40px hsl(262 83% 65% / 0.4);
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.2), 0 4px 12px hsl(0 0% 0% / 0.15);
+    --shadow-card-hover: 0 4px 16px hsl(262 83% 65% / 0.15), 0 8px 32px hsl(262 83% 65% / 0.1);
 
     --sidebar-background: 250 40% 8%;
     --sidebar-foreground: 250 20% 95%;
@@ -126,6 +132,22 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+  }
 }
 
 @layer utilities {
@@ -140,6 +162,10 @@
   .gradient-hero {
     background: var(--gradient-hero);
   }
+
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
   
   .gradient-text {
     background: var(--gradient-primary);
@@ -150,5 +176,78 @@
   
   .shadow-glow {
     box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .glass {
+    background: hsl(var(--background) / 0.7);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  .glass-card {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .gradient-border {
+    position: relative;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gradient-primary);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .gradient-border:hover::before {
+    opacity: 1;
+  }
+
+  /* Animated gradient background for hero */
+  .animated-gradient {
+    background: linear-gradient(
+      -45deg,
+      hsl(262 83% 58% / 0.08),
+      hsl(217 91% 60% / 0.08),
+      hsl(339 90% 60% / 0.05),
+      hsl(142 76% 45% / 0.05)
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Smooth page transitions */
+  .page-enter {
+    animation: page-fade-in 0.3s ease-out;
+  }
+
+  @keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }

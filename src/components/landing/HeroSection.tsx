@@ -1,30 +1,35 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Building2, Users, Shield } from "lucide-react";
+import { ArrowRight, Search, Building2, Users, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      {/* Background decorations */}
-      <div className="absolute inset-0 gradient-hero" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/5 rounded-full blur-3xl" />
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 animated-gradient" />
+      
+      {/* Mesh gradient orbs */}
+      <div className="absolute top-20 left-10 w-80 h-80 bg-primary/8 rounded-full blur-[100px] animate-pulse" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/8 rounded-full blur-[120px]" />
+      <div className="absolute top-1/3 right-1/3 w-72 h-72 bg-accent/5 rounded-full blur-[80px]" />
+
+      {/* Dot grid pattern */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: "radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)",
+        backgroundSize: "32px 32px"
+      }} />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary/15 mb-8 shadow-sm"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span className="text-sm font-medium text-primary">
               India's #1 PG Management Platform
             </span>
@@ -34,8 +39,8 @@ const HeroSection = () => {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight mb-6"
           >
             Manage Your{" "}
             <span className="gradient-text">PG Business</span>
@@ -48,7 +53,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+            className="text-base sm:text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
           >
             The complete solution for PG owners and tenants. Manage properties, 
             collect rent, track expenses, and find your perfect PG – all in one place.
@@ -59,23 +64,23 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14"
           >
             <Button
               size="lg"
-              className="gradient-primary text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all group"
+              className="gradient-primary text-base px-8 py-6 shadow-lg hover:shadow-glow transition-all duration-300 group rounded-xl"
               asChild
             >
               <Link to="/auth?mode=signup&role=owner">
                 <Building2 className="w-5 h-5 mr-2" />
                 List Your PG
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="text-lg px-8 py-6 border-2 hover:bg-primary/5"
+              className="text-base px-8 py-6 border-2 hover:bg-primary/5 rounded-xl"
               asChild
             >
               <Link to="/browse">
@@ -90,7 +95,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="grid grid-cols-3 gap-4 sm:gap-8 max-w-xl mx-auto"
+            className="inline-flex items-center gap-8 sm:gap-12 px-8 py-5 rounded-2xl glass-card border border-border/50 shadow-card"
           >
             {[
               { value: "10K+", label: "PG Properties" },
@@ -98,10 +103,10 @@ const HeroSection = () => {
               { value: "₹5Cr+", label: "Rent Collected" },
             ].map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold gradient-text">
+                <div className="text-2xl sm:text-3xl font-extrabold gradient-text">
                   {stat.value}
                 </div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground mt-0.5">{stat.label}</div>
               </div>
             ))}
           </motion.div>
@@ -111,16 +116,15 @@ const HeroSection = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
+          transition={{ duration: 1, delay: 0.6 }}
           className="hidden lg:block"
         >
-          {/* Left floating card */}
           <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ y: [0, -12, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             className="absolute left-8 top-1/2 -translate-y-1/2"
           >
-            <div className="bg-card p-4 rounded-2xl shadow-lg border border-border w-64">
+            <div className="glass-card p-4 rounded-2xl shadow-card border border-border/50 w-60">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
                   <Shield className="w-5 h-5 text-success" />
@@ -136,13 +140,12 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          {/* Right floating card */}
           <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             className="absolute right-8 top-1/3"
           >
-            <div className="bg-card p-4 rounded-2xl shadow-lg border border-border w-56">
+            <div className="glass-card p-4 rounded-2xl shadow-card border border-border/50 w-52">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center">
                   <Users className="w-5 h-5 text-white" />
@@ -161,15 +164,15 @@ const HeroSection = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
+        transition={{ delay: 1.2 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2"
+          className="w-6 h-10 rounded-full border-2 border-muted-foreground/20 flex justify-center pt-2"
         >
-          <div className="w-1 h-2 bg-muted-foreground/50 rounded-full" />
+          <div className="w-1 h-2 bg-muted-foreground/40 rounded-full" />
         </motion.div>
       </motion.div>
     </section>
