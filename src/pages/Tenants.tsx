@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye } from "lucide-react";
+import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,9 +27,19 @@ interface TenantAssignment {
   id_proof_type: string | null;
   id_proof_number: string | null;
   notes: string | null;
-  rooms?: { room_number: string };
+  custom_rent: number | null;
+  rooms?: { room_number: string; rent_amount: number };
   properties?: { name: string };
   profiles?: { full_name: string; phone: string | null };
+}
+
+interface RoomWithCapacity {
+  id: string;
+  room_number: string;
+  property_id: string;
+  capacity: number;
+  rent_amount: number;
+  is_vacant: boolean;
 }
 
 const Tenants = () => {
@@ -37,7 +47,7 @@ const Tenants = () => {
   const { toast } = useToast();
   const [assignments, setAssignments] = useState<TenantAssignment[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
-  const [rooms, setRooms] = useState<{ id: string; room_number: string; property_id: string; is_vacant: boolean }[]>([]);
+  const [rooms, setRooms] = useState<RoomWithCapacity[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailTenant, setDetailTenant] = useState<TenantAssignment | null>(null);
@@ -50,6 +60,7 @@ const Tenants = () => {
   const [propertyId, setPropertyId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [moveInDate, setMoveInDate] = useState(new Date().toISOString().split("T")[0]);
+  const [customRent, setCustomRent] = useState("");
   const [foundTenant, setFoundTenant] = useState<{ user_id: string; full_name: string } | null>(null);
   const [searching, setSearching] = useState(false);
 
@@ -59,14 +70,15 @@ const Tenants = () => {
   const [idProofType, setIdProofType] = useState("");
   const [idProofNumber, setIdProofNumber] = useState("");
   const [tenantNotes, setTenantNotes] = useState("");
+  const [detailRent, setDetailRent] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
 
   const fetchData = async () => {
     if (!user) return;
     const [assignRes, propRes, roomRes] = await Promise.all([
-      supabase.from("tenant_assignments").select("*, rooms(room_number), properties(name)").order("created_at", { ascending: false }),
+      supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").order("created_at", { ascending: false }),
       supabase.from("properties").select("id, name").eq("owner_id", user.id),
-      supabase.from("rooms").select("id, room_number, property_id, is_vacant"),
+      supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant"),
     ]);
 
     const data = assignRes.data ?? [];
@@ -85,7 +97,26 @@ const Tenants = () => {
 
   useEffect(() => { fetchData(); }, [user]);
 
-  const vacantRoomsForProperty = rooms.filter(r => r.property_id === propertyId && r.is_vacant);
+  // Count active assignments per room
+  const getActiveCountForRoom = (roomId: string) => {
+    return assignments.filter(a => a.room_id === roomId && a.is_active).length;
+  };
+
+  // Rooms that have available beds for a given property
+  const availableRoomsForProperty = rooms.filter(r => {
+    if (r.property_id !== propertyId) return false;
+    const activeCount = getActiveCountForRoom(r.id);
+    return activeCount < r.capacity;
+  });
+
+  // When room is selected, pre-fill rent
+  const handleRoomSelect = (rId: string) => {
+    setRoomId(rId);
+    const room = rooms.find(r => r.id === rId);
+    if (room) {
+      setCustomRent(String(room.rent_amount));
+    }
+  };
 
   const searchTenant = async () => {
     if (!tenantEmail.trim()) return;
@@ -100,16 +131,33 @@ const Tenants = () => {
     setSearching(false);
   };
 
+  const updateRoomVacancy = async (rId: string) => {
+    const room = rooms.find(r => r.id === rId);
+    if (!room) return;
+    // Re-count from DB
+    const { count } = await supabase
+      .from("tenant_assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("room_id", rId)
+      .eq("is_active", true);
+    const activeCount = count ?? 0;
+    const shouldBeVacant = activeCount < room.capacity;
+    await supabase.from("rooms").update({ is_vacant: shouldBeVacant }).eq("id", rId);
+  };
+
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !foundTenant || !propertyId || !roomId) return;
     setAssigning(true);
+
+    const rentValue = customRent ? parseFloat(customRent) : null;
 
     const { error } = await supabase.from("tenant_assignments").insert({
       tenant_id: foundTenant.user_id,
       property_id: propertyId,
       room_id: roomId,
       move_in_date: moveInDate,
+      custom_rent: rentValue,
     });
 
     if (error) {
@@ -118,7 +166,7 @@ const Tenants = () => {
       return;
     }
 
-    await supabase.from("rooms").update({ is_vacant: false }).eq("id", roomId);
+    await updateRoomVacancy(roomId);
     toast({ title: "Tenant assigned successfully!" });
     setDialogOpen(false);
     resetForm();
@@ -129,7 +177,7 @@ const Tenants = () => {
   const resetForm = () => {
     setTenantEmail(""); setPropertyId(""); setRoomId("");
     setMoveInDate(new Date().toISOString().split("T")[0]);
-    setFoundTenant(null);
+    setCustomRent(""); setFoundTenant(null);
   };
 
   const handleDeactivate = async (id: string, rId: string) => {
@@ -137,6 +185,7 @@ const Tenants = () => {
       is_active: false,
       move_out_date: new Date().toISOString().split("T")[0],
     }).eq("id", id);
+    // A bed freed up, so room should be vacant (has available beds)
     await supabase.from("rooms").update({ is_vacant: true }).eq("id", rId);
     toast({ title: "Tenant moved out" });
     setDetailTenant(null);
@@ -150,6 +199,7 @@ const Tenants = () => {
     setIdProofType(a.id_proof_type ?? "");
     setIdProofNumber(a.id_proof_number ?? "");
     setTenantNotes(a.notes ?? "");
+    setDetailRent(String(a.custom_rent ?? (a as any).rooms?.rent_amount ?? ""));
     // Fetch documents
     const { data } = await supabase.storage.from("tenant-documents").list(a.id);
     if (data && data.length > 0) {
@@ -166,12 +216,14 @@ const Tenants = () => {
   const saveDetails = async () => {
     if (!detailTenant) return;
     setSavingDetails(true);
+    const rentValue = detailRent ? parseFloat(detailRent) : null;
     const { error } = await supabase.from("tenant_assignments").update({
       emergency_contact_name: emergencyName || null,
       emergency_contact_phone: emergencyPhone || null,
       id_proof_type: idProofType || null,
       id_proof_number: idProofNumber || null,
       notes: tenantNotes || null,
+      custom_rent: rentValue,
     }).eq("id", detailTenant.id);
 
     if (error) {
@@ -211,6 +263,10 @@ const Tenants = () => {
     }
   };
 
+  const getTenantRent = (a: TenantAssignment) => {
+    return a.custom_rent ?? (a as any).rooms?.rent_amount ?? 0;
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -242,7 +298,7 @@ const Tenants = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Property *</Label>
-                  <Select value={propertyId} onValueChange={(v) => { setPropertyId(v); setRoomId(""); }}>
+                  <Select value={propertyId} onValueChange={(v) => { setPropertyId(v); setRoomId(""); setCustomRent(""); }}>
                     <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
                     <SelectContent>
                       {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -250,17 +306,30 @@ const Tenants = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Room * {propertyId && `(${vacantRoomsForProperty.length} vacant)`}</Label>
-                  <Select value={roomId} onValueChange={setRoomId} disabled={!propertyId}>
-                    <SelectTrigger><SelectValue placeholder="Select vacant room" /></SelectTrigger>
+                  <Label>Room * {propertyId && `(${availableRoomsForProperty.length} available)`}</Label>
+                  <Select value={roomId} onValueChange={handleRoomSelect} disabled={!propertyId}>
+                    <SelectTrigger><SelectValue placeholder="Select room with available beds" /></SelectTrigger>
                     <SelectContent>
-                      {vacantRoomsForProperty.map(r => <SelectItem key={r.id} value={r.id}>Room {r.room_number}</SelectItem>)}
+                      {availableRoomsForProperty.map(r => {
+                        const active = getActiveCountForRoom(r.id);
+                        return (
+                          <SelectItem key={r.id} value={r.id}>
+                            Room {r.room_number} ({active}/{r.capacity} occupied)
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Move-in Date</Label>
-                  <Input type="date" value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Move-in Date</Label>
+                    <Input type="date" value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rent (₹)</Label>
+                    <Input type="number" value={customRent} onChange={e => setCustomRent(e.target.value)} placeholder="Room default" />
+                  </div>
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={!foundTenant || !propertyId || !roomId || assigning}>
                   {assigning ? "Assigning..." : "Assign Tenant"}
@@ -302,6 +371,10 @@ const Tenants = () => {
                   <p><span className="text-muted-foreground">Property:</span> {(a as any).properties?.name}</p>
                   <p><span className="text-muted-foreground">Room:</span> {(a as any).rooms?.room_number}</p>
                   <p><span className="text-muted-foreground">Move-in:</span> {a.move_in_date}</p>
+                  <p className="flex items-center gap-1 font-semibold">
+                    <IndianRupee className="w-3 h-3" />
+                    {Number(getTenantRent(a)).toLocaleString()}/month
+                  </p>
                   {a.id_proof_type && (
                     <p className="flex items-center gap-1"><Shield className="w-3 h-3 text-primary" /> {a.id_proof_type}: {a.id_proof_number}</p>
                   )}
@@ -341,6 +414,25 @@ const Tenants = () => {
                     <span className="text-muted-foreground block">Move-in</span>
                     <span className="font-medium">{detailTenant.move_in_date}</span>
                   </div>
+                </div>
+
+                <Separator />
+
+                {/* Rent */}
+                <div className="space-y-2">
+                  <Label className="text-xs flex items-center gap-1">
+                    <IndianRupee className="w-3 h-3" /> Monthly Rent
+                  </Label>
+                  <Input
+                    type="number"
+                    className="h-9"
+                    value={detailRent}
+                    onChange={e => setDetailRent(e.target.value)}
+                    placeholder={`Room default: ₹${(detailTenant as any).rooms?.rent_amount ?? 0}`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Room default: ₹{Number((detailTenant as any).rooms?.rent_amount ?? 0).toLocaleString()}. Set a custom amount to override.
+                  </p>
                 </div>
 
                 <Separator />

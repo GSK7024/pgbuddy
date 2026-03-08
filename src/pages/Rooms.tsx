@@ -35,6 +35,7 @@ const Rooms = () => {
   const { toast } = useToast();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
@@ -50,12 +51,20 @@ const Rooms = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [propRes, roomRes] = await Promise.all([
+    const [propRes, roomRes, assignRes] = await Promise.all([
       supabase.from("properties").select("id, name").eq("owner_id", user.id),
       supabase.from("rooms").select("*, properties(name)").order("created_at", { ascending: false }),
+      supabase.from("tenant_assignments").select("room_id").eq("is_active", true),
     ]);
     setProperties(propRes.data ?? []);
     setRooms(roomRes.data ?? []);
+
+    // Build occupancy map
+    const map: Record<string, number> = {};
+    (assignRes.data ?? []).forEach(a => {
+      map[a.room_id] = (map[a.room_id] || 0) + 1;
+    });
+    setOccupancyMap(map);
     setLoading(false);
   };
 
@@ -110,12 +119,19 @@ const Rooms = () => {
     if (!error) { toast({ title: "Room deleted" }); fetchData(); }
   };
 
-  const toggleVacancy = async (id: string, current: boolean) => {
-    await supabase.from("rooms").update({ is_vacant: !current }).eq("id", id);
-    fetchData();
-  };
-
   const filtered = filterProperty === "all" ? rooms : rooms.filter(r => r.property_id === filterProperty);
+
+  const getOccupancyBadge = (r: Room) => {
+    const occupied = occupancyMap[r.id] || 0;
+    const isFull = occupied >= r.capacity;
+    if (occupied === 0) {
+      return <Badge variant="default" className="bg-success">Vacant</Badge>;
+    }
+    if (isFull) {
+      return <Badge variant="secondary">{occupied}/{r.capacity} Full</Badge>;
+    }
+    return <Badge variant="outline" className="border-warning text-warning">{occupied}/{r.capacity} Occupied</Badge>;
+  };
 
   return (
     <DashboardLayout>
@@ -208,13 +224,7 @@ const Rooms = () => {
                       <CardTitle className="text-lg">Room {r.room_number}</CardTitle>
                       <p className="text-sm text-muted-foreground">{(r as any).properties?.name}</p>
                     </div>
-                    <Badge
-                      variant={r.is_vacant ? "default" : "secondary"}
-                      className={`cursor-pointer ${r.is_vacant ? "bg-success hover:bg-success/90" : ""}`}
-                      onClick={() => toggleVacancy(r.id, r.is_vacant)}
-                    >
-                      {r.is_vacant ? "Vacant" : "Occupied"}
-                    </Badge>
+                    {getOccupancyBadge(r)}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
