@@ -164,6 +164,17 @@ const TenantAnalytics = () => {
     });
     setTurnoverData(months);
 
+    // Monthly revenue trend within range
+    const revTrend = monthStarts.map(ms => {
+      const key = format(ms, "yyyy-MM");
+      const label = format(ms, "MMM yy");
+      const monthPayments = rangePayments.filter(p => p.created_at?.startsWith(key));
+      const collected = monthPayments.filter(p => p.status === "paid").reduce((s: number, p: any) => s + Number(p.amount), 0);
+      const pending = monthPayments.filter(p => p.status === "pending").reduce((s: number, p: any) => s + Number(p.amount), 0);
+      return { month: label, collected, pending };
+    });
+    setRevenueTrendData(revTrend);
+
     // Summary
     const totalBeds = occData.reduce((s, o) => s + o.totalBeds, 0);
     const occupiedBeds = occData.reduce((s, o) => s + o.occupied, 0);
