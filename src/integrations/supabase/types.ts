@@ -854,6 +854,59 @@ export type Database = {
           },
         ]
       }
+      tenant_documents: {
+        Row: {
+          created_at: string
+          document_name: string
+          document_type: string
+          id: string
+          notes: string | null
+          property_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          tenant_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          document_name: string
+          document_type?: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          tenant_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          tenant_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_invitations: {
         Row: {
           claimed_by: string | null
@@ -932,6 +985,69 @@ export type Database = {
         }
         Relationships: []
       }
+      utility_bills: {
+        Row: {
+          amount: number
+          bill_month: string
+          bill_type: string
+          created_at: string
+          current_reading: number | null
+          id: string
+          previous_reading: number | null
+          property_id: string
+          rate_per_unit: number
+          room_id: string
+          status: string
+          tenant_id: string
+          units_consumed: number | null
+        }
+        Insert: {
+          amount?: number
+          bill_month: string
+          bill_type?: string
+          created_at?: string
+          current_reading?: number | null
+          id?: string
+          previous_reading?: number | null
+          property_id: string
+          rate_per_unit?: number
+          room_id: string
+          status?: string
+          tenant_id: string
+          units_consumed?: number | null
+        }
+        Update: {
+          amount?: number
+          bill_month?: string
+          bill_type?: string
+          created_at?: string
+          current_reading?: number | null
+          id?: string
+          previous_reading?: number | null
+          property_id?: string
+          rate_per_unit?: number
+          room_id?: string
+          status?: string
+          tenant_id?: string
+          units_consumed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "utility_bills_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "utility_bills_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vacancy_notices: {
         Row: {
           created_at: string
@@ -979,6 +1095,56 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visitor_logs: {
+        Row: {
+          check_in: string
+          check_out: string | null
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          property_id: string
+          purpose: string
+          tenant_id: string | null
+          visitor_name: string
+          visitor_phone: string | null
+        }
+        Insert: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          purpose?: string
+          tenant_id?: string | null
+          visitor_name: string
+          visitor_phone?: string | null
+        }
+        Update: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          purpose?: string
+          tenant_id?: string | null
+          visitor_name?: string
+          visitor_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitor_logs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
