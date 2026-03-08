@@ -83,6 +83,15 @@ const Tenants = () => {
   const [tenantPhone, setTenantPhone] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
 
+  // Transfer / Swap state
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferPropertyId, setTransferPropertyId] = useState("");
+  const [transferRoomId, setTransferRoomId] = useState("");
+  const [transferring, setTransferring] = useState(false);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const [swapTargetId, setSwapTargetId] = useState("");
+  const [swapping, setSwapping] = useState(false);
+
   const fetchData = async () => {
     if (!user) return;
     const [assignRes, propRes, roomRes, subRes] = await Promise.all([
