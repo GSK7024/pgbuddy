@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Building2, Home, Users, CreditCard, BarChart3, Receipt,
   LogOut, Menu, X, MessageSquare, BellDot, Settings, Megaphone, QrCode, Share2, User, Crown, Camera, UtensilsCrossed, Gift,
+  FileText, UserCheck, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +29,9 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("sidebar.manageListing"), href: "/dashboard/listing", icon: Camera },
   { name: t("sidebar.mealMenu"), href: "/dashboard/meal-menu", icon: UtensilsCrossed },
   { name: "Refer & Earn", href: "/dashboard/referrals", icon: Gift },
+  { name: "Documents", href: "/dashboard/documents", icon: FileText },
+  { name: "Visitor Log", href: "/dashboard/visitors", icon: UserCheck },
+  { name: "Utility Bills", href: "/dashboard/utility-bills", icon: Zap },
 ];
 
 const bottomLinks = [

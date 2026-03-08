@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
   LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star, UtensilsCrossed, MessageCircle,
+  ClipboardCheck, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +22,8 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("tenant.reviews"), href: "/tenant/reviews", icon: Star },
   { name: t("tenant.mealMenu"), href: "/tenant/meal-menu", icon: UtensilsCrossed },
   { name: "Community Chat", href: "/tenant/chat", icon: MessageCircle },
+  { name: "Onboarding", href: "/tenant/onboarding", icon: ClipboardCheck },
+  { name: "My Documents", href: "/tenant/documents", icon: FileText },
 ];
 
 const getBottomLinks = (t: (k: string) => string) => [

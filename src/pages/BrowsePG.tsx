@@ -11,6 +11,7 @@ import Footer from "@/components/landing/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import PropertyMap from "@/components/PropertyMap";
 
 interface RoomInfo {
   id: string;
@@ -317,6 +318,14 @@ const BrowsePG = () => {
               {sorted.map((p, i) => (
                 <PropertyCard key={p.id} property={p} index={i} />
               ))}
+            </div>
+          )}
+
+          {/* Map View */}
+          {!loading && sorted.length > 0 && (
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-lg font-semibold mb-4">📍 PG Locations</h2>
+              <PropertyMap properties={sorted.map(p => ({ id: p.id, name: p.name, city: p.city }))} />
             </div>
           )}
 

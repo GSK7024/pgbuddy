@@ -41,6 +41,11 @@ import TenantMealMenu from "./pages/TenantMealMenu";
 import Referrals from "./pages/Referrals";
 import TenantChat from "./pages/TenantChat";
 import CityPGs from "./pages/CityPGs";
+import TenantOnboarding from "./pages/TenantOnboarding";
+import TenantDocuments from "./pages/TenantDocuments";
+import Documents from "./pages/Documents";
+import VisitorLog from "./pages/VisitorLog";
+import UtilityBills from "./pages/UtilityBills";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +81,9 @@ const App = () => (
               <Route path="/dashboard/listing" element={<ProtectedRoute requiredRole="owner"><ManageListing /></ProtectedRoute>} />
               <Route path="/dashboard/meal-menu" element={<ProtectedRoute requiredRole="owner"><MealMenu /></ProtectedRoute>} />
               <Route path="/dashboard/referrals" element={<ProtectedRoute requiredRole="owner"><Referrals /></ProtectedRoute>} />
+              <Route path="/dashboard/documents" element={<ProtectedRoute requiredRole="owner"><Documents /></ProtectedRoute>} />
+              <Route path="/dashboard/visitors" element={<ProtectedRoute requiredRole="owner"><VisitorLog /></ProtectedRoute>} />
+              <Route path="/dashboard/utility-bills" element={<ProtectedRoute requiredRole="owner"><UtilityBills /></ProtectedRoute>} />
               {/* Tenant routes */}
               <Route path="/tenant" element={<ProtectedRoute requiredRole="tenant"><TenantDashboard /></ProtectedRoute>} />
               <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
@@ -87,6 +95,8 @@ const App = () => (
               <Route path="/tenant/reviews" element={<ProtectedRoute requiredRole="tenant"><TenantReviews /></ProtectedRoute>} />
               <Route path="/tenant/meal-menu" element={<ProtectedRoute requiredRole="tenant"><TenantMealMenu /></ProtectedRoute>} />
               <Route path="/tenant/chat" element={<ProtectedRoute requiredRole="tenant"><TenantChat /></ProtectedRoute>} />
+              <Route path="/tenant/onboarding" element={<ProtectedRoute requiredRole="tenant"><TenantOnboarding /></ProtectedRoute>} />
+              <Route path="/tenant/documents" element={<ProtectedRoute requiredRole="tenant"><TenantDocuments /></ProtectedRoute>} />
               {/* SEO city pages */}
               <Route path="/pgs/:city" element={<CityPGs />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
