@@ -66,6 +66,7 @@ const TenantAnalytics = () => {
   const [occupancyData, setOccupancyData] = useState<PropertyOccupancy[]>([]);
   const [revenueData, setRevenueData] = useState<PropertyRevenue[]>([]);
   const [turnoverData, setTurnoverData] = useState<TurnoverMonth[]>([]);
+  const [revenueTrendData, setRevenueTrendData] = useState<{ month: string; collected: number; pending: number }[]>([]);
   const [summary, setSummary] = useState({
     totalBeds: 0, occupiedBeds: 0, totalRevenue: 0, pendingRevenue: 0,
     totalMoveIns: 0, totalMoveOuts: 0, avgStayDays: 0,
