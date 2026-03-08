@@ -13,6 +13,7 @@ const sidebarLinks = [
   { name: "Payments", href: "/tenant/payments", icon: CreditCard },
   { name: "Complaints", href: "/tenant/complaints", icon: MessageSquare },
   { name: "Vacancy Notice", href: "/tenant/notices", icon: BellDot },
+  { name: "Browse PGs", href: "/tenant/marketplace", icon: Search },
 ];
 
 const TenantLayout = ({ children }: { children: React.ReactNode }) => {
