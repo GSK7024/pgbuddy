@@ -748,6 +748,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ ముఖ్యం",
     tipLabel: "💡 చిట్కా",
     importantLabel: "ముఖ్యం",
+    videoSectionTitle: "📹 వీడియో ట్యుటోరియల్స్",
+    videoSectionDesc: "పూర్తి ప్రవాహాన్ని అర్థం చేసుకోవడానికి ఈ వీడియోలు చూడండి.",
+    ownerVideos: [
+      { title: "PG ప్రాపర్టీని ఎలా సెటప్ చేయాలి", description: "ఖాతా సృష్టించడం, ప్రాపర్టీ జోడించడం, గదులు.", videoId: "owner-setup-demo" },
+      { title: "అద్దెదారులను ఆహ్వానించడం", description: "ఆహ్వాన కోడ్ పంపడం, చెల్లింపులు ట్రాక్ చేయడం.", videoId: "owner-tenants-demo" },
+      { title: "చెల్లింపు ట్రాకింగ్", description: "అద్దె చెల్లింపులు ట్రాక్ చేయండి.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "అద్దెదారుగా చేరడం", description: "సైన్ అప్, ఆహ్వాన కోడ్ నమోదు చేయండి.", videoId: "tenant-onboard-demo" },
+      { title: "అద్దె చెల్లించడం", description: "అద్దె చూడండి, రుజువు అప్‌లోడ్ చేయండి.", videoId: "tenant-payment-demo" },
+      { title: "అద్దెదారు ఫీచర్లు", description: "ఫిర్యాదులు, భోజనం, ప్రకటనలు, చాట్.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. ఖాతా సృష్టించడం & లాగిన్",
