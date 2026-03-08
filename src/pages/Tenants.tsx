@@ -64,6 +64,7 @@ const Tenants = () => {
   const [roomId, setRoomId] = useState("");
   const [moveInDate, setMoveInDate] = useState(new Date().toISOString().split("T")[0]);
   const [customRent, setCustomRent] = useState("");
+  const [assignPhone, setAssignPhone] = useState("");
   const [foundTenant, setFoundTenant] = useState<{ user_id: string; full_name: string } | null>(null);
   const [searching, setSearching] = useState(false);
 
@@ -182,6 +183,11 @@ const Tenants = () => {
       custom_rent: rentValue,
     });
 
+    // Save phone number to tenant profile
+    if (!error && assignPhone.trim()) {
+      await supabase.from("profiles").update({ phone: assignPhone.trim() }).eq("user_id", foundTenant.user_id);
+    }
+
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       setAssigning(false);
@@ -199,7 +205,7 @@ const Tenants = () => {
   const resetForm = () => {
     setTenantEmail(""); setPropertyId(""); setRoomId("");
     setMoveInDate(new Date().toISOString().split("T")[0]);
-    setCustomRent(""); setFoundTenant(null);
+    setCustomRent(""); setAssignPhone(""); setFoundTenant(null);
   };
 
   const handleDeactivate = async (id: string, rId: string) => {
@@ -386,6 +392,12 @@ const Tenants = () => {
                     <Label>Move-in Date</Label>
                     <Input type="date" value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Phone Number</Label>
+                    <Input type="tel" value={assignPhone} onChange={e => setAssignPhone(e.target.value)} placeholder="+91 XXXXXXXXXX" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Rent (₹)</Label>
                     <Input type="number" value={customRent} onChange={e => setCustomRent(e.target.value)} placeholder="Room default" />
