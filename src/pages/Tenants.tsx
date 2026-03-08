@@ -74,6 +74,7 @@ const Tenants = () => {
   const [idProofNumber, setIdProofNumber] = useState("");
   const [tenantNotes, setTenantNotes] = useState("");
   const [detailRent, setDetailRent] = useState("");
+  const [rentChangeNote, setRentChangeNote] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
 
   const fetchData = async () => {
@@ -260,7 +261,9 @@ const Tenants = () => {
         old_rent: Number(oldRent),
         new_rent: Number(newRent),
         changed_by: user.id,
+        notes: rentChangeNote.trim() || null,
       });
+      setRentChangeNote("");
       // Refresh history
       const { data: hist } = await supabase.from("rent_history").select("id, old_rent, new_rent, changed_at, notes").eq("assignment_id", detailTenant.id).order("changed_at", { ascending: false });
       setRentHistory(hist ?? []);
@@ -484,6 +487,13 @@ const Tenants = () => {
                   <p className="text-xs text-muted-foreground">
                     Room default: ₹{Number((detailTenant as any).rooms?.rent_amount ?? 0).toLocaleString()}. Set a custom amount to override.
                   </p>
+                  <Textarea
+                    value={rentChangeNote}
+                    onChange={e => setRentChangeNote(e.target.value)}
+                    placeholder="Reason for rent change (e.g. AC added, early payment discount)..."
+                    rows={2}
+                    className="text-sm"
+                  />
                 </div>
 
                 {/* Rent History */}
@@ -494,13 +504,16 @@ const Tenants = () => {
                     </h4>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
                       {rentHistory.map(h => (
-                        <div key={h.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-xs">
-                          <div>
-                            <span className="text-muted-foreground">₹{Number(h.old_rent ?? 0).toLocaleString()}</span>
-                            <span className="mx-1.5">→</span>
-                            <span className="font-semibold">₹{Number(h.new_rent).toLocaleString()}</span>
+                        <div key={h.id} className="p-2 rounded-lg bg-muted/50 text-xs space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-muted-foreground">₹{Number(h.old_rent ?? 0).toLocaleString()}</span>
+                              <span className="mx-1.5">→</span>
+                              <span className="font-semibold">₹{Number(h.new_rent).toLocaleString()}</span>
+                            </div>
+                            <span className="text-muted-foreground">{new Date(h.changed_at).toLocaleDateString()}</span>
                           </div>
-                          <span className="text-muted-foreground">{new Date(h.changed_at).toLocaleDateString()}</span>
+                          {h.notes && <p className="text-muted-foreground italic">{h.notes}</p>}
                         </div>
                       ))}
                     </div>
