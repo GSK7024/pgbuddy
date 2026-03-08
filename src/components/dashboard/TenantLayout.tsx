@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
@@ -35,56 +35,62 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
   const sidebarLinks = getSidebarLinks(t);
   const bottomLinks = getBottomLinks(t);
+  const currentPath = location.pathname;
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  const currentPath = window.location.pathname;
-
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <>
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {sidebarLinks.map((link) => (
-          <Link
-            key={link.name}
-            to={link.href}
-            onClick={onClick}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              currentPath === link.href
-                ? "gradient-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <link.icon className="w-4 h-4" />
-            {link.name}
-          </Link>
-        ))}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {sidebarLinks.map((link) => {
+          const isActive = currentPath === link.href;
+          return (
+            <Link
+              key={link.name}
+              to={link.href}
+              onClick={onClick}
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "gradient-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+              }`}
+            >
+              <link.icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{link.name}</span>
+            </Link>
+          );
+        })}
       </nav>
-      <div className="p-4 border-t border-border space-y-1">
-        {bottomLinks.map((link) => (
-          <Link
-            key={link.name}
-            to={link.href}
-            onClick={onClick}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              currentPath === link.href
-                ? "gradient-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <link.icon className="w-4 h-4" />
-            {link.name}
-          </Link>
-        ))}
+      <div className="px-3 py-4 border-t border-border/50 space-y-0.5">
+        {bottomLinks.map((link) => {
+          const isActive = currentPath === link.href;
+          return (
+            <Link
+              key={link.name}
+              to={link.href}
+              onClick={onClick}
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "gradient-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+              }`}
+            >
+              <link.icon className="w-4 h-4" />
+              {link.name}
+            </Link>
+          );
+        })}
         <div className="flex items-center justify-between px-3 py-1">
           <LanguageSwitcher />
         </div>
-        <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
+        <Button variant="ghost" size="sm" className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive" onClick={handleSignOut}>
           <LogOut className="w-4 h-4" />
           {t("nav.signOut")}
         </Button>
@@ -95,13 +101,13 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-card fixed h-full z-30">
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
+      <aside className="hidden lg:flex flex-col w-64 border-r border-border/50 bg-card/80 backdrop-blur-sm fixed h-full z-30">
+        <div className="p-5 border-b border-border/50 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md">
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold gradient-text">PG Manager</span>
+            <span className="text-lg font-bold gradient-text tracking-tight">PG Manager</span>
           </Link>
           <NotificationBell />
         </div>
@@ -109,17 +115,17 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-card border-b border-border">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 glass border-b border-border/50">
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-sm">
               <Building2 className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-bold gradient-text">PG Manager</span>
           </Link>
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-muted">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-xl hover:bg-muted/50 transition-colors">
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
@@ -128,11 +134,12 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-30 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)}>
+        <div className="lg:hidden fixed inset-0 z-30 bg-background/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)}>
           <motion.aside
             initial={{ x: -280 }}
             animate={{ x: 0 }}
-            className="w-64 h-full bg-card border-r border-border flex flex-col pt-16"
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="w-64 h-full bg-card border-r border-border/50 flex flex-col pt-16 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <NavLinks onClick={() => setSidebarOpen(false)} />
@@ -142,7 +149,7 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 pt-14 lg:pt-0">
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8 page-enter">
           {children}
         </div>
       </main>
