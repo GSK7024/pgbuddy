@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee } from "lucide-react";
+import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,7 @@ const Tenants = () => {
   const [assigning, setAssigning] = useState(false);
   const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [rentHistory, setRentHistory] = useState<{ id: string; old_rent: number | null; new_rent: number; changed_at: string; notes: string | null }[]>([]);
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
@@ -200,10 +201,13 @@ const Tenants = () => {
     setIdProofNumber(a.id_proof_number ?? "");
     setTenantNotes(a.notes ?? "");
     setDetailRent(String(a.custom_rent ?? (a as any).rooms?.rent_amount ?? ""));
-    // Fetch documents
-    const { data } = await supabase.storage.from("tenant-documents").list(a.id);
-    if (data && data.length > 0) {
-      const docs = data.map(f => {
+    // Fetch documents and rent history in parallel
+    const [docsRes, historyRes] = await Promise.all([
+      supabase.storage.from("tenant-documents").list(a.id),
+      supabase.from("rent_history").select("id, old_rent, new_rent, changed_at, notes").eq("assignment_id", a.id).order("changed_at", { ascending: false }),
+    ]);
+    if (docsRes.data && docsRes.data.length > 0) {
+      const docs = docsRes.data.map(f => {
         const { data: urlData } = supabase.storage.from("tenant-documents").getPublicUrl(`${a.id}/${f.name}`);
         return { name: f.name, url: urlData.publicUrl };
       });
@@ -211,12 +215,16 @@ const Tenants = () => {
     } else {
       setDocuments([]);
     }
+    setRentHistory(historyRes.data ?? []);
   };
 
   const saveDetails = async () => {
-    if (!detailTenant) return;
+    if (!detailTenant || !user) return;
     setSavingDetails(true);
     const rentValue = detailRent ? parseFloat(detailRent) : null;
+    const oldRent = detailTenant.custom_rent ?? (detailTenant as any).rooms?.rent_amount ?? 0;
+    const newRent = rentValue ?? (detailTenant as any).rooms?.rent_amount ?? 0;
+
     const { error } = await supabase.from("tenant_assignments").update({
       emergency_contact_name: emergencyName || null,
       emergency_contact_phone: emergencyPhone || null,
@@ -225,6 +233,19 @@ const Tenants = () => {
       notes: tenantNotes || null,
       custom_rent: rentValue,
     }).eq("id", detailTenant.id);
+
+    // Log rent change if different
+    if (!error && Number(oldRent) !== Number(newRent)) {
+      await supabase.from("rent_history").insert({
+        assignment_id: detailTenant.id,
+        old_rent: Number(oldRent),
+        new_rent: Number(newRent),
+        changed_by: user.id,
+      });
+      // Refresh history
+      const { data: hist } = await supabase.from("rent_history").select("id, old_rent, new_rent, changed_at, notes").eq("assignment_id", detailTenant.id).order("changed_at", { ascending: false });
+      setRentHistory(hist ?? []);
+    }
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -434,6 +455,27 @@ const Tenants = () => {
                     Room default: ₹{Number((detailTenant as any).rooms?.rent_amount ?? 0).toLocaleString()}. Set a custom amount to override.
                   </p>
                 </div>
+
+                {/* Rent History */}
+                {rentHistory.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2 text-sm">
+                      <History className="w-4 h-4 text-primary" /> Rent History
+                    </h4>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {rentHistory.map(h => (
+                        <div key={h.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-xs">
+                          <div>
+                            <span className="text-muted-foreground">₹{Number(h.old_rent ?? 0).toLocaleString()}</span>
+                            <span className="mx-1.5">→</span>
+                            <span className="font-semibold">₹{Number(h.new_rent).toLocaleString()}</span>
+                          </div>
+                          <span className="text-muted-foreground">{new Date(h.changed_at).toLocaleDateString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <Separator />
 
