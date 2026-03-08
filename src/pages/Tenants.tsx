@@ -58,6 +58,8 @@ const Tenants = () => {
   const [uploading, setUploading] = useState(false);
   const [rentHistory, setRentHistory] = useState<{ id: string; old_rent: number | null; new_rent: number; changed_at: string; notes: string | null }[]>([]);
   const [tenantLimit, setTenantLimit] = useState(5);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterPropertyId, setFilterPropertyId] = useState("all");
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
@@ -413,6 +415,35 @@ const Tenants = () => {
           </Dialog>
         </div>
 
+        {/* Search & Filter Bar */}
+        {!loading && assignments.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by tenant name or phone..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <Select value={filterPropertyId} onValueChange={setFilterPropertyId}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="All Properties" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Properties</SelectItem>
+                {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-muted-foreground">Loading...</p>
         ) : assignments.length === 0 ? (
@@ -424,8 +455,16 @@ const Tenants = () => {
             </CardContent>
           </Card>
         ) : (() => {
-          const activeTenants = assignments.filter(a => a.is_active);
-          const movedOutTenants = assignments.filter(a => !a.is_active);
+          const query = searchQuery.toLowerCase().trim();
+          const filtered = assignments.filter(a => {
+            const matchesProperty = filterPropertyId === "all" || a.property_id === filterPropertyId;
+            const matchesSearch = !query ||
+              (a.profiles?.full_name || "").toLowerCase().includes(query) ||
+              (a.profiles?.phone || "").toLowerCase().includes(query);
+            return matchesProperty && matchesSearch;
+          });
+          const activeTenants = filtered.filter(a => a.is_active);
+          const movedOutTenants = filtered.filter(a => !a.is_active);
 
           const TenantCard = ({ a }: { a: TenantAssignment }) => (
             <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(a)}>
