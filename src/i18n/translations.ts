@@ -1,4 +1,4 @@
-export type Language = "en" | "hi" | "mr" | "ta" | "te" | "kn" | "ml" | "bn" | "gu" | "pa";
+export type Language = "en" | "hi" | "mr" | "ta" | "te" | "kn" | "ml" | "bn" | "gu" | "pa" | "or" | "as";
 
 export const translations: Record<Language, Record<string, string>> = {
   en: {
@@ -76,6 +76,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   hi: {
@@ -153,6 +155,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   mr: {
@@ -230,6 +234,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Tamil
@@ -308,6 +314,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Telugu
@@ -386,6 +394,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Kannada
@@ -464,6 +474,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Malayalam
@@ -542,6 +554,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Bengali
@@ -620,6 +634,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Gujarati
@@ -698,6 +714,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Punjabi
@@ -776,5 +794,165 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
+  },
+
+  or: {
+    "app.name": "PG ମ୍ୟାନେଜର",
+    "nav.findPg": "PG ଖୋଜନ୍ତୁ",
+    "nav.listPg": "ଆପଣଙ୍କ PG ତାଲିକାଭୁକ୍ତ କରନ୍ତୁ",
+    "nav.about": "ଆମ ବିଷୟରେ",
+    "nav.login": "ଲଗଇନ",
+    "nav.getStarted": "ଆରମ୍ଭ କରନ୍ତୁ",
+    "nav.signOut": "ସାଇନ ଆଉଟ",
+
+    "sidebar.overview": "ସାରାଂଶ",
+    "sidebar.properties": "ସମ୍ପତ୍ତି",
+    "sidebar.rooms": "କୋଠରୀ",
+    "sidebar.tenants": "ଭଡ଼ାଟିଆ",
+    "sidebar.invitations": "ନିମନ୍ତ୍ରଣ",
+    "sidebar.payments": "ଭୁଗତାନ",
+    "sidebar.paymentSetup": "ଭୁଗତାନ ସେଟଅପ",
+    "sidebar.expenses": "ଖର୍ଚ୍ଚ",
+    "sidebar.complaints": "ଅଭିଯୋଗ",
+    "sidebar.notices": "ସୂଚନା",
+    "sidebar.announcements": "ଘୋଷଣା",
+    "sidebar.manageListing": "ତାଲିକା ପରିଚାଳନା",
+    "sidebar.subscription": "ସବସ୍କ୍ରିପସନ",
+    "sidebar.profile": "ପ୍ରୋଫାଇଲ",
+    "sidebar.mealMenu": "ଖାଦ୍ୟ ତାଲିକା",
+
+    "tenant.myRoom": "ମୋ କୋଠରୀ",
+    "tenant.payments": "ଭୁଗତାନ",
+    "tenant.complaints": "ଅଭିଯୋଗ",
+    "tenant.vacancyNotice": "ଖାଲି ସୂଚନା",
+    "tenant.announcements": "ଘୋଷଣା",
+    "tenant.browsePgs": "PG ବ୍ରାଉଜ କରନ୍ତୁ",
+    "tenant.reviews": "ସମୀକ୍ଷା",
+    "tenant.mealMenu": "ଖାଦ୍ୟ ତାଲିକା",
+
+    "meal.title": "ଖାଦ୍ୟ ତାଲିକା",
+    "meal.subtitle": "ଆପଣଙ୍କ ଭଡ଼ାଟିଆଙ୍କ ପାଇଁ ଦୈନିକ ଖାଦ୍ୟ ତାଲିକା ପରିଚାଳନା କରନ୍ତୁ",
+    "meal.tenantSubtitle": "ଆଜିର ଏବଂ ଆସନ୍ତା ଖାଦ୍ୟ ସମୟସୂଚୀ ଦେଖନ୍ତୁ",
+    "meal.breakfast": "ଜଳଖିଆ",
+    "meal.lunch": "ମଧ୍ୟାହ୍ନ ଭୋଜନ",
+    "meal.dinner": "ରାତ୍ରି ଭୋଜନ",
+    "meal.snacks": "ଜଳଖିଆ",
+    "meal.save": "ତାଲିକା ସେଭ କରନ୍ତୁ",
+    "meal.saved": "ତାଲିକା ସେଭ ହୋଇଗଲା!",
+    "meal.selectDate": "ତାରିଖ ବାଛନ୍ତୁ",
+    "meal.noMenu": "ଏହି ଦିନ ପାଇଁ ତାଲିକା ସେଟ ହୋଇନାହିଁ",
+    "meal.todayMenu": "ଆଜିର ତାଲିକା",
+
+    "hero.badge": "ଭାରତର #1 PG ପରିଚାଳନା ପ୍ଲାଟଫର୍ମ",
+    "hero.title1": "ଆପଣଙ୍କ",
+    "hero.title2": "PG ବ୍ୟବସାୟ",
+    "hero.title3": "ପ୍ରୋ ପରି ପରିଚାଳନା କରନ୍ତୁ",
+    "hero.subtitle": "PG ମାଲିକ ଏବଂ ଭଡ଼ାଟିଆଙ୍କ ପାଇଁ ସମ୍ପୂର୍ଣ୍ଣ ସମାଧାନ। ସମ୍ପତ୍ତି ପରିଚାଳନା, ଭଡ଼ା ସଂଗ୍ରହ, ଖର୍ଚ୍ଚ ଟ୍ରାକ – ସବୁ ଗୋଟିଏ ଜାଗାରେ।",
+    "hero.listPg": "ଆପଣଙ୍କ PG ତାଲିକାଭୁକ୍ତ କରନ୍ତୁ",
+    "hero.findPg": "PG ଖୋଜନ୍ତୁ",
+
+    "cta.badge": "2 ମିନିଟରେ ଆରମ୍ଭ କରନ୍ତୁ",
+    "cta.title1": "ଆପଣଙ୍କ",
+    "cta.title2": "PG ବ୍ୟବସାୟ ବଦଳାଇବାକୁ ପ୍ରସ୍ତୁତ?",
+    "cta.subtitle": "ହଜାର ହଜାର PG ମାଲିକ ଏବଂ ଭଡ଼ାଟିଆଙ୍କ ସହ ଯୋଗ ଦିଅନ୍ତୁ ଯେଉଁମାନେ ସହଜ ସମ୍ପତ୍ତି ପରିଚାଳନା ଉପଭୋଗ କରୁଛନ୍ତି।",
+    "cta.getStarted": "ମାଗଣାରେ ଆରମ୍ଭ କରନ୍ତୁ",
+    "cta.browsePgs": "PG ବ୍ରାଉଜ କରନ୍ତୁ",
+    "cta.free": "ଆରମ୍ଭ ମାଗଣା",
+    "cta.noCard": "କ୍ରେଡିଟ କାର୍ଡ ଆବଶ୍ୟକ ନାହିଁ",
+    "cta.quick": "ମିନିଟରେ ସେଟଅପ",
+
+    "lang.en": "English",
+    "lang.hi": "हिंदी",
+    "lang.mr": "मराठी",
+    "lang.ta": "தமிழ்",
+    "lang.te": "తెలుగు",
+    "lang.kn": "ಕನ್ನಡ",
+    "lang.ml": "മലയാളം",
+    "lang.bn": "বাংলা",
+    "lang.gu": "ગુજરાતી",
+    "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
+  },
+
+  as: {
+    "app.name": "PG মেনেজাৰ",
+    "nav.findPg": "PG বিচাৰক",
+    "nav.listPg": "আপোনাৰ PG তালিকাভুক্ত কৰক",
+    "nav.about": "আমাৰ বিষয়ে",
+    "nav.login": "লগইন",
+    "nav.getStarted": "আৰম্ভ কৰক",
+    "nav.signOut": "ছাইন আউট",
+
+    "sidebar.overview": "সাৰাংশ",
+    "sidebar.properties": "সম্পত্তি",
+    "sidebar.rooms": "কোঠা",
+    "sidebar.tenants": "ভাড়াতীয়া",
+    "sidebar.invitations": "নিমন্ত্ৰণ",
+    "sidebar.payments": "পৰিশোধ",
+    "sidebar.paymentSetup": "পৰিশোধ ছেটআপ",
+    "sidebar.expenses": "খৰচ",
+    "sidebar.complaints": "অভিযোগ",
+    "sidebar.notices": "জাননী",
+    "sidebar.announcements": "ঘোষণা",
+    "sidebar.manageListing": "তালিকা পৰিচালনা",
+    "sidebar.subscription": "চাবস্ক্ৰিপচন",
+    "sidebar.profile": "প্ৰ'ফাইল",
+    "sidebar.mealMenu": "খাদ্য তালিকা",
+
+    "tenant.myRoom": "মোৰ কোঠা",
+    "tenant.payments": "পৰিশোধ",
+    "tenant.complaints": "অভিযোগ",
+    "tenant.vacancyNotice": "খালী জাননী",
+    "tenant.announcements": "ঘোষণা",
+    "tenant.browsePgs": "PG ব্ৰাউজ কৰক",
+    "tenant.reviews": "সমীক্ষা",
+    "tenant.mealMenu": "খাদ্য তালিকা",
+
+    "meal.title": "খাদ্য তালিকা",
+    "meal.subtitle": "আপোনাৰ ভাড়াতীয়াসকলৰ বাবে দৈনিক খাদ্য তালিকা পৰিচালনা কৰক",
+    "meal.tenantSubtitle": "আজিৰ আৰু আগন্তুক খাদ্য সময়সূচী চাওক",
+    "meal.breakfast": "পুৱাৰ জলপান",
+    "meal.lunch": "দুপৰীয়াৰ আহাৰ",
+    "meal.dinner": "ৰাতিৰ আহাৰ",
+    "meal.snacks": "জলপান",
+    "meal.save": "তালিকা সংৰক্ষণ কৰক",
+    "meal.saved": "তালিকা সংৰক্ষিত হ'ল!",
+    "meal.selectDate": "তাৰিখ বাছক",
+    "meal.noMenu": "এই দিনৰ বাবে তালিকা নিৰ্ধাৰিত হোৱা নাই",
+    "meal.todayMenu": "আজিৰ তালিকা",
+
+    "hero.badge": "ভাৰতৰ #1 PG পৰিচালনা প্লেটফৰ্ম",
+    "hero.title1": "আপোনাৰ",
+    "hero.title2": "PG ব্যৱসায়",
+    "hero.title3": "প্ৰ'ৰ দৰে পৰিচালনা কৰক",
+    "hero.subtitle": "PG মালিক আৰু ভাড়াতীয়াসকলৰ বাবে সম্পূৰ্ণ সমাধান। সম্পত্তি পৰিচালনা, ভাড়া সংগ্ৰহ, খৰচ অনুসৰণ – সকলো এটা ঠাইত।",
+    "hero.listPg": "আপোনাৰ PG তালিকাভুক্ত কৰক",
+    "hero.findPg": "PG বিচাৰক",
+
+    "cta.badge": "2 মিনিটত আৰম্ভ কৰক",
+    "cta.title1": "আপোনাৰ",
+    "cta.title2": "PG ব্যৱসায় সলনি কৰিবলৈ সাজু?",
+    "cta.subtitle": "হাজাৰ হাজাৰ PG মালিক আৰু ভাড়াতীয়াৰ সৈতে যোগদান কৰক যিসকলে ইতিমধ্যে সহজ সম্পত্তি পৰিচালনা উপভোগ কৰি আছে।",
+    "cta.getStarted": "বিনামূলীয়াকৈ আৰম্ভ কৰক",
+    "cta.browsePgs": "PG ব্ৰাউজ কৰক",
+    "cta.free": "আৰম্ভ বিনামূলীয়া",
+    "cta.noCard": "ক্ৰেডিট কাৰ্ড প্ৰয়োজন নাই",
+    "cta.quick": "মিনিটত ছেটআপ",
+
+    "lang.en": "English",
+    "lang.hi": "हिंदी",
+    "lang.mr": "मराठी",
+    "lang.ta": "தமிழ்",
+    "lang.te": "తెలుగు",
+    "lang.kn": "ಕನ್ನಡ",
+    "lang.ml": "മലയാളം",
+    "lang.bn": "বাংলা",
+    "lang.gu": "ગુજરાતી",
+    "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 };

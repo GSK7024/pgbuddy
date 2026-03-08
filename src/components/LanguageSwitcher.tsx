@@ -23,6 +23,8 @@ const languages: { code: Language; label: string; flag: string; region?: string 
   { code: "te", label: "తెలుగు", flag: "🇮🇳", region: "South" },
   { code: "kn", label: "ಕನ್ನಡ", flag: "🇮🇳", region: "South" },
   { code: "ml", label: "മലയാളം", flag: "🇮🇳", region: "South" },
+  { code: "or", label: "ଓଡ଼ିଆ", flag: "🇮🇳", region: "East" },
+  { code: "as", label: "অসমীয়া", flag: "🇮🇳", region: "East" },
 ];
 
 const LanguageSwitcher = ({ variant = "ghost" }: { variant?: "ghost" | "outline" }) => {
