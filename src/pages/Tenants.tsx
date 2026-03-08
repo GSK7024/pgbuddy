@@ -205,7 +205,7 @@ const Tenants = () => {
   const resetForm = () => {
     setTenantEmail(""); setPropertyId(""); setRoomId("");
     setMoveInDate(new Date().toISOString().split("T")[0]);
-    setCustomRent(""); setFoundTenant(null);
+    setCustomRent(""); setAssignPhone(""); setFoundTenant(null);
   };
 
   const handleDeactivate = async (id: string, rId: string) => {
