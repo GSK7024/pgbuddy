@@ -34,6 +34,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: "Utility Bills", href: "/dashboard/utility-bills", icon: Zap },
   { name: "Analytics", href: "/dashboard/analytics", icon: PieChart },
   { name: "Activity Log", href: "/dashboard/audit-logs", icon: Activity },
+  { name: "Move-Out", href: "/dashboard/move-out", icon: LogOut },
   { name: "Staff", href: "/dashboard/staff", icon: ShieldCheck },
 ];
 
