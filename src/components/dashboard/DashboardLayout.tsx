@@ -24,6 +24,7 @@ const sidebarLinks = [
 ];
 
 const bottomLinks = [
+  { name: "Subscription", href: "/dashboard/subscription", icon: Crown },
   { name: "Profile", href: "/dashboard/profile", icon: User },
 ];
 
