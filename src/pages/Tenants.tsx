@@ -256,6 +256,11 @@ const Tenants = () => {
       custom_rent: rentValue,
     }).eq("id", detailTenant.id);
 
+    // Update tenant phone in profiles
+    if (!error && tenantPhone !== (detailTenant.profiles?.phone ?? "")) {
+      await supabase.from("profiles").update({ phone: tenantPhone.trim() || null }).eq("user_id", detailTenant.tenant_id);
+    }
+
     // Log rent change if different
     if (!error && Number(oldRent) !== Number(newRent)) {
       await supabase.from("rent_history").insert({
