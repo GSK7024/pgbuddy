@@ -536,6 +536,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ महत्त्वाचे",
     tipLabel: "💡 टीप",
     importantLabel: "महत्त्वाचे",
+    videoSectionTitle: "📹 व्हिडिओ ट्यूटोरियल",
+    videoSectionDesc: "संपूर्ण प्रवाह समजून घेण्यासाठी हे व्हिडिओ पहा.",
+    ownerVideos: [
+      { title: "PG प्रॉपर्टी कशी सेट करावी", description: "खाते तयार करणे, प्रॉपर्टी जोडणे, खोल्या आणि सेटिंग्ज.", videoId: "owner-setup-demo" },
+      { title: "भाडेकरूंना कसे आमंत्रित करावे", description: "इन्व्हाइट कोड पाठवणे, पेमेंट ट्रॅक करणे.", videoId: "owner-tenants-demo" },
+      { title: "पेमेंट ट्रॅकिंग आणि रिपोर्ट", description: "भाडे पेमेंट ट्रॅक करा, प्रूफ मंजूर करा.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "भाडेकरू म्हणून कसे सामील व्हावे", description: "साइन अप, इन्व्हाइट कोड टाका आणि डॅशबोर्ड.", videoId: "tenant-onboard-demo" },
+      { title: "भाडे भरणे आणि प्रूफ अपलोड", description: "भाडे पहा, पेमेंट प्रूफ अपलोड करा.", videoId: "tenant-payment-demo" },
+      { title: "भाडेकरू सुविधा", description: "तक्रारी, जेवण मेनू, घोषणा, चॅट.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. खाते तयार करणे आणि लॉगिन",
