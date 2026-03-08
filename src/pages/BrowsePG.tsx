@@ -321,6 +321,14 @@ const BrowsePG = () => {
             </div>
           )}
 
+          {/* Map View */}
+          {!loading && sorted.length > 0 && (
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-lg font-semibold mb-4">📍 PG Locations</h2>
+              <PropertyMap properties={sorted.map(p => ({ id: p.id, name: p.name, city: p.city }))} />
+            </div>
+          )}
+
           {/* City links for SEO */}
           <div className="max-w-5xl mx-auto pt-8">
             <h2 className="text-lg font-semibold mb-4 text-center">Browse PGs by City</h2>
