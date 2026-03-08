@@ -64,6 +64,7 @@ const Tenants = () => {
   const [roomId, setRoomId] = useState("");
   const [moveInDate, setMoveInDate] = useState(new Date().toISOString().split("T")[0]);
   const [customRent, setCustomRent] = useState("");
+  const [assignPhone, setAssignPhone] = useState("");
   const [foundTenant, setFoundTenant] = useState<{ user_id: string; full_name: string } | null>(null);
   const [searching, setSearching] = useState(false);
 
