@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
-  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star,
+  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star, UtensilsCrossed,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationBell from "@/components/NotificationBell";
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const sidebarLinks = [
   { name: "My Room", href: "/tenant", icon: LayoutDashboard },
