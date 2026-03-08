@@ -487,6 +487,13 @@ const Tenants = () => {
                   <p className="text-xs text-muted-foreground">
                     Room default: ₹{Number((detailTenant as any).rooms?.rent_amount ?? 0).toLocaleString()}. Set a custom amount to override.
                   </p>
+                  <Textarea
+                    value={rentChangeNote}
+                    onChange={e => setRentChangeNote(e.target.value)}
+                    placeholder="Reason for rent change (e.g. AC added, early payment discount)..."
+                    rows={2}
+                    className="text-sm"
+                  />
                 </div>
 
                 {/* Rent History */}
