@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import NotificationBell from "@/components/NotificationBell";
 
 const sidebarLinks = [
   { name: "My Room", href: "/tenant", icon: LayoutDashboard },
@@ -81,13 +82,14 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-card fixed h-full z-30">
-        <div className="p-6 border-b border-border">
+        <div className="p-6 border-b border-border flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-lg font-bold gradient-text">PG Manager</span>
           </Link>
+          <NotificationBell />
         </div>
         <NavLinks />
       </aside>
@@ -101,9 +103,12 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
             <span className="font-bold gradient-text">PG Manager</span>
           </Link>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-muted">
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-muted">
+              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
