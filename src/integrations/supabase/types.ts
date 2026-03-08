@@ -384,6 +384,7 @@ export type Database = {
       tenant_assignments: {
         Row: {
           created_at: string
+          custom_rent: number | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           id: string
@@ -399,6 +400,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_rent?: number | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           id?: string
@@ -414,6 +416,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_rent?: number | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           id?: string

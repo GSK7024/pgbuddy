@@ -1,0 +1,1 @@
+ALTER TABLE public.tenant_assignments ADD COLUMN custom_rent numeric;
