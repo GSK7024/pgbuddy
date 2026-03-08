@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("sidebar.overview"), href: "/dashboard", icon: BarChart3 },
@@ -128,6 +129,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </Link>
         <div className="flex items-center justify-between px-3 py-1">
           <LanguageSwitcher />
+          <ThemeToggle />
         </div>
         <Button variant="ghost" size="sm" className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive" onClick={handleSignOut}>
           <LogOut className="w-4 h-4" />

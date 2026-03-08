@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Home, Building2, Users, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,6 +51,7 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-2">
             <LanguageSwitcher />
+            <ThemeToggle />
             <Button variant="ghost" size="sm" asChild>
               <Link to="/auth">
                 <LogIn className="w-4 h-4 mr-1.5" />
