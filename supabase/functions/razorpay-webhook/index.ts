@@ -106,6 +106,47 @@ Deno.serve(async (req) => {
           })
           .eq('razorpay_subscription_id', subscriptionId);
       }
+    } else if (eventType === 'payment.captured') {
+      // Handle rent payment captures
+      const paymentEntity = payload.payment?.entity;
+      const notes = paymentEntity?.notes || {};
+
+      if (notes.type === 'rent_payment' && notes.payment_id) {
+        const razorpayPaymentId = paymentEntity?.id;
+        await supabase
+          .from('rent_payments')
+          .update({
+            status: 'paid',
+            payment_date: new Date().toISOString(),
+            transaction_id: razorpayPaymentId,
+          })
+          .eq('id', notes.payment_id)
+          .eq('status', 'pending');
+
+        // Notify the property owner
+        const { data: rentPayment } = await supabase
+          .from('rent_payments')
+          .select('property_id, month, amount, tenant_id')
+          .eq('id', notes.payment_id)
+          .single();
+
+        if (rentPayment) {
+          const { data: property } = await supabase
+            .from('properties')
+            .select('owner_id, name')
+            .eq('id', rentPayment.property_id)
+            .single();
+
+          if (property) {
+            await supabase.from('notifications').insert({
+              user_id: property.owner_id,
+              title: 'Rent Payment Received',
+              message: `Rent of ₹${rentPayment.amount} for ${rentPayment.month} at ${property.name} has been paid online.`,
+              type: 'payment',
+            });
+          }
+        }
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {

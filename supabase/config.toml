@@ -2,3 +2,6 @@ project_id = "smcdsmwrtrwxdlmrndhk"
 
 [functions.rent-reminders]
 verify_jwt = false
+
+[functions.create-rent-order]
+verify_jwt = false
