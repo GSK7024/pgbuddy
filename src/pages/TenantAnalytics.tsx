@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { Users, Building2, TrendingUp, TrendingDown, IndianRupee, ArrowRightLeft, Home } from "lucide-react";
+import { Users, TrendingUp, IndianRupee, ArrowRightLeft, Home, CalendarIcon } from "lucide-react";
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, eachMonthOfInterval } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
-
-const COLORS = ["hsl(var(--primary))", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#6366f1"];
 
 interface PropertyOccupancy {
   name: string;
@@ -32,9 +34,35 @@ interface TurnoverMonth {
   moveOuts: number;
 }
 
+type PresetKey = "last30" | "last3m" | "last6m" | "last12m" | "custom";
+
+const presets: { key: PresetKey; label: string }[] = [
+  { key: "last30", label: "Last 30 days" },
+  { key: "last3m", label: "Last 3 months" },
+  { key: "last6m", label: "Last 6 months" },
+  { key: "last12m", label: "Last 12 months" },
+  { key: "custom", label: "Custom range" },
+];
+
+const getPresetRange = (key: PresetKey): { from: Date; to: Date } => {
+  const now = new Date();
+  switch (key) {
+    case "last30": return { from: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30), to: now };
+    case "last3m": return { from: subMonths(now, 3), to: now };
+    case "last6m": return { from: subMonths(now, 6), to: now };
+    case "last12m": return { from: subMonths(now, 12), to: now };
+    default: return { from: subMonths(now, 6), to: now };
+  }
+};
+
 const TenantAnalytics = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [activePreset, setActivePreset] = useState<PresetKey>("last6m");
+  const [dateRange, setDateRange] = useState(getPresetRange("last6m"));
+  const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
+  const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
+
   const [occupancyData, setOccupancyData] = useState<PropertyOccupancy[]>([]);
   const [revenueData, setRevenueData] = useState<PropertyRevenue[]>([]);
   const [turnoverData, setTurnoverData] = useState<TurnoverMonth[]>([]);
@@ -43,39 +71,71 @@ const TenantAnalytics = () => {
     totalMoveIns: 0, totalMoveOuts: 0, avgStayDays: 0,
   });
 
+  // Raw data cache
+  const [rawData, setRawData] = useState<{
+    properties: { id: string; name: string }[];
+    rooms: { id: string; property_id: string; capacity: number; is_vacant: boolean }[];
+    assignments: any[];
+    payments: any[];
+  }>({ properties: [], rooms: [], assignments: [], payments: [] });
+
   useEffect(() => {
     if (!user) return;
-    fetchAnalytics();
+    fetchRawData();
   }, [user]);
 
-  const fetchAnalytics = async () => {
+  useEffect(() => {
+    if (rawData.properties.length > 0 || !loading) {
+      processAnalytics();
+    }
+  }, [dateRange, rawData]);
+
+  const fetchRawData = async () => {
     if (!user) return;
     const [propRes, roomRes, assignRes, payRes] = await Promise.all([
       supabase.from("properties").select("id, name").eq("owner_id", user.id),
       supabase.from("rooms").select("id, property_id, capacity, is_vacant"),
       supabase.from("tenant_assignments").select("id, property_id, is_active, move_in_date, move_out_date, custom_rent, rooms(rent_amount)"),
-      supabase.from("rent_payments").select("property_id, amount, status"),
+      supabase.from("rent_payments").select("property_id, amount, status, created_at"),
     ]);
+    setRawData({
+      properties: propRes.data ?? [],
+      rooms: roomRes.data ?? [],
+      assignments: assignRes.data ?? [],
+      payments: payRes.data ?? [],
+    });
+    setLoading(false);
+  };
 
-    const properties = propRes.data ?? [];
-    const rooms = roomRes.data ?? [];
-    const assignments = assignRes.data ?? [];
-    const payments = payRes.data ?? [];
+  const processAnalytics = () => {
+    const { properties, rooms, assignments, payments } = rawData;
     const propIds = new Set(properties.map(p => p.id));
+    const { from, to } = dateRange;
 
-    // Filter to owner's properties
     const ownerRooms = rooms.filter(r => propIds.has(r.property_id));
     const ownerAssignments = assignments.filter(a => propIds.has(a.property_id));
     const ownerPayments = payments.filter(p => propIds.has(p.property_id));
 
-    // Occupancy per property
+    // Filter payments by date range
+    const rangePayments = ownerPayments.filter(p => {
+      const d = new Date(p.created_at);
+      return d >= from && d <= to;
+    });
+
+    // Filter assignments active within range for turnover
+    const rangeAssignments = ownerAssignments.filter(a => {
+      const moveIn = new Date(a.move_in_date);
+      const moveOut = a.move_out_date ? new Date(a.move_out_date) : null;
+      return moveIn <= to && (!moveOut || moveOut >= from);
+    });
+
+    // Occupancy (current snapshot - not date-filtered)
     const occData: PropertyOccupancy[] = properties.map(p => {
       const propRooms = ownerRooms.filter(r => r.property_id === p.id);
       const totalBeds = propRooms.reduce((s, r) => s + r.capacity, 0);
       const occupied = ownerAssignments.filter(a => a.property_id === p.id && a.is_active).length;
       return {
-        name: p.name,
-        totalBeds,
+        name: p.name, totalBeds,
         occupied: Math.min(occupied, totalBeds),
         vacant: Math.max(totalBeds - occupied, 0),
         rate: totalBeds > 0 ? Math.round((Math.min(occupied, totalBeds) / totalBeds) * 100) : 0,
@@ -83,26 +143,24 @@ const TenantAnalytics = () => {
     });
     setOccupancyData(occData);
 
-    // Revenue per property
+    // Revenue per property (date-filtered)
     const revData: PropertyRevenue[] = properties.map(p => {
-      const propPayments = ownerPayments.filter(pay => pay.property_id === p.id);
-      const collected = propPayments.filter(pay => pay.status === "paid").reduce((s, pay) => s + Number(pay.amount), 0);
-      const pending = propPayments.filter(pay => pay.status === "pending").reduce((s, pay) => s + Number(pay.amount), 0);
+      const propPay = rangePayments.filter(pay => pay.property_id === p.id);
+      const collected = propPay.filter(pay => pay.status === "paid").reduce((s, pay) => s + Number(pay.amount), 0);
+      const pending = propPay.filter(pay => pay.status === "pending").reduce((s, pay) => s + Number(pay.amount), 0);
       return { name: p.name, collected, pending, total: collected + pending };
     });
     setRevenueData(revData);
 
-    // Turnover - last 6 months
-    const now = new Date();
-    const months: TurnoverMonth[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleString("default", { month: "short", year: "2-digit" });
+    // Turnover by month within range
+    const monthStarts = eachMonthOfInterval({ start: startOfMonth(from), end: endOfMonth(to) });
+    const months: TurnoverMonth[] = monthStarts.map(ms => {
+      const key = format(ms, "yyyy-MM");
+      const label = format(ms, "MMM yy");
       const moveIns = ownerAssignments.filter(a => a.move_in_date?.startsWith(key)).length;
       const moveOuts = ownerAssignments.filter(a => a.move_out_date?.startsWith(key)).length;
-      months.push({ month: label, moveIns, moveOuts });
-    }
+      return { month: label, moveIns, moveOuts };
+    });
     setTurnoverData(months);
 
     // Summary
@@ -113,18 +171,29 @@ const TenantAnalytics = () => {
     const totalMoveIns = months.reduce((s, m) => s + m.moveIns, 0);
     const totalMoveOuts = months.reduce((s, m) => s + m.moveOuts, 0);
 
-    // Avg stay days for moved-out tenants
-    const movedOut = ownerAssignments.filter(a => !a.is_active && a.move_out_date);
+    const movedOut = rangeAssignments.filter(a => !a.is_active && a.move_out_date);
     const avgStay = movedOut.length > 0
-      ? Math.round(movedOut.reduce((s, a) => {
+      ? Math.round(movedOut.reduce((s: number, a: any) => {
           const inD = new Date(a.move_in_date).getTime();
-          const outD = new Date(a.move_out_date!).getTime();
+          const outD = new Date(a.move_out_date).getTime();
           return s + (outD - inD) / (1000 * 60 * 60 * 24);
         }, 0) / movedOut.length)
       : 0;
 
     setSummary({ totalBeds, occupiedBeds, totalRevenue, pendingRevenue, totalMoveIns, totalMoveOuts, avgStayDays: avgStay });
-    setLoading(false);
+  };
+
+  const handlePreset = (key: PresetKey) => {
+    setActivePreset(key);
+    if (key !== "custom") {
+      setDateRange(getPresetRange(key));
+    }
+  };
+
+  const applyCustomRange = () => {
+    if (customFrom && customTo) {
+      setDateRange({ from: customFrom, to: customTo });
+    }
   };
 
   const overallOccupancy = summary.totalBeds > 0 ? Math.round((summary.occupiedBeds / summary.totalBeds) * 100) : 0;
@@ -132,10 +201,79 @@ const TenantAnalytics = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Tenant Analytics</h1>
-          <p className="text-muted-foreground">Occupancy, revenue & turnover insights</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Tenant Analytics</h1>
+            <p className="text-muted-foreground">Occupancy, revenue & turnover insights</p>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {format(dateRange.from, "MMM d, yyyy")} – {format(dateRange.to, "MMM d, yyyy")}
+          </div>
         </div>
+
+        {/* Date Range Filters */}
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {presets.map(p => (
+                <Button
+                  key={p.key}
+                  size="sm"
+                  variant={activePreset === p.key ? "default" : "outline"}
+                  onClick={() => handlePreset(p.key)}
+                  className={activePreset === p.key ? "gradient-primary" : ""}
+                >
+                  {p.label}
+                </Button>
+              ))}
+
+              {activePreset === "custom" && (
+                <div className="flex flex-wrap items-center gap-2 ml-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("gap-1.5", !customFrom && "text-muted-foreground")}>
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        {customFrom ? format(customFrom, "MMM d, yyyy") : "From"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customFrom}
+                        onSelect={setCustomFrom}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-muted-foreground text-sm">→</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("gap-1.5", !customTo && "text-muted-foreground")}>
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        {customTo ? format(customTo, "MMM d, yyyy") : "To"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customTo}
+                        onSelect={setCustomTo}
+                        disabled={(date) => date > new Date() || (customFrom ? date < customFrom : false)}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Button size="sm" onClick={applyCustomRange} disabled={!customFrom || !customTo}>
+                    Apply
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {loading ? (
           <p className="text-muted-foreground">Loading analytics...</p>
@@ -176,7 +314,7 @@ const TenantAnalytics = () => {
                 <Card>
                   <CardContent className="pt-5 pb-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Turnover (6mo)</span>
+                      <span className="text-sm text-muted-foreground">Turnover</span>
                       <ArrowRightLeft className="w-4 h-4 text-warning" />
                     </div>
                     <p className="text-2xl font-bold">{summary.totalMoveIns} / {summary.totalMoveOuts}</p>
@@ -201,7 +339,6 @@ const TenantAnalytics = () => {
 
             {/* Charts Row 1 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Occupancy per Property */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Occupancy by Property</CardTitle>
@@ -211,7 +348,7 @@ const TenantAnalytics = () => {
                     <p className="text-sm text-muted-foreground py-8 text-center">No properties yet</p>
                   ) : (
                     <div className="space-y-4">
-                      {occupancyData.map((p, i) => (
+                      {occupancyData.map((p) => (
                         <div key={p.name} className="space-y-1.5">
                           <div className="flex justify-between text-sm">
                             <span className="font-medium truncate">{p.name}</span>
@@ -225,7 +362,6 @@ const TenantAnalytics = () => {
                 </CardContent>
               </Card>
 
-              {/* Revenue per Property */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Revenue by Property</CardTitle>
@@ -255,7 +391,7 @@ const TenantAnalytics = () => {
             {/* Turnover Trend */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Tenant Turnover (Last 6 Months)</CardTitle>
+                <CardTitle className="text-base">Tenant Turnover</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={280}>
