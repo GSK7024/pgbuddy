@@ -60,6 +60,7 @@ import TermsOfService from "./pages/static/TermsOfService";
 import Pricing from "./pages/static/Pricing";
 import UserGuide from "./pages/static/UserGuide";
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
