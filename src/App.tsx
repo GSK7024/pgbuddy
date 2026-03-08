@@ -31,6 +31,7 @@ import ResetPassword from "./pages/ResetPassword";
 import BrowsePG from "./pages/BrowsePG";
 import ListPG from "./pages/ListPG";
 import NotFound from "./pages/NotFound";
+import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
 
