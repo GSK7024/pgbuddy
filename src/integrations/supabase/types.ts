@@ -233,6 +233,7 @@ export type Database = {
           owner_id: string
           rules: string | null
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           address?: string
@@ -249,6 +250,7 @@ export type Database = {
           owner_id: string
           rules?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           address?: string
@@ -265,8 +267,132 @@ export type Database = {
           owner_id?: string
           rules?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
+      }
+      property_enquiries: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          property_id: string
+          status: string
+          visitor_email: string | null
+          visitor_name: string
+          visitor_phone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          property_id: string
+          status?: string
+          visitor_email?: string | null
+          visitor_name: string
+          visitor_phone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          property_id?: string
+          status?: string
+          visitor_email?: string | null
+          visitor_name?: string
+          visitor_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_enquiries_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_cover: boolean
+          property_id: string
+          storage_path: string
+          url: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_cover?: boolean
+          property_id: string
+          storage_path: string
+          url: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_cover?: boolean
+          property_id?: string
+          storage_path?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_photos_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          property_id: string
+          rating: number
+          review_text: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          property_id: string
+          rating: number
+          review_text?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          property_id?: string
+          rating?: number
+          review_text?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_reviews_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rent_history: {
         Row: {
