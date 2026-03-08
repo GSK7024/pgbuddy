@@ -1081,6 +1081,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "પગલું", needHelp: "વધુ મદદ જોઈએ?",
     needHelpDesc: "support@pgmanager.in પર ઈમેલ કરો.",
     warningLabel: "⚠️ મહત્વપૂર્ણ", tipLabel: "💡 ટિપ", importantLabel: "મહત્વપૂર્ણ",
+    videoSectionTitle: "📹 વીડિયો ટ્યુટોરિયલ",
+    videoSectionDesc: "સંપૂર્ણ ફ્લો સમજવા માટે આ વીડિયો જુઓ.",
+    ownerVideos: [
+      { title: "PG પ્રોપર્ટી સેટઅપ", description: "એકાઉન્ટ, પ્રોપર્ટી, રૂમ.", videoId: "owner-setup-demo" },
+      { title: "ભાડૂતોને આમંત્રણ", description: "ઇન્વાઇટ કોડ મોકલો, પેમેન્ટ ટ્રેક.", videoId: "owner-tenants-demo" },
+      { title: "પેમેન્ટ ટ્રેકિંગ", description: "ભાડું પેમેન્ટ ટ્રેક કરો.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ભાડૂત તરીકે જોડાઓ", description: "સાઇન અપ, ઇન્વાઇટ કોડ દાખલ કરો.", videoId: "tenant-onboard-demo" },
+      { title: "ભાડું ચૂકવો", description: "ભાડું જુઓ, પુરાવો અપલોડ કરો.", videoId: "tenant-payment-demo" },
+      { title: "ભાડૂત ફીચર્સ", description: "ફરિયાદો, ભોજન, જાહેરાતો, ચેટ.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. એકાઉન્ટ બનાવો & લોગિન", steps: [
         { title: "વેબસાઈટ ખોલો", desc: "'Sign Up' ક્લિક કરો.", image: "/guide/signup-page.jpg" },
