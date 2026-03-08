@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX, Download } from "lucide-react";
+import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX, Download, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,7 @@ const Tenants = () => {
   const [tenantLimit, setTenantLimit] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPropertyId, setFilterPropertyId] = useState("all");
+  const [sortBy, setSortBy] = useState("name-asc");
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
@@ -474,6 +475,20 @@ const Tenants = () => {
                 {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <ArrowUpDown className="w-4 h-4 mr-1 text-muted-foreground" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">Name A–Z</SelectItem>
+                <SelectItem value="name-desc">Name Z–A</SelectItem>
+                <SelectItem value="date-newest">Newest first</SelectItem>
+                <SelectItem value="date-oldest">Oldest first</SelectItem>
+                <SelectItem value="rent-high">Rent: High → Low</SelectItem>
+                <SelectItem value="rent-low">Rent: Low → High</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
 
@@ -496,8 +511,18 @@ const Tenants = () => {
               (a.profiles?.phone || "").toLowerCase().includes(query);
             return matchesProperty && matchesSearch;
           });
-          const activeTenants = filtered.filter(a => a.is_active);
-          const movedOutTenants = filtered.filter(a => !a.is_active);
+          const sortFn = (a: TenantAssignment, b: TenantAssignment) => {
+            switch (sortBy) {
+              case "name-desc": return (b.profiles?.full_name || "").localeCompare(a.profiles?.full_name || "");
+              case "date-newest": return new Date(b.move_in_date).getTime() - new Date(a.move_in_date).getTime();
+              case "date-oldest": return new Date(a.move_in_date).getTime() - new Date(b.move_in_date).getTime();
+              case "rent-high": return getTenantRent(b) - getTenantRent(a);
+              case "rent-low": return getTenantRent(a) - getTenantRent(b);
+              default: return (a.profiles?.full_name || "").localeCompare(b.profiles?.full_name || "");
+            }
+          };
+          const activeTenants = filtered.filter(a => a.is_active).sort(sortFn);
+          const movedOutTenants = filtered.filter(a => !a.is_active).sort(sortFn);
 
           const TenantCard = ({ a }: { a: TenantAssignment }) => (
             <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(a)}>
