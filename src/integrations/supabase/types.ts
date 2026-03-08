@@ -737,6 +737,50 @@ export type Database = {
           },
         ]
       }
+      staff_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_email: string | null
+          owner_id: string
+          property_id: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          staff_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_email?: string | null
+          owner_id: string
+          property_id?: string | null
+          role?: Database["public"]["Enums"]["staff_role"]
+          staff_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_email?: string | null
+          owner_id?: string
+          property_id?: string | null
+          role?: Database["public"]["Enums"]["staff_role"]
+          staff_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_members_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           created_at: string
@@ -1214,9 +1258,19 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_staff_owner_id: { Args: { _user_id: string }; Returns: string }
+      get_staff_property_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff_of_property: {
+        Args: {
+          _allowed_roles?: Database["public"]["Enums"]["staff_role"][]
+          _property_id: string
           _user_id: string
         }
         Returns: boolean
@@ -1237,6 +1291,7 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "tenant"
+      staff_role: "manager" | "accountant" | "caretaker"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1365,6 +1420,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "tenant"],
+      staff_role: ["manager", "accountant", "caretaker"],
     },
   },
 } as const
