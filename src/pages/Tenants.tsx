@@ -385,6 +385,7 @@ const Tenants = () => {
                   {assigning ? "Assigning..." : "Assign Tenant"}
                 </Button>
               </form>
+              )}
             </DialogContent>
           </Dialog>
         </div>
