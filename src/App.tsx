@@ -38,6 +38,9 @@ import ManageListing from "./pages/ManageListing";
 import TenantReviews from "./pages/TenantReviews";
 import MealMenu from "./pages/MealMenu";
 import TenantMealMenu from "./pages/TenantMealMenu";
+import Referrals from "./pages/Referrals";
+import TenantChat from "./pages/TenantChat";
+import CityPGs from "./pages/CityPGs";
 
 const queryClient = new QueryClient();
 
