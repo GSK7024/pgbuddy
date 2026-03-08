@@ -32,6 +32,8 @@ import BrowsePG from "./pages/BrowsePG";
 import ListPG from "./pages/ListPG";
 import NotFound from "./pages/NotFound";
 import Subscription from "./pages/Subscription";
+import PropertyDetail from "./pages/PropertyDetail";
+import ManageListing from "./pages/ManageListing";
 
 const queryClient = new QueryClient();
 
