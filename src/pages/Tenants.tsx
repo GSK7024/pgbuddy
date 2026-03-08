@@ -183,6 +183,11 @@ const Tenants = () => {
       custom_rent: rentValue,
     });
 
+    // Save phone number to tenant profile
+    if (!error && assignPhone.trim()) {
+      await supabase.from("profiles").update({ phone: assignPhone.trim() }).eq("user_id", foundTenant.user_id);
+    }
+
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       setAssigning(false);
