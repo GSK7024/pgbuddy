@@ -268,6 +268,44 @@ export type Database = {
         }
         Relationships: []
       }
+      rent_history: {
+        Row: {
+          assignment_id: string
+          changed_at: string
+          changed_by: string
+          id: string
+          new_rent: number
+          notes: string | null
+          old_rent: number | null
+        }
+        Insert: {
+          assignment_id: string
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_rent: number
+          notes?: string | null
+          old_rent?: number | null
+        }
+        Update: {
+          assignment_id?: string
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_rent?: number
+          notes?: string | null
+          old_rent?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rent_history_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rent_payments: {
         Row: {
           amount: number
