@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX, Download, ArrowUpDown } from "lucide-react";
+import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX, Download, ArrowUpDown, ArrowLeftRight, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,15 @@ const Tenants = () => {
   const [rentChangeNote, setRentChangeNote] = useState("");
   const [tenantPhone, setTenantPhone] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
+
+  // Transfer / Swap state
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferPropertyId, setTransferPropertyId] = useState("");
+  const [transferRoomId, setTransferRoomId] = useState("");
+  const [transferring, setTransferring] = useState(false);
+  const [swapOpen, setSwapOpen] = useState(false);
+  const [swapTargetId, setSwapTargetId] = useState("");
+  const [swapping, setSwapping] = useState(false);
 
   const fetchData = async () => {
     if (!user) return;
@@ -322,6 +331,85 @@ const Tenants = () => {
       window.open(data.signedUrl, "_blank");
     }
   };
+
+  const handleTransfer = async () => {
+    if (!detailTenant || !transferRoomId || !user) return;
+    setTransferring(true);
+
+    const targetRoom = rooms.find(r => r.id === transferRoomId);
+    const oldRoomId = detailTenant.room_id;
+    const targetPropertyId = transferPropertyId || detailTenant.property_id;
+
+    // Update assignment to new room/property
+    const { error } = await supabase.from("tenant_assignments").update({
+      room_id: transferRoomId,
+      property_id: targetPropertyId,
+      custom_rent: targetRoom ? targetRoom.rent_amount : detailTenant.custom_rent,
+    }).eq("id", detailTenant.id);
+
+    if (error) {
+      toast({ title: "Transfer failed", description: error.message, variant: "destructive" });
+    } else {
+      // Update vacancy for both rooms
+      await updateRoomVacancy(oldRoomId);
+      await updateRoomVacancy(transferRoomId);
+      toast({ title: "Tenant transferred successfully!" });
+      setDetailTenant(null);
+      setTransferOpen(false);
+      fetchData();
+    }
+    setTransferring(false);
+  };
+
+  const handleSwap = async () => {
+    if (!detailTenant || !swapTargetId || !user) return;
+    setSwapping(true);
+
+    const targetAssignment = assignments.find(a => a.id === swapTargetId);
+    if (!targetAssignment) {
+      toast({ title: "Error", description: "Target tenant not found", variant: "destructive" });
+      setSwapping(false);
+      return;
+    }
+
+    // Swap room_id and property_id between both assignments
+    const [res1, res2] = await Promise.all([
+      supabase.from("tenant_assignments").update({
+        room_id: targetAssignment.room_id,
+        property_id: targetAssignment.property_id,
+      }).eq("id", detailTenant.id),
+      supabase.from("tenant_assignments").update({
+        room_id: detailTenant.room_id,
+        property_id: detailTenant.property_id,
+      }).eq("id", targetAssignment.id),
+    ]);
+
+    if (res1.error || res2.error) {
+      toast({ title: "Swap failed", description: (res1.error || res2.error)?.message, variant: "destructive" });
+    } else {
+      toast({ title: "Tenants swapped successfully!" });
+      setDetailTenant(null);
+      setSwapOpen(false);
+      fetchData();
+    }
+    setSwapping(false);
+  };
+
+  // Available rooms for transfer (exclude current room, must have capacity)
+  const transferAvailableRooms = rooms.filter(r => {
+    if (!detailTenant) return false;
+    const tPropId = transferPropertyId || detailTenant.property_id;
+    if (r.property_id !== tPropId) return false;
+    if (r.id === detailTenant.room_id) return false;
+    const activeCount = getActiveCountForRoom(r.id);
+    return activeCount < r.capacity;
+  });
+
+  // Active tenants for swap (exclude current tenant)
+  const swappableTenants = assignments.filter(a => {
+    if (!detailTenant) return false;
+    return a.is_active && a.id !== detailTenant.id;
+  });
 
   const getTenantRent = (a: TenantAssignment) => {
     return a.custom_rent ?? (a as any).rooms?.rent_amount ?? 0;
@@ -774,6 +862,112 @@ const Tenants = () => {
 
                 {detailTenant.is_active && (
                   <>
+                    <Separator />
+
+                    {/* Transfer & Swap */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold flex items-center gap-2 text-sm">
+                        <ArrowLeftRight className="w-4 h-4 text-primary" /> Room Transfer / Swap
+                      </h4>
+
+                      {/* Transfer to different room */}
+                      {!transferOpen && !swapOpen && (
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => {
+                            setTransferPropertyId(detailTenant.property_id);
+                            setTransferRoomId("");
+                            setTransferOpen(true);
+                          }}>
+                            <MoveRight className="w-3.5 h-3.5" /> Transfer Room
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => {
+                            setSwapTargetId("");
+                            setSwapOpen(true);
+                          }}>
+                            <ArrowLeftRight className="w-3.5 h-3.5" /> Swap Tenants
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Transfer Form */}
+                      {transferOpen && (
+                        <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium">Transfer to a new room</p>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setTransferOpen(false)}>
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Property</Label>
+                            <Select value={transferPropertyId} onValueChange={(v) => { setTransferPropertyId(v); setTransferRoomId(""); }}>
+                              <SelectTrigger className="h-9"><SelectValue placeholder="Select property" /></SelectTrigger>
+                              <SelectContent>
+                                {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">New Room ({transferAvailableRooms.length} available)</Label>
+                            <Select value={transferRoomId} onValueChange={setTransferRoomId}>
+                              <SelectTrigger className="h-9"><SelectValue placeholder="Select room" /></SelectTrigger>
+                              <SelectContent>
+                                {transferAvailableRooms.map(r => {
+                                  const active = getActiveCountForRoom(r.id);
+                                  return (
+                                    <SelectItem key={r.id} value={r.id}>
+                                      Room {r.room_number} ({active}/{r.capacity} occupied) – ₹{Number(r.rent_amount).toLocaleString()}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button size="sm" className="w-full gradient-primary" disabled={!transferRoomId || transferring} onClick={handleTransfer}>
+                            {transferring ? "Transferring..." : "Confirm Transfer"}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Swap Form */}
+                      {swapOpen && (
+                        <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium">Swap with another tenant</p>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSwapOpen(false)}>
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Select tenant to swap with</Label>
+                            <Select value={swapTargetId} onValueChange={setSwapTargetId}>
+                              <SelectTrigger className="h-9"><SelectValue placeholder="Choose tenant" /></SelectTrigger>
+                              <SelectContent>
+                                {swappableTenants.map(a => (
+                                  <SelectItem key={a.id} value={a.id}>
+                                    {a.profiles?.full_name || "Unknown"} – {(a as any).properties?.name}, Room {(a as any).rooms?.room_number}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {swapTargetId && (() => {
+                            const target = assignments.find(a => a.id === swapTargetId);
+                            if (!target) return null;
+                            return (
+                              <div className="text-xs text-muted-foreground p-2 rounded bg-muted/50 space-y-0.5">
+                                <p><strong>{detailTenant.profiles?.full_name}</strong> → {(target as any).properties?.name}, Room {(target as any).rooms?.room_number}</p>
+                                <p><strong>{target.profiles?.full_name}</strong> → {(detailTenant as any).properties?.name}, Room {(detailTenant as any).rooms?.room_number}</p>
+                              </div>
+                            );
+                          })()}
+                          <Button size="sm" className="w-full gradient-primary" disabled={!swapTargetId || swapping} onClick={handleSwap}>
+                            {swapping ? "Swapping..." : "Confirm Swap"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
                     <Separator />
                     <Button variant="outline" size="sm" className="w-full text-destructive" onClick={() => handleDeactivate(detailTenant.id, detailTenant.room_id)}>
                       Mark as Moved Out
