@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Building2, Home, Users, CreditCard, BarChart3, Receipt,
   LogOut, Menu, X, MessageSquare, BellDot, Megaphone, QrCode, Share2, User, Crown, Camera, UtensilsCrossed, Gift,
-  FileText, UserCheck, Zap, PieChart,
+  FileText, UserCheck, Zap, PieChart, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
