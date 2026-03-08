@@ -1312,6 +1312,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "পদক্ষেপ", needHelp: "অধিক সহায় লাগে?",
     needHelpDesc: "support@pgmanager.in লৈ ইমেইল কৰক।",
     warningLabel: "⚠️ গুৰুত্বপূৰ্ণ", tipLabel: "💡 পৰামৰ্শ", importantLabel: "গুৰুত্বপূৰ্ণ",
+    videoSectionTitle: "📹 ভিডিঅ' টিউটৰিয়েল",
+    videoSectionDesc: "সম্পূৰ্ণ ফ্ল' বুজিবলৈ এই ভিডিঅ'বোৰ চাওক।",
+    ownerVideos: [
+      { title: "PG প্ৰপাৰ্টি ছেটআপ", description: "একাউণ্ট, প্ৰপাৰ্টি, ৰুম.", videoId: "owner-setup-demo" },
+      { title: "ভাড়াতীয়াক নিমন্ত্ৰণ", description: "নিমন্ত্ৰণ ক'ড পঠিয়াওক, পেমেণ্ট ট্ৰেক.", videoId: "owner-tenants-demo" },
+      { title: "পেমেণ্ট ট্ৰেকিং", description: "ভাড়া পেমেণ্ট ট্ৰেক কৰক.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ভাড়াতীয়া হিচাপে যোগদান", description: "ছাইন আপ, নিমন্ত্ৰণ ক'ড দিয়ক.", videoId: "tenant-onboard-demo" },
+      { title: "ভাড়া পৰিশোধ", description: "ভাড়া চাওক, প্ৰমাণ আপলোড.", videoId: "tenant-payment-demo" },
+      { title: "ভাড়াতীয়া ফিচাৰ", description: "অভিযোগ, আহাৰ, ঘোষণা, চ্যাট.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. একাউণ্ট সৃষ্টি & লগইন", steps: [
         { title: "ৱেবছাইট খোলক", desc: "'Sign Up' ক্লিক কৰক.", image: "/guide/signup-page.jpg" },
