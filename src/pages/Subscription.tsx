@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Crown, Zap, Building2, IndianRupee, Loader2 } from "lucide-react";
+import { Check, Crown, Zap, Building2, IndianRupee, Loader2, Camera, Video, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -233,7 +233,30 @@ const Subscription = () => {
                       <p className="text-sm font-semibold">
                         {plan.tenant_limit === -1 ? "Unlimited" : `Up to ${plan.tenant_limit}`} tenants
                       </p>
-                      {(plan.features as string[]).map((feature, i) => (
+
+                      {/* Listing features highlight */}
+                      <div className="rounded-lg bg-muted/50 p-2.5 space-y-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Listing Features</p>
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <Camera className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span>{plan.slug === "free" ? "3 photos" : plan.slug === "pro" ? "10 photos" : "Unlimited photos"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <Video className={`w-3.5 h-3.5 shrink-0 ${plan.slug === "free" ? "text-muted-foreground/40" : "text-primary"}`} />
+                          <span className={plan.slug === "free" ? "text-muted-foreground line-through" : ""}>Video tour</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <Star className={`w-3.5 h-3.5 shrink-0 ${plan.slug === "business" ? "text-warning" : "text-muted-foreground/40"}`} />
+                          <span className={plan.slug !== "business" ? "text-muted-foreground line-through" : ""}>Featured badge</span>
+                        </div>
+                      </div>
+
+                      {(plan.features as string[]).filter(f =>
+                        !f.toLowerCase().includes("photo") &&
+                        !f.toLowerCase().includes("video") &&
+                        !f.toLowerCase().includes("featured") &&
+                        !f.toLowerCase().includes("enquiry")
+                      ).map((feature, i) => (
                         <div key={i} className="flex items-start gap-2 text-sm">
                           <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
                           <span>{feature}</span>
