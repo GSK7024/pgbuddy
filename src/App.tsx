@@ -65,6 +65,7 @@ const App = () => (
             <Route path="/dashboard/invitations" element={<ProtectedRoute requiredRole="owner"><TenantInvitations /></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute requiredRole="owner"><ProfileSettings Layout={DashboardLayout} /></ProtectedRoute>} />
             <Route path="/dashboard/subscription" element={<ProtectedRoute requiredRole="owner"><Subscription /></ProtectedRoute>} />
+            <Route path="/dashboard/listing" element={<ProtectedRoute requiredRole="owner"><ManageListing /></ProtectedRoute>} />
             {/* Tenant routes */}
             <Route path="/tenant" element={<ProtectedRoute requiredRole="tenant"><TenantDashboard /></ProtectedRoute>} />
             <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
