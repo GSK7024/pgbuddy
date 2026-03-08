@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, MapPin, IndianRupee, Home, Star, Phone, Users, Bed, ArrowUpDown } from "lucide-react";
+import { Search, MapPin, IndianRupee, Home, Star, Phone, Users, Bed, ArrowUpDown, Crown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,7 @@ interface PropertyListing {
   amenities: string[] | null;
   gender_preference: string | null;
   contact_phone: string | null;
+  is_featured: boolean | null;
   rooms: RoomInfo[];
   coverPhoto?: string;
   avgRating?: number;
@@ -77,10 +78,17 @@ const PropertyCard = ({ property, index }: { property: PropertyListing; index: n
               </div>
               <span className="text-[10px] opacity-70">/month</span>
             </div>
-            {/* Badge */}
-            <Badge className="absolute top-3 right-3 bg-success text-white">
-              {vacantRooms.length} room{vacantRooms.length !== 1 ? "s" : ""}
-            </Badge>
+            {/* Badges */}
+            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+              {property.is_featured && (
+                <Badge className="bg-warning text-warning-foreground gap-1">
+                  <Crown className="w-3 h-3" /> Featured
+                </Badge>
+              )}
+              <Badge className="bg-success text-white">
+                {vacantRooms.length} room{vacantRooms.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
           </div>
 
           <CardContent className="p-4 space-y-2.5">
@@ -143,7 +151,7 @@ const BrowsePG = () => {
       const [propRes, photosRes, reviewsRes] = await Promise.all([
         supabase
           .from("properties")
-          .select("id, name, address, city, locality, description, amenities, gender_preference, contact_phone, rooms(id, room_number, room_type, rent_amount, capacity, is_vacant)")
+          .select("id, name, address, city, locality, description, amenities, gender_preference, contact_phone, is_featured, rooms(id, room_number, room_type, rent_amount, capacity, is_vacant)")
           .eq("is_active", true)
           .order("created_at", { ascending: false }),
         supabase.from("property_photos").select("property_id, url, is_cover").eq("is_cover", true),
@@ -192,6 +200,10 @@ const BrowsePG = () => {
   });
 
   const sorted = [...filtered].sort((a, b) => {
+    // Featured properties always come first
+    if (a.is_featured && !b.is_featured) return -1;
+    if (!a.is_featured && b.is_featured) return 1;
+
     const aVacant = a.rooms.filter(r => r.is_vacant);
     const bVacant = b.rooms.filter(r => r.is_vacant);
     const aMin = aVacant.length > 0 ? Math.min(...aVacant.map(r => Number(r.rent_amount))) : Infinity;

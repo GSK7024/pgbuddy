@@ -228,6 +228,7 @@ export type Database = {
           gender_preference: string | null
           id: string
           is_active: boolean | null
+          is_featured: boolean | null
           locality: string | null
           name: string
           owner_id: string
@@ -245,6 +246,7 @@ export type Database = {
           gender_preference?: string | null
           id?: string
           is_active?: boolean | null
+          is_featured?: boolean | null
           locality?: string | null
           name: string
           owner_id: string
@@ -262,6 +264,7 @@ export type Database = {
           gender_preference?: string | null
           id?: string
           is_active?: boolean | null
+          is_featured?: boolean | null
           locality?: string | null
           name?: string
           owner_id?: string
