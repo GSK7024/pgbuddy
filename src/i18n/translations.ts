@@ -634,6 +634,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "lang.bn": "বাংলা",
     "lang.gu": "ગુજરાતી",
     "lang.pa": "ਪੰਜਾਬੀ",
+    "lang.or": "ଓଡ଼ିଆ",
+    "lang.as": "অসমীয়া",
   },
 
   // Gujarati
