@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
   LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star, UtensilsCrossed, MessageCircle,
-  ClipboardCheck, FileText, Zap,
+  ClipboardCheck, FileText, Zap, DoorOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +26,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: "Onboarding", href: "/tenant/onboarding", icon: ClipboardCheck },
   { name: "My Documents", href: "/tenant/documents", icon: FileText },
   { name: "Utility Bills", href: "/tenant/utility-bills", icon: Zap },
+  { name: "Move-Out", href: "/tenant/move-out", icon: DoorOpen },
 ];
 
 const getBottomLinks = (t: (k: string) => string) => [

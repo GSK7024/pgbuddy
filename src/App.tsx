@@ -51,6 +51,8 @@ import TenantUtilityBills from "./pages/TenantUtilityBills";
 import TenantAnalytics from "./pages/TenantAnalytics";
 import AuditLogs from "./pages/AuditLogs";
 import StaffManagement from "./pages/StaffManagement";
+import MoveOutManagement from "./pages/MoveOutManagement";
+import TenantMoveOut from "./pages/TenantMoveOut";
 import AboutUs from "./pages/static/AboutUs";
 import Careers from "./pages/static/Careers";
 import Blog from "./pages/static/Blog";
@@ -104,6 +106,7 @@ const App = () => (
               <Route path="/dashboard/analytics" element={<ProtectedRoute requiredRole="owner"><TenantAnalytics /></ProtectedRoute>} />
               <Route path="/dashboard/audit-logs" element={<ProtectedRoute requiredRole="owner"><AuditLogs /></ProtectedRoute>} />
               <Route path="/dashboard/staff" element={<ProtectedRoute requiredRole="owner"><StaffManagement /></ProtectedRoute>} />
+              <Route path="/dashboard/move-out" element={<ProtectedRoute requiredRole="owner"><MoveOutManagement /></ProtectedRoute>} />
               {/* Tenant routes */}
               <Route path="/tenant" element={<ProtectedRoute requiredRole="tenant"><TenantDashboard /></ProtectedRoute>} />
               <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
@@ -118,6 +121,7 @@ const App = () => (
               <Route path="/tenant/onboarding" element={<ProtectedRoute requiredRole="tenant"><TenantOnboarding /></ProtectedRoute>} />
               <Route path="/tenant/documents" element={<ProtectedRoute requiredRole="tenant"><TenantDocuments /></ProtectedRoute>} />
               <Route path="/tenant/utility-bills" element={<ProtectedRoute requiredRole="tenant"><TenantUtilityBills /></ProtectedRoute>} />
+              <Route path="/tenant/move-out" element={<ProtectedRoute requiredRole="tenant"><TenantMoveOut /></ProtectedRoute>} />
               {/* SEO city pages */}
               <Route path="/pgs/:city" element={<CityPGs />} />
               {/* Static pages */}
