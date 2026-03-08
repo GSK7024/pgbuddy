@@ -61,16 +61,25 @@ const Payments = () => {
       supabase.from("tenant_assignments").select("id, tenant_id, property_id, room_id, rooms(room_number, rent_amount), properties(name)").eq("is_active", true),
     ]);
 
+    const payData = payRes.data ?? [];
     const assignData = assignRes.data ?? [];
-    // Fetch tenant names
-    const tenantIds = [...new Set(assignData.map(a => a.tenant_id))];
-    let profilesMap: Record<string, { full_name: string }> = {};
-    if (tenantIds.length > 0) {
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", tenantIds);
+    
+    // Fetch tenant names and phones for both payments and assignments
+    const allTenantIds = [...new Set([
+      ...payData.map(p => p.tenant_id),
+      ...assignData.map(a => a.tenant_id),
+    ])];
+    let profilesMap: Record<string, { full_name: string; phone: string | null }> = {};
+    if (allTenantIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, phone").in("user_id", allTenantIds);
       profiles?.forEach(p => { profilesMap[p.user_id] = p; });
     }
 
-    setPayments(payRes.data ?? []);
+    setPayments(payData.map(p => ({
+      ...p,
+      tenant_name: profilesMap[p.tenant_id]?.full_name || null,
+      tenant_phone: profilesMap[p.tenant_id]?.phone || null,
+    })));
     setAssignments(assignData.map(a => ({ ...a, profiles: profilesMap[a.tenant_id] })) as ActiveAssignment[]);
     setLoading(false);
   };
