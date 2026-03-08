@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX } from "lucide-react";
+import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -329,15 +329,47 @@ const Tenants = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold">Tenants</h1>
             <p className="text-muted-foreground">Manage tenant assignments and details</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Assign Tenant</Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            {assignments.length > 0 && (
+              <Button variant="outline" className="gap-2" onClick={() => {
+                const rows = assignments.map(a => ({
+                  Name: a.profiles?.full_name || "Unknown",
+                  Phone: a.profiles?.phone || "",
+                  Property: (a as any).properties?.name || "",
+                  Room: (a as any).rooms?.room_number || "",
+                  "Rent (₹)": getTenantRent(a),
+                  Status: a.is_active ? "Active" : "Moved Out",
+                  "Move-in": a.move_in_date,
+                  "Move-out": a.move_out_date || "",
+                  "ID Proof": a.id_proof_type ? `${a.id_proof_type}: ${a.id_proof_number}` : "",
+                  "Emergency Contact": a.emergency_contact_name ? `${a.emergency_contact_name} (${a.emergency_contact_phone || ""})` : "",
+                  Notes: a.notes || "",
+                }));
+                const headers = Object.keys(rows[0]);
+                const csv = [
+                  headers.join(","),
+                  ...rows.map(r => headers.map(h => `"${String((r as any)[h]).replace(/"/g, '""')}"`).join(","))
+                ].join("\n");
+                const blob = new Blob([csv], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `tenants-${new Date().toISOString().slice(0, 10)}.csv`;
+                link.click();
+                URL.revokeObjectURL(url);
+              }}>
+                <Download className="w-4 h-4" /> Export CSV
+              </Button>
+            )}
+            <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Assign Tenant</Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Assign Tenant to Room</DialogTitle></DialogHeader>
               {tenantLimit !== -1 && assignments.filter(a => a.is_active).length >= tenantLimit ? (
@@ -412,7 +444,8 @@ const Tenants = () => {
               </form>
               )}
             </DialogContent>
-          </Dialog>
+           </Dialog>
+          </div>
         </div>
 
         {/* Search & Filter Bar */}
