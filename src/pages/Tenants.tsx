@@ -332,6 +332,85 @@ const Tenants = () => {
     }
   };
 
+  const handleTransfer = async () => {
+    if (!detailTenant || !transferRoomId || !user) return;
+    setTransferring(true);
+
+    const targetRoom = rooms.find(r => r.id === transferRoomId);
+    const oldRoomId = detailTenant.room_id;
+    const targetPropertyId = transferPropertyId || detailTenant.property_id;
+
+    // Update assignment to new room/property
+    const { error } = await supabase.from("tenant_assignments").update({
+      room_id: transferRoomId,
+      property_id: targetPropertyId,
+      custom_rent: targetRoom ? targetRoom.rent_amount : detailTenant.custom_rent,
+    }).eq("id", detailTenant.id);
+
+    if (error) {
+      toast({ title: "Transfer failed", description: error.message, variant: "destructive" });
+    } else {
+      // Update vacancy for both rooms
+      await updateRoomVacancy(oldRoomId);
+      await updateRoomVacancy(transferRoomId);
+      toast({ title: "Tenant transferred successfully!" });
+      setDetailTenant(null);
+      setTransferOpen(false);
+      fetchData();
+    }
+    setTransferring(false);
+  };
+
+  const handleSwap = async () => {
+    if (!detailTenant || !swapTargetId || !user) return;
+    setSwapping(true);
+
+    const targetAssignment = assignments.find(a => a.id === swapTargetId);
+    if (!targetAssignment) {
+      toast({ title: "Error", description: "Target tenant not found", variant: "destructive" });
+      setSwapping(false);
+      return;
+    }
+
+    // Swap room_id and property_id between both assignments
+    const [res1, res2] = await Promise.all([
+      supabase.from("tenant_assignments").update({
+        room_id: targetAssignment.room_id,
+        property_id: targetAssignment.property_id,
+      }).eq("id", detailTenant.id),
+      supabase.from("tenant_assignments").update({
+        room_id: detailTenant.room_id,
+        property_id: detailTenant.property_id,
+      }).eq("id", targetAssignment.id),
+    ]);
+
+    if (res1.error || res2.error) {
+      toast({ title: "Swap failed", description: (res1.error || res2.error)?.message, variant: "destructive" });
+    } else {
+      toast({ title: "Tenants swapped successfully!" });
+      setDetailTenant(null);
+      setSwapOpen(false);
+      fetchData();
+    }
+    setSwapping(false);
+  };
+
+  // Available rooms for transfer (exclude current room, must have capacity)
+  const transferAvailableRooms = rooms.filter(r => {
+    if (!detailTenant) return false;
+    const tPropId = transferPropertyId || detailTenant.property_id;
+    if (r.property_id !== tPropId) return false;
+    if (r.id === detailTenant.room_id) return false;
+    const activeCount = getActiveCountForRoom(r.id);
+    return activeCount < r.capacity;
+  });
+
+  // Active tenants for swap (exclude current tenant)
+  const swappableTenants = assignments.filter(a => {
+    if (!detailTenant) return false;
+    return a.is_active && a.id !== detailTenant.id;
+  });
+
   const getTenantRent = (a: TenantAssignment) => {
     return a.custom_rent ?? (a as any).rooms?.rent_amount ?? 0;
   };
