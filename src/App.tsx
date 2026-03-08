@@ -49,6 +49,7 @@ import VisitorLog from "./pages/VisitorLog";
 import UtilityBills from "./pages/UtilityBills";
 import TenantUtilityBills from "./pages/TenantUtilityBills";
 import TenantAnalytics from "./pages/TenantAnalytics";
+import AuditLogs from "./pages/AuditLogs";
 import AboutUs from "./pages/static/AboutUs";
 import Careers from "./pages/static/Careers";
 import Blog from "./pages/static/Blog";
@@ -100,6 +101,7 @@ const App = () => (
               <Route path="/dashboard/visitors" element={<ProtectedRoute requiredRole="owner"><VisitorLog /></ProtectedRoute>} />
               <Route path="/dashboard/utility-bills" element={<ProtectedRoute requiredRole="owner"><UtilityBills /></ProtectedRoute>} />
               <Route path="/dashboard/analytics" element={<ProtectedRoute requiredRole="owner"><TenantAnalytics /></ProtectedRoute>} />
+              <Route path="/dashboard/audit-logs" element={<ProtectedRoute requiredRole="owner"><AuditLogs /></ProtectedRoute>} />
               {/* Tenant routes */}
               <Route path="/tenant" element={<ProtectedRoute requiredRole="tenant"><TenantDashboard /></ProtectedRoute>} />
               <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
