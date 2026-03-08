@@ -11,18 +11,19 @@ import NotificationBell from "@/components/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const sidebarLinks = [
-  { name: "My Room", href: "/tenant", icon: LayoutDashboard },
-  { name: "Payments", href: "/tenant/payments", icon: CreditCard },
-  { name: "Complaints", href: "/tenant/complaints", icon: MessageSquare },
-  { name: "Vacancy Notice", href: "/tenant/notices", icon: BellDot },
-  { name: "Announcements", href: "/tenant/announcements", icon: Megaphone },
-  { name: "Browse PGs", href: "/tenant/marketplace", icon: Search },
-  { name: "Reviews", href: "/tenant/reviews", icon: Star },
+const getSidebarLinks = (t: (k: string) => string) => [
+  { name: t("tenant.myRoom"), href: "/tenant", icon: LayoutDashboard },
+  { name: t("tenant.payments"), href: "/tenant/payments", icon: CreditCard },
+  { name: t("tenant.complaints"), href: "/tenant/complaints", icon: MessageSquare },
+  { name: t("tenant.vacancyNotice"), href: "/tenant/notices", icon: BellDot },
+  { name: t("tenant.announcements"), href: "/tenant/announcements", icon: Megaphone },
+  { name: t("tenant.browsePgs"), href: "/tenant/marketplace", icon: Search },
+  { name: t("tenant.reviews"), href: "/tenant/reviews", icon: Star },
+  { name: t("tenant.mealMenu"), href: "/tenant/meal-menu", icon: UtensilsCrossed },
 ];
 
-const bottomLinks = [
-  { name: "Profile", href: "/tenant/profile", icon: User },
+const getBottomLinks = (t: (k: string) => string) => [
+  { name: t("sidebar.profile"), href: "/tenant/profile", icon: User },
 ];
 
 const TenantLayout = ({ children }: { children: React.ReactNode }) => {
