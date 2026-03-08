@@ -13,19 +13,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const sidebarLinks = [
-  { name: "Overview", href: "/dashboard", icon: BarChart3 },
-  { name: "Properties", href: "/dashboard/properties", icon: Building2 },
-  { name: "Rooms", href: "/dashboard/rooms", icon: Home },
-  { name: "Tenants", href: "/dashboard/tenants", icon: Users },
-  { name: "Invitations", href: "/dashboard/invitations", icon: Share2 },
-  { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
-  { name: "Payment Setup", href: "/dashboard/payment-settings", icon: QrCode },
-  { name: "Expenses", href: "/dashboard/expenses", icon: Receipt },
-  { name: "Complaints", href: "/dashboard/complaints", icon: MessageSquare },
-  { name: "Notices", href: "/dashboard/notices", icon: BellDot },
-  { name: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
-  { name: "Manage Listing", href: "/dashboard/listing", icon: Camera },
+const getSidebarLinks = (t: (k: string) => string) => [
+  { name: t("sidebar.overview"), href: "/dashboard", icon: BarChart3 },
+  { name: t("sidebar.properties"), href: "/dashboard/properties", icon: Building2 },
+  { name: t("sidebar.rooms"), href: "/dashboard/rooms", icon: Home },
+  { name: t("sidebar.tenants"), href: "/dashboard/tenants", icon: Users },
+  { name: t("sidebar.invitations"), href: "/dashboard/invitations", icon: Share2 },
+  { name: t("sidebar.payments"), href: "/dashboard/payments", icon: CreditCard },
+  { name: t("sidebar.paymentSetup"), href: "/dashboard/payment-settings", icon: QrCode },
+  { name: t("sidebar.expenses"), href: "/dashboard/expenses", icon: Receipt },
+  { name: t("sidebar.complaints"), href: "/dashboard/complaints", icon: MessageSquare },
+  { name: t("sidebar.notices"), href: "/dashboard/notices", icon: BellDot },
+  { name: t("sidebar.announcements"), href: "/dashboard/announcements", icon: Megaphone },
+  { name: t("sidebar.manageListing"), href: "/dashboard/listing", icon: Camera },
+  { name: t("sidebar.mealMenu"), href: "/dashboard/meal-menu", icon: UtensilsCrossed },
 ];
 
 const bottomLinks = [
