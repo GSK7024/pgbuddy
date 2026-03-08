@@ -455,8 +455,16 @@ const Tenants = () => {
             </CardContent>
           </Card>
         ) : (() => {
-          const activeTenants = assignments.filter(a => a.is_active);
-          const movedOutTenants = assignments.filter(a => !a.is_active);
+          const query = searchQuery.toLowerCase().trim();
+          const filtered = assignments.filter(a => {
+            const matchesProperty = filterPropertyId === "all" || a.property_id === filterPropertyId;
+            const matchesSearch = !query ||
+              (a.profiles?.full_name || "").toLowerCase().includes(query) ||
+              (a.profiles?.phone || "").toLowerCase().includes(query);
+            return matchesProperty && matchesSearch;
+          });
+          const activeTenants = filtered.filter(a => a.is_active);
+          const movedOutTenants = filtered.filter(a => !a.is_active);
 
           const TenantCard = ({ a }: { a: TenantAssignment }) => (
             <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(a)}>
