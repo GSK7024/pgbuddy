@@ -68,12 +68,14 @@ const UserGuide = () => {
             </TabsList>
 
             <TabsContent value="owner" className="space-y-8">
+              <VideoSection title={content.videoSectionTitle} description={content.videoSectionDesc} videos={content.ownerVideos} />
               {content.ownerSections.map((section, si) => (
                 <GuideSection key={si} section={section} warningLabel={content.warningLabel} tipLabel={content.tipLabel} />
               ))}
             </TabsContent>
 
             <TabsContent value="tenant" className="space-y-8">
+              <VideoSection title={content.videoSectionTitle} description={content.videoSectionDesc} videos={content.tenantVideos} />
               {content.tenantSections.map((section, si) => (
                 <GuideSection key={si} section={section} warningLabel={content.warningLabel} tipLabel={content.tipLabel} />
               ))}
