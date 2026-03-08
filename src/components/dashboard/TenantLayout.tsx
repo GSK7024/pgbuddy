@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotificationBell from "@/components/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("tenant.myRoom"), href: "/tenant", icon: LayoutDashboard },
