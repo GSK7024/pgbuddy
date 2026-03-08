@@ -51,6 +51,8 @@ import TenantUtilityBills from "./pages/TenantUtilityBills";
 import TenantAnalytics from "./pages/TenantAnalytics";
 import AuditLogs from "./pages/AuditLogs";
 import StaffManagement from "./pages/StaffManagement";
+import MoveOutManagement from "./pages/MoveOutManagement";
+import TenantMoveOut from "./pages/TenantMoveOut";
 import AboutUs from "./pages/static/AboutUs";
 import Careers from "./pages/static/Careers";
 import Blog from "./pages/static/Blog";
