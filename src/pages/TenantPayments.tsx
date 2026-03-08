@@ -248,11 +248,18 @@ const TenantPayments = () => {
                       )}
                     </div>
                   )}
-                  {p.status === "paid" && p.proof_url && (
+                  {p.status === "paid" && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
-                      <CheckCircle className="w-3 h-3 text-success" />
-                      <span>Proof attached</span>
-                      <a href={p.proof_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">View</a>
+                      {p.proof_url && (
+                        <>
+                          <CheckCircle className="w-3 h-3 text-success" />
+                          <span>Proof attached</span>
+                          <a href={p.proof_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">View</a>
+                        </>
+                      )}
+                      <div className="ml-auto">
+                        <RentReceipt payment={p} />
+                      </div>
                     </div>
                   )}
                 </CardContent>
