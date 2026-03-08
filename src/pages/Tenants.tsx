@@ -511,8 +511,18 @@ const Tenants = () => {
               (a.profiles?.phone || "").toLowerCase().includes(query);
             return matchesProperty && matchesSearch;
           });
-          const activeTenants = filtered.filter(a => a.is_active);
-          const movedOutTenants = filtered.filter(a => !a.is_active);
+          const sortFn = (a: TenantAssignment, b: TenantAssignment) => {
+            switch (sortBy) {
+              case "name-desc": return (b.profiles?.full_name || "").localeCompare(a.profiles?.full_name || "");
+              case "date-newest": return new Date(b.move_in_date).getTime() - new Date(a.move_in_date).getTime();
+              case "date-oldest": return new Date(a.move_in_date).getTime() - new Date(b.move_in_date).getTime();
+              case "rent-high": return getTenantRent(b) - getTenantRent(a);
+              case "rent-low": return getTenantRent(a) - getTenantRent(b);
+              default: return (a.profiles?.full_name || "").localeCompare(b.profiles?.full_name || "");
+            }
+          };
+          const activeTenants = filtered.filter(a => a.is_active).sort(sortFn);
+          const movedOutTenants = filtered.filter(a => !a.is_active).sort(sortFn);
 
           const TenantCard = ({ a }: { a: TenantAssignment }) => (
             <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(a)}>
