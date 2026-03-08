@@ -1235,6 +1235,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ପଦକ୍ଷେପ", needHelp: "ଅଧିକ ସାହାଯ୍ୟ ଦରକାର?",
     needHelpDesc: "support@pgmanager.in କୁ ଇମେଲ୍ କରନ୍ତୁ।",
     warningLabel: "⚠️ ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ", tipLabel: "💡 ଟିପ୍", importantLabel: "ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ",
+    videoSectionTitle: "📹 ଭିଡିଓ ଟ୍ୟୁଟୋରିଆଲ୍",
+    videoSectionDesc: "ସମ୍ପୂର୍ଣ୍ଣ ଫ୍ଲୋ ବୁଝିବା ପାଇଁ ଏହି ଭିଡିଓ ଦେଖନ୍ତୁ।",
+    ownerVideos: [
+      { title: "PG ପ୍ରପର୍ଟି ସେଟଅପ୍", description: "ଆକାଉଣ୍ଟ, ପ୍ରପର୍ଟି, ରୁମ୍.", videoId: "owner-setup-demo" },
+      { title: "ଭଡ଼ାଟିଆଙ୍କୁ ନିମନ୍ତ୍ରଣ", description: "ନିମନ୍ତ୍ରଣ କୋଡ୍ ପଠାନ୍ତୁ, ପେମେଣ୍ଟ ଟ୍ରାକ୍.", videoId: "owner-tenants-demo" },
+      { title: "ପେମେଣ୍ଟ ଟ୍ରାକିଂ", description: "ଭଡ଼ା ପେମେଣ୍ଟ ଟ୍ରାକ୍ କରନ୍ତୁ.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ଭଡ଼ାଟିଆ ଭାବରେ ଯୋଗ ଦିଅନ୍ତୁ", description: "ସାଇନ୍ ଅପ୍, ନିମନ୍ତ୍ରଣ କୋଡ୍ ଦିଅନ୍ତୁ.", videoId: "tenant-onboard-demo" },
+      { title: "ଭଡ଼ା ଦିଅନ୍ତୁ", description: "ଭଡ଼ା ଦେଖନ୍ତୁ, ପ୍ରମାଣ ଅପଲୋଡ୍.", videoId: "tenant-payment-demo" },
+      { title: "ଭଡ଼ାଟିଆ ଫିଚର୍", description: "ଅଭିଯୋଗ, ଖାଦ୍ୟ, ଘୋଷଣା, ଚାଟ୍.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. ଆକାଉଣ୍ଟ ତିଆରି & ଲଗଇନ୍", steps: [
         { title: "ୱେବସାଇଟ୍ ଖୋଲନ୍ତୁ", desc: "'Sign Up' କ୍ଲିକ୍ କରନ୍ତୁ.", image: "/guide/signup-page.jpg" },
