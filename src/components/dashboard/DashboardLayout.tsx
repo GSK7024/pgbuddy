@@ -27,6 +27,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("sidebar.announcements"), href: "/dashboard/announcements", icon: Megaphone },
   { name: t("sidebar.manageListing"), href: "/dashboard/listing", icon: Camera },
   { name: t("sidebar.mealMenu"), href: "/dashboard/meal-menu", icon: UtensilsCrossed },
+  { name: "Refer & Earn", href: "/dashboard/referrals", icon: Gift },
 ];
 
 const bottomLinks = [
