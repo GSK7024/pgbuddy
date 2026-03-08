@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Plus } from "lucide-react";
+import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Plus, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ interface Payment {
   proof_uploaded_at: string | null;
   rooms?: { room_number: string };
   properties?: { name: string };
+  tenant_phone?: string | null;
+  tenant_name?: string | null;
 }
 
 interface ActiveAssignment {
@@ -59,16 +61,25 @@ const Payments = () => {
       supabase.from("tenant_assignments").select("id, tenant_id, property_id, room_id, rooms(room_number, rent_amount), properties(name)").eq("is_active", true),
     ]);
 
+    const payData = payRes.data ?? [];
     const assignData = assignRes.data ?? [];
-    // Fetch tenant names
-    const tenantIds = [...new Set(assignData.map(a => a.tenant_id))];
-    let profilesMap: Record<string, { full_name: string }> = {};
-    if (tenantIds.length > 0) {
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", tenantIds);
+    
+    // Fetch tenant names and phones for both payments and assignments
+    const allTenantIds = [...new Set([
+      ...payData.map(p => p.tenant_id),
+      ...assignData.map(a => a.tenant_id),
+    ])];
+    let profilesMap: Record<string, { full_name: string; phone: string | null }> = {};
+    if (allTenantIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, phone").in("user_id", allTenantIds);
       profiles?.forEach(p => { profilesMap[p.user_id] = p; });
     }
 
-    setPayments(payRes.data ?? []);
+    setPayments(payData.map(p => ({
+      ...p,
+      tenant_name: profilesMap[p.tenant_id]?.full_name || null,
+      tenant_phone: profilesMap[p.tenant_id]?.phone || null,
+    })));
     setAssignments(assignData.map(a => ({ ...a, profiles: profilesMap[a.tenant_id] })) as ActiveAssignment[]);
     setLoading(false);
   };
@@ -145,6 +156,21 @@ const Payments = () => {
   };
 
   const selectedAssign = assignments.find(a => a.id === selectedAssignment);
+
+  const sendWhatsAppReminder = (payment: Payment) => {
+    const phone = payment.tenant_phone?.replace(/[^0-9]/g, "");
+    if (!phone) {
+      toast({ title: "No phone number", description: "This tenant doesn't have a phone number on their profile.", variant: "destructive" });
+      return;
+    }
+    const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
+    const tenantName = payment.tenant_name || "Tenant";
+    const propertyName = (payment as any).properties?.name || "your PG";
+    const roomNumber = (payment as any).rooms?.room_number || "";
+    const message = `Hi ${tenantName},\n\nThis is a friendly reminder that your rent of ₹${Number(payment.amount).toLocaleString()} for ${payment.month} (${propertyName}, Room ${roomNumber}) is pending.\n\nPlease make the payment at your earliest convenience.\n\nThank you!`;
+    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
 
   return (
     <DashboardLayout>
@@ -240,9 +266,14 @@ const Payments = () => {
                         </Badge>
                       </div>
                       {p.status === "pending" && (
-                        <Button size="sm" className="gradient-primary" onClick={() => markPaid(p.id)}>
-                          Mark Paid
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" className="gap-1 text-success border-success hover:bg-success/10" onClick={() => sendWhatsAppReminder(p)}>
+                            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                          </Button>
+                          <Button size="sm" className="gradient-primary" onClick={() => markPaid(p.id)}>
+                            Mark Paid
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
