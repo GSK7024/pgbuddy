@@ -201,10 +201,13 @@ const Tenants = () => {
     setIdProofNumber(a.id_proof_number ?? "");
     setTenantNotes(a.notes ?? "");
     setDetailRent(String(a.custom_rent ?? (a as any).rooms?.rent_amount ?? ""));
-    // Fetch documents
-    const { data } = await supabase.storage.from("tenant-documents").list(a.id);
-    if (data && data.length > 0) {
-      const docs = data.map(f => {
+    // Fetch documents and rent history in parallel
+    const [docsRes, historyRes] = await Promise.all([
+      supabase.storage.from("tenant-documents").list(a.id),
+      supabase.from("rent_history").select("id, old_rent, new_rent, changed_at, notes").eq("assignment_id", a.id).order("changed_at", { ascending: false }),
+    ]);
+    if (docsRes.data && docsRes.data.length > 0) {
+      const docs = docsRes.data.map(f => {
         const { data: urlData } = supabase.storage.from("tenant-documents").getPublicUrl(`${a.id}/${f.name}`);
         return { name: f.name, url: urlData.publicUrl };
       });
@@ -212,6 +215,7 @@ const Tenants = () => {
     } else {
       setDocuments([]);
     }
+    setRentHistory(historyRes.data ?? []);
   };
 
   const saveDetails = async () => {
