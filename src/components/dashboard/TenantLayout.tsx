@@ -24,6 +24,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: "Community Chat", href: "/tenant/chat", icon: MessageCircle },
   { name: "Onboarding", href: "/tenant/onboarding", icon: ClipboardCheck },
   { name: "My Documents", href: "/tenant/documents", icon: FileText },
+  { name: "Utility Bills", href: "/tenant/utility-bills", icon: Zap },
 ];
 
 const getBottomLinks = (t: (k: string) => string) => [
