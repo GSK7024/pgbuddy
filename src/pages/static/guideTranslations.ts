@@ -1158,6 +1158,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ਕਦਮ", needHelp: "ਹੋਰ ਮਦਦ ਚਾਹੀਦੀ?",
     needHelpDesc: "support@pgmanager.in 'ਤੇ ਈਮੇਲ ਕਰੋ।",
     warningLabel: "⚠️ ਮਹੱਤਵਪੂਰਨ", tipLabel: "💡 ਟਿਪ", importantLabel: "ਮਹੱਤਵਪੂਰਨ",
+    videoSectionTitle: "📹 ਵੀਡੀਓ ਟਿਊਟੋਰੀਅਲ",
+    videoSectionDesc: "ਪੂਰਾ ਫਲੋ ਸਮਝਣ ਲਈ ਇਹ ਵੀਡੀਓ ਦੇਖੋ।",
+    ownerVideos: [
+      { title: "PG ਪ੍ਰਾਪਰਟੀ ਸੈੱਟਅੱਪ", description: "ਅਕਾਊਂਟ, ਪ੍ਰਾਪਰਟੀ, ਕਮਰੇ.", videoId: "owner-setup-demo" },
+      { title: "ਕਿਰਾਏਦਾਰਾਂ ਨੂੰ ਸੱਦਾ", description: "ਸੱਦਾ ਕੋਡ ਭੇਜੋ, ਭੁਗਤਾਨ ਟ੍ਰੈਕ.", videoId: "owner-tenants-demo" },
+      { title: "ਭੁਗਤਾਨ ਟ੍ਰੈਕਿੰਗ", description: "ਕਿਰਾਇਆ ਭੁਗਤਾਨ ਟ੍ਰੈਕ ਕਰੋ.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ਕਿਰਾਏਦਾਰ ਵਜੋਂ ਸ਼ਾਮਲ ਹੋਵੋ", description: "ਸਾਈਨ ਅੱਪ, ਸੱਦਾ ਕੋਡ ਦਾਖਲ ਕਰੋ.", videoId: "tenant-onboard-demo" },
+      { title: "ਕਿਰਾਇਆ ਭਰੋ", description: "ਕਿਰਾਇਆ ਦੇਖੋ, ਸਬੂਤ ਅੱਪਲੋਡ ਕਰੋ.", videoId: "tenant-payment-demo" },
+      { title: "ਕਿਰਾਏਦਾਰ ਫੀਚਰ", description: "ਸ਼ਿਕਾਇਤਾਂ, ਖਾਣਾ, ਘੋਸ਼ਣਾਵਾਂ, ਚੈਟ.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. ਅਕਾਊਂਟ ਬਣਾਓ & ਲੌਗਇਨ", steps: [
         { title: "ਵੈੱਬਸਾਈਟ ਖੋਲ੍ਹੋ", desc: "'Sign Up' ਕਲਿੱਕ ਕਰੋ.", image: "/guide/signup-page.jpg" },
