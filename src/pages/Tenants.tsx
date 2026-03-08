@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, UserCheck, Search } from "lucide-react";
+import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +22,11 @@ interface TenantAssignment {
   move_in_date: string;
   move_out_date: string | null;
   is_active: boolean;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  id_proof_type: string | null;
+  id_proof_number: string | null;
+  notes: string | null;
   rooms?: { room_number: string };
   properties?: { name: string };
   profiles?: { full_name: string; phone: string | null };
@@ -33,15 +40,26 @@ const Tenants = () => {
   const [rooms, setRooms] = useState<{ id: string; room_number: string; property_id: string; is_vacant: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailTenant, setDetailTenant] = useState<TenantAssignment | null>(null);
   const [assigning, setAssigning] = useState(false);
+  const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
 
-  // Form
+  // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
   const [propertyId, setPropertyId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [moveInDate, setMoveInDate] = useState(new Date().toISOString().split("T")[0]);
   const [foundTenant, setFoundTenant] = useState<{ user_id: string; full_name: string } | null>(null);
   const [searching, setSearching] = useState(false);
+
+  // Form - detail edit
+  const [emergencyName, setEmergencyName] = useState("");
+  const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [idProofType, setIdProofType] = useState("");
+  const [idProofNumber, setIdProofNumber] = useState("");
+  const [tenantNotes, setTenantNotes] = useState("");
+  const [savingDetails, setSavingDetails] = useState(false);
 
   const fetchData = async () => {
     if (!user) return;
@@ -75,7 +93,7 @@ const Tenants = () => {
     setFoundTenant(null);
     const { data, error } = await supabase.rpc("find_user_by_email", { _email: tenantEmail.trim() });
     if (error || !data || data.length === 0) {
-      toast({ title: "Tenant not found", description: "No account found with this email. Make sure the tenant has signed up first.", variant: "destructive" });
+      toast({ title: "Tenant not found", description: "No account found with this email.", variant: "destructive" });
     } else {
       setFoundTenant(data[0]);
     }
@@ -87,7 +105,6 @@ const Tenants = () => {
     if (!user || !foundTenant || !propertyId || !roomId) return;
     setAssigning(true);
 
-    // Insert assignment
     const { error } = await supabase.from("tenant_assignments").insert({
       tenant_id: foundTenant.user_id,
       property_id: propertyId,
@@ -101,9 +118,7 @@ const Tenants = () => {
       return;
     }
 
-    // Mark room as occupied
     await supabase.from("rooms").update({ is_vacant: false }).eq("id", roomId);
-
     toast({ title: "Tenant assigned successfully!" });
     setDialogOpen(false);
     resetForm();
@@ -117,17 +132,83 @@ const Tenants = () => {
     setFoundTenant(null);
   };
 
-  const handleDeactivate = async (id: string, roomId: string) => {
+  const handleDeactivate = async (id: string, rId: string) => {
     await supabase.from("tenant_assignments").update({
       is_active: false,
       move_out_date: new Date().toISOString().split("T")[0],
     }).eq("id", id);
-
-    // Mark room as vacant again
-    await supabase.from("rooms").update({ is_vacant: true }).eq("id", roomId);
-
+    await supabase.from("rooms").update({ is_vacant: true }).eq("id", rId);
     toast({ title: "Tenant moved out" });
+    setDetailTenant(null);
     fetchData();
+  };
+
+  const openDetail = async (a: TenantAssignment) => {
+    setDetailTenant(a);
+    setEmergencyName(a.emergency_contact_name ?? "");
+    setEmergencyPhone(a.emergency_contact_phone ?? "");
+    setIdProofType(a.id_proof_type ?? "");
+    setIdProofNumber(a.id_proof_number ?? "");
+    setTenantNotes(a.notes ?? "");
+    // Fetch documents
+    const { data } = await supabase.storage.from("tenant-documents").list(a.id);
+    if (data && data.length > 0) {
+      const docs = data.map(f => {
+        const { data: urlData } = supabase.storage.from("tenant-documents").getPublicUrl(`${a.id}/${f.name}`);
+        return { name: f.name, url: urlData.publicUrl };
+      });
+      setDocuments(docs);
+    } else {
+      setDocuments([]);
+    }
+  };
+
+  const saveDetails = async () => {
+    if (!detailTenant) return;
+    setSavingDetails(true);
+    const { error } = await supabase.from("tenant_assignments").update({
+      emergency_contact_name: emergencyName || null,
+      emergency_contact_phone: emergencyPhone || null,
+      id_proof_type: idProofType || null,
+      id_proof_number: idProofNumber || null,
+      notes: tenantNotes || null,
+    }).eq("id", detailTenant.id);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Tenant details saved!" });
+      fetchData();
+    }
+    setSavingDetails(false);
+  };
+
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!detailTenant || !e.target.files?.[0]) return;
+    const file = e.target.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 5MB allowed", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const filePath = `${detailTenant.id}/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from("tenant-documents").upload(filePath, file);
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Document uploaded!" });
+      openDetail(detailTenant);
+    }
+    setUploading(false);
+    e.target.value = "";
+  };
+
+  const downloadDoc = async (name: string) => {
+    if (!detailTenant) return;
+    const { data, error } = await supabase.storage.from("tenant-documents").createSignedUrl(`${detailTenant.id}/${name}`, 60);
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+    }
   };
 
   return (
@@ -136,7 +217,7 @@ const Tenants = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Tenants</h1>
-            <p className="text-muted-foreground">Manage tenant assignments</p>
+            <p className="text-muted-foreground">Manage tenant assignments and details</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
             <DialogTrigger asChild>
@@ -145,29 +226,20 @@ const Tenants = () => {
             <DialogContent>
               <DialogHeader><DialogTitle>Assign Tenant to Room</DialogTitle></DialogHeader>
               <form onSubmit={handleAssign} className="space-y-4">
-                {/* Email lookup */}
                 <div className="space-y-2">
                   <Label>Tenant Email *</Label>
                   <div className="flex gap-2">
-                    <Input
-                      type="email"
-                      value={tenantEmail}
-                      onChange={e => setTenantEmail(e.target.value)}
-                      placeholder="tenant@example.com"
-                      required
-                    />
+                    <Input type="email" value={tenantEmail} onChange={e => setTenantEmail(e.target.value)} placeholder="tenant@example.com" required />
                     <Button type="button" variant="outline" onClick={searchTenant} disabled={searching}>
                       <Search className="w-4 h-4" />
                     </Button>
                   </div>
                   {foundTenant && (
                     <div className="p-2 rounded-lg bg-success/10 text-success text-sm flex items-center gap-2">
-                      <UserCheck className="w-4 h-4" />
-                      Found: {foundTenant.full_name}
+                      <UserCheck className="w-4 h-4" /> Found: {foundTenant.full_name}
                     </div>
                   )}
                 </div>
-
                 <div className="space-y-2">
                   <Label>Property *</Label>
                   <Select value={propertyId} onValueChange={(v) => { setPropertyId(v); setRoomId(""); }}>
@@ -177,29 +249,20 @@ const Tenants = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
                   <Label>Room * {propertyId && `(${vacantRoomsForProperty.length} vacant)`}</Label>
                   <Select value={roomId} onValueChange={setRoomId} disabled={!propertyId}>
                     <SelectTrigger><SelectValue placeholder="Select vacant room" /></SelectTrigger>
                     <SelectContent>
-                      {vacantRoomsForProperty.map(r => (
-                        <SelectItem key={r.id} value={r.id}>Room {r.room_number}</SelectItem>
-                      ))}
+                      {vacantRoomsForProperty.map(r => <SelectItem key={r.id} value={r.id}>Room {r.room_number}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
                   <Label>Move-in Date</Label>
                   <Input type="date" value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
                 </div>
-
-                <Button
-                  type="submit"
-                  className="w-full gradient-primary"
-                  disabled={!foundTenant || !propertyId || !roomId || assigning}
-                >
+                <Button type="submit" className="w-full gradient-primary" disabled={!foundTenant || !propertyId || !roomId || assigning}>
                   {assigning ? "Assigning..." : "Assign Tenant"}
                 </Button>
               </form>
@@ -220,7 +283,7 @@ const Tenants = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {assignments.map(a => (
-              <Card key={a.id}>
+              <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(a)}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
@@ -235,21 +298,152 @@ const Tenants = () => {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                <CardContent className="space-y-1 text-sm">
                   <p><span className="text-muted-foreground">Property:</span> {(a as any).properties?.name}</p>
                   <p><span className="text-muted-foreground">Room:</span> {(a as any).rooms?.room_number}</p>
                   <p><span className="text-muted-foreground">Move-in:</span> {a.move_in_date}</p>
-                  {a.move_out_date && <p><span className="text-muted-foreground">Move-out:</span> {a.move_out_date}</p>}
-                  {a.is_active && (
-                    <Button variant="outline" size="sm" className="w-full mt-2 text-destructive" onClick={() => handleDeactivate(a.id, a.room_id)}>
-                      Mark as Moved Out
-                    </Button>
+                  {a.id_proof_type && (
+                    <p className="flex items-center gap-1"><Shield className="w-3 h-3 text-primary" /> {a.id_proof_type}: {a.id_proof_number}</p>
                   )}
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Tenant Detail Dialog */}
+        <Dialog open={!!detailTenant} onOpenChange={(o) => { if (!o) setDetailTenant(null); }}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-primary" />
+                {detailTenant?.profiles?.full_name || "Tenant Details"}
+              </DialogTitle>
+            </DialogHeader>
+
+            {detailTenant && (
+              <div className="space-y-5">
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground block">Property</span>
+                    <span className="font-medium">{(detailTenant as any).properties?.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Room</span>
+                    <span className="font-medium">{(detailTenant as any).rooms?.room_number}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Phone</span>
+                    <span className="font-medium">{detailTenant.profiles?.phone || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Move-in</span>
+                    <span className="font-medium">{detailTenant.move_in_date}</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* ID Proof */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2 text-sm">
+                    <Shield className="w-4 h-4 text-primary" /> ID Proof
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">ID Type</Label>
+                      <Select value={idProofType} onValueChange={setIdProofType}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="aadhar">Aadhar Card</SelectItem>
+                          <SelectItem value="pan">PAN Card</SelectItem>
+                          <SelectItem value="passport">Passport</SelectItem>
+                          <SelectItem value="driving_license">Driving License</SelectItem>
+                          <SelectItem value="voter_id">Voter ID</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">ID Number</Label>
+                      <Input className="h-9" value={idProofNumber} onChange={e => setIdProofNumber(e.target.value)} placeholder="XXXX-XXXX-XXXX" />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Emergency Contact */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-primary" /> Emergency Contact
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Name</Label>
+                      <Input className="h-9" value={emergencyName} onChange={e => setEmergencyName(e.target.value)} placeholder="Contact name" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Phone</Label>
+                      <Input className="h-9" value={emergencyPhone} onChange={e => setEmergencyPhone(e.target.value)} placeholder="+91..." />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Notes</Label>
+                  <Textarea value={tenantNotes} onChange={e => setTenantNotes(e.target.value)} placeholder="Any notes about the tenant..." rows={2} />
+                </div>
+
+                <Button onClick={saveDetails} disabled={savingDetails} className="w-full gradient-primary" size="sm">
+                  {savingDetails ? "Saving..." : "Save Details"}
+                </Button>
+
+                <Separator />
+
+                {/* Documents */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2 text-sm">
+                    <FileText className="w-4 h-4 text-primary" /> Documents
+                  </h4>
+                  <div className="space-y-2">
+                    {documents.length > 0 ? documents.map(doc => (
+                      <div key={doc.name} className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-sm">
+                        <span className="truncate flex-1">{doc.name.split("_").slice(1).join("_") || doc.name}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadDoc(doc.name)}>
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )) : (
+                      <p className="text-xs text-muted-foreground">No documents uploaded yet</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="doc-upload" className="cursor-pointer">
+                      <div className="flex items-center gap-2 p-3 border-2 border-dashed rounded-lg text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                        <Upload className="w-4 h-4" />
+                        {uploading ? "Uploading..." : "Upload document (ID proof, agreement, etc.)"}
+                      </div>
+                    </Label>
+                    <input id="doc-upload" type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={handleDocUpload} disabled={uploading} />
+                  </div>
+                </div>
+
+                {detailTenant.is_active && (
+                  <>
+                    <Separator />
+                    <Button variant="outline" size="sm" className="w-full text-destructive" onClick={() => handleDeactivate(detailTenant.id, detailTenant.room_id)}>
+                      Mark as Moved Out
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
