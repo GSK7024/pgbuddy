@@ -222,6 +222,7 @@ const Tenants = () => {
     setIdProofNumber(a.id_proof_number ?? "");
     setTenantNotes(a.notes ?? "");
     setDetailRent(String(a.custom_rent ?? (a as any).rooms?.rent_amount ?? ""));
+    setTenantPhone(a.profiles?.phone ?? "");
     // Fetch documents and rent history in parallel
     const [docsRes, historyRes] = await Promise.all([
       supabase.storage.from("tenant-documents").list(a.id),
