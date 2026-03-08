@@ -26,6 +26,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: "Onboarding", href: "/tenant/onboarding", icon: ClipboardCheck },
   { name: "My Documents", href: "/tenant/documents", icon: FileText },
   { name: "Utility Bills", href: "/tenant/utility-bills", icon: Zap },
+  { name: "Move-Out", href: "/tenant/move-out", icon: DoorOpen },
 ];
 
 const getBottomLinks = (t: (k: string) => string) => [

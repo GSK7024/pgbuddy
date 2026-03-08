@@ -121,6 +121,7 @@ const App = () => (
               <Route path="/tenant/onboarding" element={<ProtectedRoute requiredRole="tenant"><TenantOnboarding /></ProtectedRoute>} />
               <Route path="/tenant/documents" element={<ProtectedRoute requiredRole="tenant"><TenantDocuments /></ProtectedRoute>} />
               <Route path="/tenant/utility-bills" element={<ProtectedRoute requiredRole="tenant"><TenantUtilityBills /></ProtectedRoute>} />
+              <Route path="/tenant/move-out" element={<ProtectedRoute requiredRole="tenant"><TenantMoveOut /></ProtectedRoute>} />
               {/* SEO city pages */}
               <Route path="/pgs/:city" element={<CityPGs />} />
               {/* Static pages */}
