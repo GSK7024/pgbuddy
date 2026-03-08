@@ -31,6 +31,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: "Documents", href: "/dashboard/documents", icon: FileText },
   { name: "Visitor Log", href: "/dashboard/visitors", icon: UserCheck },
   { name: "Utility Bills", href: "/dashboard/utility-bills", icon: Zap },
+  { name: "Analytics", href: "/dashboard/analytics", icon: PieChart },
 ];
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
