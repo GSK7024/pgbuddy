@@ -78,10 +78,11 @@ const Tenants = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [assignRes, propRes, roomRes] = await Promise.all([
+    const [assignRes, propRes, roomRes, subRes] = await Promise.all([
       supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").order("created_at", { ascending: false }),
       supabase.from("properties").select("id, name").eq("owner_id", user.id),
       supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant"),
+      supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", user.id).eq("status", "active").maybeSingle(),
     ]);
 
     const data = assignRes.data ?? [];
@@ -95,6 +96,10 @@ const Tenants = () => {
     setAssignments(data.map(a => ({ ...a, profiles: profilesMap[a.tenant_id] })));
     setProperties(propRes.data ?? []);
     setRooms(roomRes.data ?? []);
+
+    // Set tenant limit from subscription
+    const limit = (subRes.data as any)?.subscription_plans?.tenant_limit;
+    setTenantLimit(limit !== undefined && limit !== null ? limit : 5);
     setLoading(false);
   };
 
