@@ -475,6 +475,20 @@ const Tenants = () => {
                 {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <ArrowUpDown className="w-4 h-4 mr-1 text-muted-foreground" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">Name A–Z</SelectItem>
+                <SelectItem value="name-desc">Name Z–A</SelectItem>
+                <SelectItem value="date-newest">Newest first</SelectItem>
+                <SelectItem value="date-oldest">Oldest first</SelectItem>
+                <SelectItem value="rent-high">Rent: High → Low</SelectItem>
+                <SelectItem value="rent-low">Rent: Low → High</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
 
