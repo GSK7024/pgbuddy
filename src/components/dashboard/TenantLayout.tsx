@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
   LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star, UtensilsCrossed, MessageCircle,
+  ClipboardCheck, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
