@@ -41,6 +41,11 @@ import TenantMealMenu from "./pages/TenantMealMenu";
 import Referrals from "./pages/Referrals";
 import TenantChat from "./pages/TenantChat";
 import CityPGs from "./pages/CityPGs";
+import TenantOnboarding from "./pages/TenantOnboarding";
+import TenantDocuments from "./pages/TenantDocuments";
+import Documents from "./pages/Documents";
+import VisitorLog from "./pages/VisitorLog";
+import UtilityBills from "./pages/UtilityBills";
 
 const queryClient = new QueryClient();
 
