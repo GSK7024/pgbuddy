@@ -384,30 +384,45 @@ export type Database = {
       tenant_assignments: {
         Row: {
           created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           id: string
+          id_proof_number: string | null
+          id_proof_type: string | null
           is_active: boolean | null
           move_in_date: string
           move_out_date: string | null
+          notes: string | null
           property_id: string
           room_id: string
           tenant_id: string
         }
         Insert: {
           created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           id?: string
+          id_proof_number?: string | null
+          id_proof_type?: string | null
           is_active?: boolean | null
           move_in_date?: string
           move_out_date?: string | null
+          notes?: string | null
           property_id: string
           room_id: string
           tenant_id: string
         }
         Update: {
           created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           id?: string
+          id_proof_number?: string | null
+          id_proof_type?: string | null
           is_active?: boolean | null
           move_in_date?: string
           move_out_date?: string | null
+          notes?: string | null
           property_id?: string
           room_id?: string
           tenant_id?: string
