@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Crown, Zap, Building2, IndianRupee, Loader2 } from "lucide-react";
+import { Check, Crown, Zap, Building2, IndianRupee, Loader2, Camera, Video, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
