@@ -52,6 +52,38 @@ export type Database = {
           },
         ]
       }
+      community_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          property_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          property_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          property_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_messages_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complaints: {
         Row: {
           category: string
@@ -473,6 +505,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_email: string | null
+          referred_user_id: string | null
+          referrer_id: string
+          reward_granted: boolean
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_id: string
+          reward_granted?: boolean
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_id?: string
+          reward_granted?: boolean
+          status?: string
+        }
+        Relationships: []
       }
       rent_history: {
         Row: {
