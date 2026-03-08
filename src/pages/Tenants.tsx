@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface TenantAssignment {
   id: string;
@@ -55,6 +56,7 @@ const Tenants = () => {
   const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [rentHistory, setRentHistory] = useState<{ id: string; old_rent: number | null; new_rent: number; changed_at: string; notes: string | null }[]>([]);
+  const [tenantLimit, setTenantLimit] = useState(5);
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
@@ -76,10 +78,11 @@ const Tenants = () => {
 
   const fetchData = async () => {
     if (!user) return;
-    const [assignRes, propRes, roomRes] = await Promise.all([
+    const [assignRes, propRes, roomRes, subRes] = await Promise.all([
       supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").order("created_at", { ascending: false }),
       supabase.from("properties").select("id, name").eq("owner_id", user.id),
       supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant"),
+      supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", user.id).eq("status", "active").maybeSingle(),
     ]);
 
     const data = assignRes.data ?? [];
@@ -93,6 +96,10 @@ const Tenants = () => {
     setAssignments(data.map(a => ({ ...a, profiles: profilesMap[a.tenant_id] })));
     setProperties(propRes.data ?? []);
     setRooms(roomRes.data ?? []);
+
+    // Set tenant limit from subscription
+    const limit = (subRes.data as any)?.subscription_plans?.tenant_limit;
+    setTenantLimit(limit !== undefined && limit !== null ? limit : 5);
     setLoading(false);
   };
 
@@ -149,6 +156,18 @@ const Tenants = () => {
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !foundTenant || !propertyId || !roomId) return;
+
+    // Check tenant limit
+    const activeTenants = assignments.filter(a => a.is_active).length;
+    if (tenantLimit !== -1 && activeTenants >= tenantLimit) {
+      toast({
+        title: "Tenant limit reached",
+        description: `Your current plan allows up to ${tenantLimit} tenants. Upgrade your plan to add more.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setAssigning(true);
 
     const rentValue = customRent ? parseFloat(customRent) : null;
@@ -302,6 +321,16 @@ const Tenants = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Assign Tenant to Room</DialogTitle></DialogHeader>
+              {tenantLimit !== -1 && assignments.filter(a => a.is_active).length >= tenantLimit ? (
+                <div className="space-y-4 text-center py-4">
+                  <p className="text-sm text-muted-foreground">
+                    You've reached your limit of <strong>{tenantLimit} tenants</strong> on your current plan.
+                  </p>
+                  <Button asChild className="gradient-primary">
+                    <Link to="/dashboard/subscription">Upgrade Plan</Link>
+                  </Button>
+                </div>
+              ) : (
               <form onSubmit={handleAssign} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Tenant Email *</Label>
@@ -356,6 +385,7 @@ const Tenants = () => {
                   {assigning ? "Assigning..." : "Assign Tenant"}
                 </Button>
               </form>
+              )}
             </DialogContent>
           </Dialog>
         </div>
