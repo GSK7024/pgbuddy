@@ -267,7 +267,7 @@ const Payments = () => {
                       </div>
                       {p.status === "pending" && (
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" className="gap-1 text-green-600 border-green-600 hover:bg-green-50" onClick={() => sendWhatsAppReminder(p)}>
+                          <Button size="sm" variant="outline" className="gap-1 text-success border-success hover:bg-success/10" onClick={() => sendWhatsAppReminder(p)}>
                             <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                           </Button>
                           <Button size="sm" className="gradient-primary" onClick={() => markPaid(p.id)}>
