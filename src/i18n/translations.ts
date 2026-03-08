@@ -1,4 +1,4 @@
-export type Language = "en" | "hi" | "mr" | "ta" | "te" | "kn" | "ml" | "bn" | "gu" | "pa";
+export type Language = "en" | "hi" | "mr" | "ta" | "te" | "kn" | "ml" | "bn" | "gu" | "pa" | "or" | "as";
 
 export const translations: Record<Language, Record<string, string>> = {
   en: {
