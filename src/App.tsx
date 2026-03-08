@@ -19,6 +19,7 @@ import TenantDashboard from "./pages/TenantDashboard";
 import TenantPayments from "./pages/TenantPayments";
 import TenantComplaints from "./pages/TenantComplaints";
 import TenantNotices from "./pages/TenantNotices";
+import Marketplace from "./pages/Marketplace";
 import ResetPassword from "./pages/ResetPassword";
 import BrowsePG from "./pages/BrowsePG";
 import ListPG from "./pages/ListPG";
