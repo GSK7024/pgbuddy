@@ -47,6 +47,15 @@ import Documents from "./pages/Documents";
 import VisitorLog from "./pages/VisitorLog";
 import UtilityBills from "./pages/UtilityBills";
 import TenantUtilityBills from "./pages/TenantUtilityBills";
+import AboutUs from "./pages/static/AboutUs";
+import Careers from "./pages/static/Careers";
+import Blog from "./pages/static/Blog";
+import Contact from "./pages/static/Contact";
+import HelpCenter from "./pages/static/HelpCenter";
+import FAQs from "./pages/static/FAQs";
+import PrivacyPolicy from "./pages/static/PrivacyPolicy";
+import TermsOfService from "./pages/static/TermsOfService";
+import Pricing from "./pages/static/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +110,16 @@ const App = () => (
               <Route path="/tenant/utility-bills" element={<ProtectedRoute requiredRole="tenant"><TenantUtilityBills /></ProtectedRoute>} />
               {/* SEO city pages */}
               <Route path="/pgs/:city" element={<CityPGs />} />
+              {/* Static pages */}
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/help" element={<HelpCenter />} />
+              <Route path="/faqs" element={<FAQs />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/pricing" element={<Pricing />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
