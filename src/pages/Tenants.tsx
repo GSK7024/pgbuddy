@@ -393,6 +393,12 @@ const Tenants = () => {
                     <Input type="date" value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
+                    <Label>Phone Number</Label>
+                    <Input type="tel" value={assignPhone} onChange={e => setAssignPhone(e.target.value)} placeholder="+91 XXXXXXXXXX" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label>Rent (₹)</Label>
                     <Input type="number" value={customRent} onChange={e => setCustomRent(e.target.value)} placeholder="Room default" />
                   </div>
