@@ -3,30 +3,36 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
-  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star,
+  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star, UtensilsCrossed,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationBell from "@/components/NotificationBell";
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const sidebarLinks = [
-  { name: "My Room", href: "/tenant", icon: LayoutDashboard },
-  { name: "Payments", href: "/tenant/payments", icon: CreditCard },
-  { name: "Complaints", href: "/tenant/complaints", icon: MessageSquare },
-  { name: "Vacancy Notice", href: "/tenant/notices", icon: BellDot },
-  { name: "Announcements", href: "/tenant/announcements", icon: Megaphone },
-  { name: "Browse PGs", href: "/tenant/marketplace", icon: Search },
-  { name: "Reviews", href: "/tenant/reviews", icon: Star },
+const getSidebarLinks = (t: (k: string) => string) => [
+  { name: t("tenant.myRoom"), href: "/tenant", icon: LayoutDashboard },
+  { name: t("tenant.payments"), href: "/tenant/payments", icon: CreditCard },
+  { name: t("tenant.complaints"), href: "/tenant/complaints", icon: MessageSquare },
+  { name: t("tenant.vacancyNotice"), href: "/tenant/notices", icon: BellDot },
+  { name: t("tenant.announcements"), href: "/tenant/announcements", icon: Megaphone },
+  { name: t("tenant.browsePgs"), href: "/tenant/marketplace", icon: Search },
+  { name: t("tenant.reviews"), href: "/tenant/reviews", icon: Star },
+  { name: t("tenant.mealMenu"), href: "/tenant/meal-menu", icon: UtensilsCrossed },
 ];
 
-const bottomLinks = [
-  { name: "Profile", href: "/tenant/profile", icon: User },
+const getBottomLinks = (t: (k: string) => string) => [
+  { name: t("sidebar.profile"), href: "/tenant/profile", icon: User },
 ];
 
 const TenantLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const sidebarLinks = getSidebarLinks(t);
+  const bottomLinks = getBottomLinks(t);
 
   const handleSignOut = async () => {
     await signOut();
@@ -70,9 +76,12 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
             {link.name}
           </Link>
         ))}
+        <div className="flex items-center justify-between px-3 py-1">
+          <LanguageSwitcher />
+        </div>
         <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
           <LogOut className="w-4 h-4" />
-          Sign Out
+          {t("nav.signOut")}
         </Button>
       </div>
     </>
