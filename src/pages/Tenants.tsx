@@ -60,6 +60,7 @@ const Tenants = () => {
   const [tenantLimit, setTenantLimit] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPropertyId, setFilterPropertyId] = useState("all");
+  const [sortBy, setSortBy] = useState("name-asc");
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
