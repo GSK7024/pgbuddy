@@ -456,6 +456,27 @@ const Tenants = () => {
                   </p>
                 </div>
 
+                {/* Rent History */}
+                {rentHistory.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2 text-sm">
+                      <History className="w-4 h-4 text-primary" /> Rent History
+                    </h4>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {rentHistory.map(h => (
+                        <div key={h.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-xs">
+                          <div>
+                            <span className="text-muted-foreground">₹{Number(h.old_rent ?? 0).toLocaleString()}</span>
+                            <span className="mx-1.5">→</span>
+                            <span className="font-semibold">₹{Number(h.new_rent).toLocaleString()}</span>
+                          </div>
+                          <span className="text-muted-foreground">{new Date(h.changed_at).toLocaleDateString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <Separator />
 
                 {/* ID Proof */}
