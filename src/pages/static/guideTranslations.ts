@@ -850,6 +850,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ಹಂತ", needHelp: "ಹೆಚ್ಚಿನ ಸಹಾಯ ಬೇಕೇ?",
     needHelpDesc: "support@pgmanager.in ಗೆ ಇಮೇಲ್ ಮಾಡಿ.",
     warningLabel: "⚠️ ಮುಖ್ಯ", tipLabel: "💡 ಸಲಹೆ", importantLabel: "ಮುಖ್ಯ",
+    videoSectionTitle: "📹 ವೀಡಿಯೊ ಟ್ಯುಟೋರಿಯಲ್‌ಗಳು",
+    videoSectionDesc: "ಸಂಪೂರ್ಣ ಹರಿವನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ಈ ವೀಡಿಯೊಗಳನ್ನು ನೋಡಿ.",
+    ownerVideos: [
+      { title: "PG ಆಸ್ತಿ ಹೇಗೆ ಸೆಟಪ್ ಮಾಡುವುದು", description: "ಖಾತೆ ರಚನೆ, ಆಸ್ತಿ ಸೇರಿಸುವುದು, ಕೊಠಡಿಗಳು.", videoId: "owner-setup-demo" },
+      { title: "ಬಾಡಿಗೆದಾರರನ್ನು ಆಹ್ವಾನಿಸುವುದು", description: "ಆಹ್ವಾನ ಕೋಡ್ ಕಳುಹಿಸುವುದು, ಪಾವತಿ ಟ್ರ್ಯಾಕ್.", videoId: "owner-tenants-demo" },
+      { title: "ಪಾವತಿ ಟ್ರ್ಯಾಕಿಂಗ್", description: "ಬಾಡಿಗೆ ಪಾವತಿಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ಬಾಡಿಗೆದಾರರಾಗಿ ಸೇರುವುದು", description: "ಸೈನ್ ಅಪ್, ಆಹ್ವಾನ ಕೋಡ್ ನಮೂದಿಸಿ.", videoId: "tenant-onboard-demo" },
+      { title: "ಬಾಡಿಗೆ ಪಾವತಿ", description: "ಬಾಡಿಗೆ ನೋಡಿ, ಪುರಾವೆ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.", videoId: "tenant-payment-demo" },
+      { title: "ಬಾಡಿಗೆದಾರ ವೈಶಿಷ್ಟ್ಯಗಳು", description: "ದೂರುಗಳು, ಊಟ, ಪ್ರಕಟಣೆಗಳು, ಚಾಟ್.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. ಖಾತೆ ರಚನೆ & ಲಾಗಿನ್", steps: [
         { title: "ವೆಬ್‌ಸೈಟ್ ತೆರೆಯಿರಿ", desc: "pgbuddy.lovable.app ತೆರೆದು 'Sign Up' ಕ್ಲಿಕ್ ಮಾಡಿ.", image: "/guide/signup-page.jpg" },
