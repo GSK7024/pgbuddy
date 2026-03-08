@@ -137,6 +137,50 @@ export type Database = {
           },
         ]
       }
+      meal_menus: {
+        Row: {
+          breakfast: string | null
+          created_at: string
+          dinner: string | null
+          id: string
+          lunch: string | null
+          menu_date: string
+          property_id: string
+          snacks: string | null
+          updated_at: string
+        }
+        Insert: {
+          breakfast?: string | null
+          created_at?: string
+          dinner?: string | null
+          id?: string
+          lunch?: string | null
+          menu_date?: string
+          property_id: string
+          snacks?: string | null
+          updated_at?: string
+        }
+        Update: {
+          breakfast?: string | null
+          created_at?: string
+          dinner?: string | null
+          id?: string
+          lunch?: string | null
+          menu_date?: string
+          property_id?: string
+          snacks?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_menus_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
