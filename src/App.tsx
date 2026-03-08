@@ -34,6 +34,7 @@ import NotFound from "./pages/NotFound";
 import Subscription from "./pages/Subscription";
 import PropertyDetail from "./pages/PropertyDetail";
 import ManageListing from "./pages/ManageListing";
+import TenantReviews from "./pages/TenantReviews";
 
 const queryClient = new QueryClient();
 
