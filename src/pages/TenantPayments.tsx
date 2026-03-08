@@ -10,6 +10,7 @@ import TenantLayout from "@/components/dashboard/TenantLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import RentReceipt from "@/components/RentReceipt";
 
 interface Payment {
   id: string;
