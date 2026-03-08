@@ -156,6 +156,18 @@ const Tenants = () => {
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !foundTenant || !propertyId || !roomId) return;
+
+    // Check tenant limit
+    const activeTenants = assignments.filter(a => a.is_active).length;
+    if (tenantLimit !== -1 && activeTenants >= tenantLimit) {
+      toast({
+        title: "Tenant limit reached",
+        description: `Your current plan allows up to ${tenantLimit} tenants. Upgrade your plan to add more.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setAssigning(true);
 
     const rentValue = customRent ? parseFloat(customRent) : null;
