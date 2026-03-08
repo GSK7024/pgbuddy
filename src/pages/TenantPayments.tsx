@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Upload, QrCode, Building2, Phone, FileText } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState, useCallback } from "react";
+import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Upload, QrCode, Building2, Zap } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import TenantLayout from "@/components/dashboard/TenantLayout";
@@ -20,6 +19,7 @@ interface Payment {
   payment_date: string | null;
   proof_url: string | null;
   proof_uploaded_at: string | null;
+  transaction_id: string | null;
   rooms: { room_number: string } | null;
   properties: { name: string } | null;
 }
@@ -32,6 +32,12 @@ interface PaymentInfo {
   account_holder: string | null;
 }
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const TenantPayments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -39,7 +45,32 @@ const TenantPayments = () => {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [paying, setPaying] = useState<string | null>(null);
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+
+  // Load Razorpay script
+  useEffect(() => {
+    if (document.getElementById("razorpay-script")) {
+      setRazorpayLoaded(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "razorpay-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => setRazorpayLoaded(true);
+    document.body.appendChild(script);
+  }, []);
+
+  const refreshPayments = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("rent_payments")
+      .select("*, rooms(room_number), properties(name)")
+      .eq("tenant_id", user.id)
+      .order("created_at", { ascending: false });
+    setPayments((data as unknown as Payment[]) ?? []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -72,6 +103,68 @@ const TenantPayments = () => {
     fetchData();
   }, [user]);
 
+  const handlePayOnline = async (payment: Payment) => {
+    if (!user || !razorpayLoaded) return;
+    setPaying(payment.id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-rent-order", {
+        body: { payment_id: payment.id },
+      });
+
+      if (error || !data?.order_id) {
+        throw new Error(error?.message || data?.error || "Failed to create order");
+      }
+
+      const options = {
+        key: data.razorpay_key,
+        amount: data.amount,
+        currency: data.currency,
+        name: payment.properties?.name || "Rent Payment",
+        description: `Rent for ${payment.month}`,
+        order_id: data.order_id,
+        handler: async (response: any) => {
+          // Update payment record with transaction ID
+          await supabase
+            .from("rent_payments")
+            .update({
+              status: "paid",
+              payment_date: new Date().toISOString(),
+              transaction_id: response.razorpay_payment_id,
+            })
+            .eq("id", payment.id);
+
+          toast({ title: "Payment successful!", description: `Transaction ID: ${response.razorpay_payment_id}` });
+          refreshPayments();
+        },
+        prefill: {
+          email: user.email,
+        },
+        notes: {
+          payment_id: payment.id,
+          type: "rent_payment",
+        },
+        theme: {
+          color: "#6366f1",
+        },
+        modal: {
+          ondismiss: () => setPaying(null),
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (resp: any) => {
+        toast({ title: "Payment failed", description: resp.error?.description || "Please try again", variant: "destructive" });
+        setPaying(null);
+      });
+      rzp.open();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setPaying(null);
+    }
+  };
+
   const handleUploadProof = async (paymentId: string, file: File) => {
     if (!user) return;
     setUploading(paymentId);
@@ -98,14 +191,7 @@ const TenantPayments = () => {
 
     toast({ title: "Payment proof uploaded!" });
     setUploading(null);
-
-    // Refresh
-    const { data } = await supabase
-      .from("rent_payments")
-      .select("*, rooms(room_number), properties(name)")
-      .eq("tenant_id", user.id)
-      .order("created_at", { ascending: false });
-    setPayments((data as unknown as Payment[]) ?? []);
+    refreshPayments();
   };
 
   const statusIcon = (s: string) => {
@@ -217,9 +303,21 @@ const TenantPayments = () => {
                     </div>
                   </div>
 
-                  {/* Upload proof for pending payments */}
-                  {p.status === "pending" && (
-                    <div className="flex items-center gap-3 pt-2 border-t border-border">
+                  {/* Actions for pending/overdue payments */}
+                  {(p.status === "pending" || p.status === "overdue") && (
+                    <div className="flex items-center gap-3 pt-2 border-t border-border flex-wrap">
+                      {/* Pay Online Button */}
+                      <Button
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => handlePayOnline(p)}
+                        disabled={paying === p.id || !razorpayLoaded}
+                      >
+                        <Zap className="w-3 h-3" />
+                        {paying === p.id ? "Processing..." : "Pay Online"}
+                      </Button>
+
+                      {/* Upload proof */}
                       {p.proof_url ? (
                         <div className="flex items-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-success" />
@@ -241,15 +339,22 @@ const TenantPayments = () => {
                           <Button variant="outline" size="sm" className="gap-2" disabled={uploading === p.id} asChild>
                             <span>
                               <Upload className="w-3 h-3" />
-                              {uploading === p.id ? "Uploading..." : "Upload Payment Proof"}
+                              {uploading === p.id ? "Uploading..." : "Upload Proof"}
                             </span>
                           </Button>
                         </label>
                       )}
                     </div>
                   )}
+
+                  {/* Paid payment details */}
                   {p.status === "paid" && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border flex-wrap">
+                      {p.transaction_id && (
+                        <span className="bg-muted px-2 py-0.5 rounded font-mono">
+                          TXN: {p.transaction_id.slice(0, 16)}...
+                        </span>
+                      )}
                       {p.proof_url && (
                         <>
                           <CheckCircle className="w-3 h-3 text-success" />
