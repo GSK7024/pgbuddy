@@ -31,6 +31,7 @@ interface PropertyListing {
   amenities: string[] | null;
   gender_preference: string | null;
   contact_phone: string | null;
+  is_featured: boolean | null;
   rooms: RoomInfo[];
   coverPhoto?: string;
   avgRating?: number;
