@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2, CreditCard, MessageSquare, BellDot,
-  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User,
+  LogOut, Menu, X, Search, LayoutDashboard, Megaphone, User, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
