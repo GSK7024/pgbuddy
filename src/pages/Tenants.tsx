@@ -467,10 +467,10 @@ const Tenants = () => {
                     <span className="text-muted-foreground block">Room</span>
                     <span className="font-medium">{(detailTenant as any).rooms?.room_number}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block">Phone</span>
-                    <span className="font-medium">{detailTenant.profiles?.phone || "—"}</span>
-                  </div>
+                   <div>
+                     <span className="text-muted-foreground block">Phone</span>
+                     <Input className="h-8 text-sm" value={tenantPhone} onChange={e => setTenantPhone(e.target.value)} placeholder="+91 XXXXXXXXXX" />
+                   </div>
                   <div>
                     <span className="text-muted-foreground block">Move-in</span>
                     <span className="font-medium">{detailTenant.move_in_date}</span>
