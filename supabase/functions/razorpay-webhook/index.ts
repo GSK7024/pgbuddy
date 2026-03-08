@@ -20,27 +20,33 @@ Deno.serve(async (req) => {
     const body = await req.text();
     const signature = req.headers.get('x-razorpay-signature');
 
-    // Verify webhook signature
-    if (signature) {
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        'raw',
-        encoder.encode(RAZORPAY_KEY_SECRET),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-      );
-      const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
-      const expectedSig = Array.from(new Uint8Array(sig))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+    // Signature is mandatory — reject requests without it
+    if (!signature) {
+      return new Response(JSON.stringify({ error: 'Missing signature' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-      if (expectedSig !== signature) {
-        return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+    // Verify webhook signature
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(RAZORPAY_KEY_SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
+    const expectedSig = Array.from(new Uint8Array(sig))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    if (expectedSig !== signature) {
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const event = JSON.parse(body);
