@@ -103,6 +103,7 @@ const App = () => (
               <Route path="/dashboard/utility-bills" element={<ProtectedRoute requiredRole="owner"><UtilityBills /></ProtectedRoute>} />
               <Route path="/dashboard/analytics" element={<ProtectedRoute requiredRole="owner"><TenantAnalytics /></ProtectedRoute>} />
               <Route path="/dashboard/audit-logs" element={<ProtectedRoute requiredRole="owner"><AuditLogs /></ProtectedRoute>} />
+              <Route path="/dashboard/staff" element={<ProtectedRoute requiredRole="owner"><StaffManagement /></ProtectedRoute>} />
               {/* Tenant routes */}
               <Route path="/tenant" element={<ProtectedRoute requiredRole="tenant"><TenantDashboard /></ProtectedRoute>} />
               <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
