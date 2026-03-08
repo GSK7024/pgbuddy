@@ -66,6 +66,7 @@ const TenantAnalytics = () => {
   const [occupancyData, setOccupancyData] = useState<PropertyOccupancy[]>([]);
   const [revenueData, setRevenueData] = useState<PropertyRevenue[]>([]);
   const [turnoverData, setTurnoverData] = useState<TurnoverMonth[]>([]);
+  const [revenueTrendData, setRevenueTrendData] = useState<{ month: string; collected: number; pending: number }[]>([]);
   const [summary, setSummary] = useState({
     totalBeds: 0, occupiedBeds: 0, totalRevenue: 0, pendingRevenue: 0,
     totalMoveIns: 0, totalMoveOuts: 0, avgStayDays: 0,
@@ -162,6 +163,17 @@ const TenantAnalytics = () => {
       return { month: label, moveIns, moveOuts };
     });
     setTurnoverData(months);
+
+    // Monthly revenue trend within range
+    const revTrend = monthStarts.map(ms => {
+      const key = format(ms, "yyyy-MM");
+      const label = format(ms, "MMM yy");
+      const monthPayments = rangePayments.filter(p => p.created_at?.startsWith(key));
+      const collected = monthPayments.filter(p => p.status === "paid").reduce((s: number, p: any) => s + Number(p.amount), 0);
+      const pending = monthPayments.filter(p => p.status === "pending").reduce((s: number, p: any) => s + Number(p.amount), 0);
+      return { month: label, collected, pending };
+    });
+    setRevenueTrendData(revTrend);
 
     // Summary
     const totalBeds = occData.reduce((s, o) => s + o.totalBeds, 0);
@@ -408,7 +420,33 @@ const TenantAnalytics = () => {
               </CardContent>
             </Card>
 
-            {/* Occupancy Pie */}
+            {/* Monthly Revenue Trend */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Monthly Revenue Trend</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {revenueTrendData.every(d => d.collected === 0 && d.pending === 0) ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">No payment data in this period</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={revenueTrendData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                      <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                      <Tooltip
+                        contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                        formatter={(value: number) => [`₹${value.toLocaleString()}`]}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="collected" name="Collected" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
+                      <Line type="monotone" dataKey="pending" name="Pending" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} strokeDasharray="5 5" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
             {summary.totalBeds > 0 && (
               <Card>
                 <CardHeader className="pb-2">
