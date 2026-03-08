@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, BookOpen, Building2, User, ChevronRight, HelpCircle, Globe } from "lucide-react";
+import { ArrowLeft, BookOpen, Building2, User, ChevronRight, HelpCircle, Globe, AlertTriangle, Lightbulb } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Language } from "@/i18n/translations";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
-import { guideTranslations } from "./guideTranslations";
+import { guideTranslations, GuideStep, GuideSection as GuideSectionType } from "./guideTranslations";
 
 const languageNames: Record<Language, string> = {
   en: "English", hi: "हिंदी", mr: "मराठी", ta: "தமிழ்", te: "తెలుగు",
@@ -40,7 +40,6 @@ const UserGuide = () => {
               </div>
             </div>
 
-            {/* Language selector for the guide */}
             <div className="relative">
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-muted-foreground" />
@@ -70,13 +69,13 @@ const UserGuide = () => {
 
             <TabsContent value="owner" className="space-y-8">
               {content.ownerSections.map((section, si) => (
-                <GuideSection key={si} section={section} sectionIndex={si} stepLabel={content.stepLabel} />
+                <GuideSection key={si} section={section} warningLabel={content.warningLabel} tipLabel={content.tipLabel} />
               ))}
             </TabsContent>
 
             <TabsContent value="tenant" className="space-y-8">
               {content.tenantSections.map((section, si) => (
-                <GuideSection key={si} section={section} sectionIndex={si} stepLabel={content.stepLabel} />
+                <GuideSection key={si} section={section} warningLabel={content.warningLabel} tipLabel={content.tipLabel} />
               ))}
             </TabsContent>
           </Tabs>
@@ -96,22 +95,55 @@ const UserGuide = () => {
   );
 };
 
-const GuideSection = ({ section, sectionIndex, stepLabel }: { section: { title: string; steps: { title: string; desc: string }[] }; sectionIndex: number; stepLabel: string }) => (
+const GuideSection = ({ section, warningLabel, tipLabel }: { section: GuideSectionType; warningLabel: string; tipLabel: string }) => (
   <div>
     <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
       <ChevronRight className="w-5 h-5 text-primary" />
       {section.title}
     </h2>
-    <div className="space-y-3">
+    <div className="space-y-4">
       {section.steps.map((step, i) => (
-        <div key={i} className="flex gap-4 p-4 rounded-xl border border-border hover:border-primary/30 transition-colors bg-card">
-          <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center shrink-0 text-xs font-bold text-primary-foreground">
-            {i + 1}
+        <div key={i} className="rounded-xl border border-border hover:border-primary/30 transition-colors bg-card overflow-hidden">
+          <div className="flex gap-4 p-4">
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center shrink-0 text-xs font-bold text-primary-foreground">
+              {i + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground text-sm">{step.title}</h3>
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{step.desc}</p>
+
+              {step.warning && (
+                <div className="mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex gap-2">
+                  <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-destructive">{warningLabel}</p>
+                    <p className="text-xs text-destructive/80 mt-0.5">{step.warning}</p>
+                  </div>
+                </div>
+              )}
+
+              {step.tip && (
+                <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20 flex gap-2">
+                  <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-primary">{tipLabel}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{step.tip}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground text-sm">{step.title}</h3>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{step.desc}</p>
-          </div>
+
+          {step.image && (
+            <div className="px-4 pb-4">
+              <img
+                src={step.image}
+                alt={step.title}
+                className="w-full rounded-lg border border-border shadow-sm"
+                loading="lazy"
+              />
+            </div>
+          )}
         </div>
       ))}
     </div>
