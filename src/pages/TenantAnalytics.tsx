@@ -420,7 +420,33 @@ const TenantAnalytics = () => {
               </CardContent>
             </Card>
 
-            {/* Occupancy Pie */}
+            {/* Monthly Revenue Trend */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Monthly Revenue Trend</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {revenueTrendData.every(d => d.collected === 0 && d.pending === 0) ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">No payment data in this period</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={revenueTrendData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                      <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                      <Tooltip
+                        contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                        formatter={(value: number) => [`₹${value.toLocaleString()}`]}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="collected" name="Collected" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
+                      <Line type="monotone" dataKey="pending" name="Pending" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} strokeDasharray="5 5" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
             {summary.totalBeds > 0 && (
               <Card>
                 <CardHeader className="pb-2">
