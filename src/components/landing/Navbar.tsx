@@ -41,6 +41,7 @@ const Navbar = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <Button variant="ghost" asChild>
               <Link to="/auth">
                 <LogIn className="w-4 h-4 mr-2" />
