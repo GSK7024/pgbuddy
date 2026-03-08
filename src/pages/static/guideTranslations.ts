@@ -1004,6 +1004,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ধাপ", needHelp: "আরও সাহায্য দরকার?",
     needHelpDesc: "support@pgmanager.in এ ইমেইল পাঠান।",
     warningLabel: "⚠️ গুরুত্বপূর্ণ", tipLabel: "💡 পরামর্শ", importantLabel: "গুরুত্বপূর্ণ",
+    videoSectionTitle: "📹 ভিডিও টিউটোরিয়াল",
+    videoSectionDesc: "সম্পূর্ণ প্রবাহ বুঝতে এই ভিডিওগুলি দেখুন।",
+    ownerVideos: [
+      { title: "PG প্রপার্টি সেটআপ", description: "অ্যাকাউন্ট, প্রপার্টি, রুম তৈরি।", videoId: "owner-setup-demo" },
+      { title: "ভাড়াটেদের আমন্ত্রণ", description: "ইনভাইট কোড পাঠানো, পেমেন্ট ট্র্যাক।", videoId: "owner-tenants-demo" },
+      { title: "পেমেন্ট ট্র্যাকিং", description: "ভাড়া পেমেন্ট ট্র্যাক করুন।", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ভাড়াটে হিসেবে যোগদান", description: "সাইন আপ, ইনভাইট কোড দিন।", videoId: "tenant-onboard-demo" },
+      { title: "ভাড়া পরিশোধ", description: "ভাড়া দেখুন, প্রমাণ আপলোড করুন।", videoId: "tenant-payment-demo" },
+      { title: "ভাড়াটে ফিচার", description: "অভিযোগ, খাবার, ঘোষণা, চ্যাট।", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. অ্যাকাউন্ট তৈরি ও লগইন", steps: [
         { title: "ওয়েবসাইট খুলুন", desc: "'Sign Up' ক্লিক করুন।", image: "/guide/signup-page.jpg" },
