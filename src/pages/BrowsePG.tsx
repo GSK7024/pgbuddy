@@ -200,6 +200,10 @@ const BrowsePG = () => {
   });
 
   const sorted = [...filtered].sort((a, b) => {
+    // Featured properties always come first
+    if (a.is_featured && !b.is_featured) return -1;
+    if (!a.is_featured && b.is_featured) return 1;
+
     const aVacant = a.rooms.filter(r => r.is_vacant);
     const bVacant = b.rooms.filter(r => r.is_vacant);
     const aMin = aVacant.length > 0 ? Math.min(...aVacant.map(r => Number(r.rent_amount))) : Infinity;
