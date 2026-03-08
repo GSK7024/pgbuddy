@@ -221,29 +221,38 @@ const Payments = () => {
           <div className="space-y-3">
             {payments.map(p => (
               <Card key={p.id}>
-                <CardContent className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-4">
-                    {statusIcon(p.status)}
-                    <div>
-                      <p className="font-medium">{(p as any).properties?.name} · Room {(p as any).rooms?.room_number}</p>
-                      <p className="text-sm text-muted-foreground">{p.month}</p>
+                <CardContent className="py-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      {statusIcon(p.status)}
+                      <div>
+                        <p className="font-medium">{(p as any).properties?.name} · Room {(p as any).rooms?.room_number}</p>
+                        <p className="text-sm text-muted-foreground">{p.month}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="font-bold flex items-center gap-1">
+                          <IndianRupee className="w-3 h-3" />{Number(p.amount).toLocaleString()}
+                        </p>
+                        <Badge variant={p.status === "paid" ? "default" : p.status === "overdue" ? "destructive" : "secondary"} className={p.status === "paid" ? "bg-success" : ""}>
+                          {p.status}
+                        </Badge>
+                      </div>
+                      {p.status === "pending" && (
+                        <Button size="sm" className="gradient-primary" onClick={() => markPaid(p.id)}>
+                          Mark Paid
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold flex items-center gap-1">
-                        <IndianRupee className="w-3 h-3" />{Number(p.amount).toLocaleString()}
-                      </p>
-                      <Badge variant={p.status === "paid" ? "default" : p.status === "overdue" ? "destructive" : "secondary"} className={p.status === "paid" ? "bg-success" : ""}>
-                        {p.status}
-                      </Badge>
+                  {(p as any).proof_url && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
+                      <CheckCircle className="w-3 h-3 text-success" />
+                      <span>Payment proof uploaded</span>
+                      <a href={(p as any).proof_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">View proof</a>
                     </div>
-                    {p.status === "pending" && (
-                      <Button size="sm" className="gradient-primary" onClick={() => markPaid(p.id)}>
-                        Mark Paid
-                      </Button>
-                    )}
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
