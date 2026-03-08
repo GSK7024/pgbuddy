@@ -19,6 +19,7 @@ import TenantDashboard from "./pages/TenantDashboard";
 import TenantPayments from "./pages/TenantPayments";
 import TenantComplaints from "./pages/TenantComplaints";
 import TenantNotices from "./pages/TenantNotices";
+import Marketplace from "./pages/Marketplace";
 import ResetPassword from "./pages/ResetPassword";
 import BrowsePG from "./pages/BrowsePG";
 import ListPG from "./pages/ListPG";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
             <Route path="/tenant/complaints" element={<ProtectedRoute requiredRole="tenant"><TenantComplaints /></ProtectedRoute>} />
             <Route path="/tenant/notices" element={<ProtectedRoute requiredRole="tenant"><TenantNotices /></ProtectedRoute>} />
+            <Route path="/tenant/marketplace" element={<ProtectedRoute requiredRole="tenant"><Marketplace /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
