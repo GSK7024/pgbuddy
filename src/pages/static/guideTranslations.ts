@@ -13,6 +13,12 @@ export interface GuideSection {
   steps: GuideStep[];
 }
 
+export interface VideoTutorial {
+  title: string;
+  description: string;
+  videoId: string;
+}
+
 export interface GuideContent {
   pageTitle: string;
   pageSubtitle: string;
@@ -20,6 +26,10 @@ export interface GuideContent {
   tenantTab: string;
   ownerSections: GuideSection[];
   tenantSections: GuideSection[];
+  ownerVideos: VideoTutorial[];
+  tenantVideos: VideoTutorial[];
+  videoSectionTitle: string;
+  videoSectionDesc: string;
   stepLabel: string;
   needHelp: string;
   needHelpDesc: string;
