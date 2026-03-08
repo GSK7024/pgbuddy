@@ -54,6 +54,7 @@ const Tenants = () => {
   const [assigning, setAssigning] = useState(false);
   const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [rentHistory, setRentHistory] = useState<{ id: string; old_rent: number | null; new_rent: number; changed_at: string; notes: string | null }[]>([]);
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
