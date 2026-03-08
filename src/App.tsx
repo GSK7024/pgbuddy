@@ -75,6 +75,7 @@ const App = () => (
             <Route path="/tenant/announcements" element={<ProtectedRoute requiredRole="tenant"><TenantAnnouncements /></ProtectedRoute>} />
             <Route path="/tenant/marketplace" element={<ProtectedRoute requiredRole="tenant"><Marketplace /></ProtectedRoute>} />
             <Route path="/tenant/profile" element={<ProtectedRoute requiredRole="tenant"><ProfileSettings Layout={TenantLayout} /></ProtectedRoute>} />
+            <Route path="/tenant/reviews" element={<ProtectedRoute requiredRole="tenant"><TenantReviews /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

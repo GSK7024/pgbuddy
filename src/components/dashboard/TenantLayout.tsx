@@ -15,6 +15,7 @@ const sidebarLinks = [
   { name: "Vacancy Notice", href: "/tenant/notices", icon: BellDot },
   { name: "Announcements", href: "/tenant/announcements", icon: Megaphone },
   { name: "Browse PGs", href: "/tenant/marketplace", icon: Search },
+  { name: "Reviews", href: "/tenant/reviews", icon: Star },
 ];
 
 const bottomLinks = [
