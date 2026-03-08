@@ -293,6 +293,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ महत्वपूर्ण",
     tipLabel: "💡 सुझाव",
     importantLabel: "महत्वपूर्ण",
+    videoSectionTitle: "📹 वीडियो ट्यूटोरियल",
+    videoSectionDesc: "पूरा फ्लो समझने के लिए ये वीडियो देखें।",
+    ownerVideos: [
+      { title: "PG प्रॉपर्टी कैसे सेट करें", description: "अकाउंट बनाना, प्रॉपर्टी जोड़ना, कमरे और सेटिंग्स मैनेज करना।", videoId: "owner-setup-demo" },
+      { title: "किरायेदारों को कैसे आमंत्रित करें", description: "इनवाइट कोड भेजना, भुगतान ट्रैक करना और शिकायतें संभालना।", videoId: "owner-tenants-demo" },
+      { title: "भुगतान ट्रैकिंग और रिपोर्ट", description: "किराया भुगतान ट्रैक करें, प्रूफ अप्रूव करें।", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "किरायेदार के रूप में कैसे जुड़ें", description: "साइन अप, इनवाइट कोड डालना और डैशबोर्ड एक्सेस।", videoId: "tenant-onboard-demo" },
+      { title: "किराया भुगतान और प्रूफ अपलोड", description: "किराया देखें, भुगतान प्रूफ अपलोड करें, रसीद डाउनलोड करें।", videoId: "tenant-payment-demo" },
+      { title: "किरायेदार सुविधाएं", description: "शिकायतें, मील मेनू, घोषणाएं, चैट और अधिक।", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. अकाउंट बनाना और लॉगिन",
