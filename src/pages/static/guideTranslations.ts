@@ -13,6 +13,12 @@ export interface GuideSection {
   steps: GuideStep[];
 }
 
+export interface VideoTutorial {
+  title: string;
+  description: string;
+  videoId: string;
+}
+
 export interface GuideContent {
   pageTitle: string;
   pageSubtitle: string;
@@ -20,6 +26,10 @@ export interface GuideContent {
   tenantTab: string;
   ownerSections: GuideSection[];
   tenantSections: GuideSection[];
+  ownerVideos: VideoTutorial[];
+  tenantVideos: VideoTutorial[];
+  videoSectionTitle: string;
+  videoSectionDesc: string;
   stepLabel: string;
   needHelp: string;
   needHelpDesc: string;
@@ -40,6 +50,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ Important",
     tipLabel: "💡 Tip",
     importantLabel: "Important",
+    videoSectionTitle: "📹 Video Tutorials",
+    videoSectionDesc: "Watch these step-by-step walkthrough videos to understand the complete flow.",
+    ownerVideos: [
+      { title: "How to Set Up Your PG Property", description: "Complete walkthrough of creating your account, adding properties, rooms, and managing settings.", videoId: "owner-setup-demo" },
+      { title: "How to Invite & Manage Tenants", description: "Learn how to send invite codes, track tenant payments, and handle complaints.", videoId: "owner-tenants-demo" },
+      { title: "Payment Tracking & Reports", description: "See how to track rent payments, approve proofs, and generate reports.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "How to Join Your PG as a Tenant", description: "Step-by-step guide to signing up, entering your invite code, and accessing your dashboard.", videoId: "tenant-onboard-demo" },
+      { title: "Paying Rent & Uploading Proof", description: "Learn how to view your rent, upload payment proof, and download receipts.", videoId: "tenant-payment-demo" },
+      { title: "Using Tenant Features", description: "Explore complaints, meal menus, announcements, community chat, and more.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. Account Creation & Login",
@@ -271,6 +293,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ महत्वपूर्ण",
     tipLabel: "💡 सुझाव",
     importantLabel: "महत्वपूर्ण",
+    videoSectionTitle: "📹 वीडियो ट्यूटोरियल",
+    videoSectionDesc: "पूरा फ्लो समझने के लिए ये वीडियो देखें।",
+    ownerVideos: [
+      { title: "PG प्रॉपर्टी कैसे सेट करें", description: "अकाउंट बनाना, प्रॉपर्टी जोड़ना, कमरे और सेटिंग्स मैनेज करना।", videoId: "owner-setup-demo" },
+      { title: "किरायेदारों को कैसे आमंत्रित करें", description: "इनवाइट कोड भेजना, भुगतान ट्रैक करना और शिकायतें संभालना।", videoId: "owner-tenants-demo" },
+      { title: "भुगतान ट्रैकिंग और रिपोर्ट", description: "किराया भुगतान ट्रैक करें, प्रूफ अप्रूव करें।", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "किरायेदार के रूप में कैसे जुड़ें", description: "साइन अप, इनवाइट कोड डालना और डैशबोर्ड एक्सेस।", videoId: "tenant-onboard-demo" },
+      { title: "किराया भुगतान और प्रूफ अपलोड", description: "किराया देखें, भुगतान प्रूफ अपलोड करें, रसीद डाउनलोड करें।", videoId: "tenant-payment-demo" },
+      { title: "किरायेदार सुविधाएं", description: "शिकायतें, मील मेनू, घोषणाएं, चैट और अधिक।", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. अकाउंट बनाना और लॉगिन",
@@ -502,6 +536,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ महत्त्वाचे",
     tipLabel: "💡 टीप",
     importantLabel: "महत्त्वाचे",
+    videoSectionTitle: "📹 व्हिडिओ ट्यूटोरियल",
+    videoSectionDesc: "संपूर्ण प्रवाह समजून घेण्यासाठी हे व्हिडिओ पहा.",
+    ownerVideos: [
+      { title: "PG प्रॉपर्टी कशी सेट करावी", description: "खाते तयार करणे, प्रॉपर्टी जोडणे, खोल्या आणि सेटिंग्ज.", videoId: "owner-setup-demo" },
+      { title: "भाडेकरूंना कसे आमंत्रित करावे", description: "इन्व्हाइट कोड पाठवणे, पेमेंट ट्रॅक करणे.", videoId: "owner-tenants-demo" },
+      { title: "पेमेंट ट्रॅकिंग आणि रिपोर्ट", description: "भाडे पेमेंट ट्रॅक करा, प्रूफ मंजूर करा.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "भाडेकरू म्हणून कसे सामील व्हावे", description: "साइन अप, इन्व्हाइट कोड टाका आणि डॅशबोर्ड.", videoId: "tenant-onboard-demo" },
+      { title: "भाडे भरणे आणि प्रूफ अपलोड", description: "भाडे पहा, पेमेंट प्रूफ अपलोड करा.", videoId: "tenant-payment-demo" },
+      { title: "भाडेकरू सुविधा", description: "तक्रारी, जेवण मेनू, घोषणा, चॅट.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. खाते तयार करणे आणि लॉगिन",
@@ -596,6 +642,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ முக்கியம்",
     tipLabel: "💡 குறிப்பு",
     importantLabel: "முக்கியம்",
+    videoSectionTitle: "📹 வீடியோ வழிகாட்டிகள்",
+    videoSectionDesc: "முழு செயல்முறையை புரிந்துகொள்ள இந்த வீடியோக்களைப் பாருங்கள்.",
+    ownerVideos: [
+      { title: "PG சொத்தை எவ்வாறு அமைப்பது", description: "கணக்கு உருவாக்கம், சொத்து சேர்த்தல், அறைகள்.", videoId: "owner-setup-demo" },
+      { title: "குடியிருப்பாளர்களை அழைப்பது", description: "அழைப்புக் குறியீடு அனுப்புதல், கட்டணம் கண்காணிப்பு.", videoId: "owner-tenants-demo" },
+      { title: "கட்டண கண்காணிப்பு", description: "வாடகை கட்டணம் கண்காணிக்கவும்.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "குடியிருப்பாளராக சேர்வது", description: "பதிவு செய்து அழைப்புக் குறியீடு உள்ளிடவும்.", videoId: "tenant-onboard-demo" },
+      { title: "வாடகை செலுத்துதல்", description: "வாடகை பார்க்கவும், ஆதாரம் பதிவேற்றவும்.", videoId: "tenant-payment-demo" },
+      { title: "குடியிருப்பாளர் அம்சங்கள்", description: "புகார்கள், உணவு, அறிவிப்புகள், அரட்டை.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. கணக்கு உருவாக்கம் & உள்நுழைவு",
@@ -690,6 +748,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     warningLabel: "⚠️ ముఖ్యం",
     tipLabel: "💡 చిట్కా",
     importantLabel: "ముఖ్యం",
+    videoSectionTitle: "📹 వీడియో ట్యుటోరియల్స్",
+    videoSectionDesc: "పూర్తి ప్రవాహాన్ని అర్థం చేసుకోవడానికి ఈ వీడియోలు చూడండి.",
+    ownerVideos: [
+      { title: "PG ప్రాపర్టీని ఎలా సెటప్ చేయాలి", description: "ఖాతా సృష్టించడం, ప్రాపర్టీ జోడించడం, గదులు.", videoId: "owner-setup-demo" },
+      { title: "అద్దెదారులను ఆహ్వానించడం", description: "ఆహ్వాన కోడ్ పంపడం, చెల్లింపులు ట్రాక్ చేయడం.", videoId: "owner-tenants-demo" },
+      { title: "చెల్లింపు ట్రాకింగ్", description: "అద్దె చెల్లింపులు ట్రాక్ చేయండి.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "అద్దెదారుగా చేరడం", description: "సైన్ అప్, ఆహ్వాన కోడ్ నమోదు చేయండి.", videoId: "tenant-onboard-demo" },
+      { title: "అద్దె చెల్లించడం", description: "అద్దె చూడండి, రుజువు అప్‌లోడ్ చేయండి.", videoId: "tenant-payment-demo" },
+      { title: "అద్దెదారు ఫీచర్లు", description: "ఫిర్యాదులు, భోజనం, ప్రకటనలు, చాట్.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       {
         title: "1. ఖాతా సృష్టించడం & లాగిన్",
@@ -780,6 +850,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ಹಂತ", needHelp: "ಹೆಚ್ಚಿನ ಸಹಾಯ ಬೇಕೇ?",
     needHelpDesc: "support@pgmanager.in ಗೆ ಇಮೇಲ್ ಮಾಡಿ.",
     warningLabel: "⚠️ ಮುಖ್ಯ", tipLabel: "💡 ಸಲಹೆ", importantLabel: "ಮುಖ್ಯ",
+    videoSectionTitle: "📹 ವೀಡಿಯೊ ಟ್ಯುಟೋರಿಯಲ್‌ಗಳು",
+    videoSectionDesc: "ಸಂಪೂರ್ಣ ಹರಿವನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ಈ ವೀಡಿಯೊಗಳನ್ನು ನೋಡಿ.",
+    ownerVideos: [
+      { title: "PG ಆಸ್ತಿ ಹೇಗೆ ಸೆಟಪ್ ಮಾಡುವುದು", description: "ಖಾತೆ ರಚನೆ, ಆಸ್ತಿ ಸೇರಿಸುವುದು, ಕೊಠಡಿಗಳು.", videoId: "owner-setup-demo" },
+      { title: "ಬಾಡಿಗೆದಾರರನ್ನು ಆಹ್ವಾನಿಸುವುದು", description: "ಆಹ್ವಾನ ಕೋಡ್ ಕಳುಹಿಸುವುದು, ಪಾವತಿ ಟ್ರ್ಯಾಕ್.", videoId: "owner-tenants-demo" },
+      { title: "ಪಾವತಿ ಟ್ರ್ಯಾಕಿಂಗ್", description: "ಬಾಡಿಗೆ ಪಾವತಿಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ಬಾಡಿಗೆದಾರರಾಗಿ ಸೇರುವುದು", description: "ಸೈನ್ ಅಪ್, ಆಹ್ವಾನ ಕೋಡ್ ನಮೂದಿಸಿ.", videoId: "tenant-onboard-demo" },
+      { title: "ಬಾಡಿಗೆ ಪಾವತಿ", description: "ಬಾಡಿಗೆ ನೋಡಿ, ಪುರಾವೆ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.", videoId: "tenant-payment-demo" },
+      { title: "ಬಾಡಿಗೆದಾರ ವೈಶಿಷ್ಟ್ಯಗಳು", description: "ದೂರುಗಳು, ಊಟ, ಪ್ರಕಟಣೆಗಳು, ಚಾಟ್.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. ಖಾತೆ ರಚನೆ & ಲಾಗಿನ್", steps: [
         { title: "ವೆಬ್‌ಸೈಟ್ ತೆರೆಯಿರಿ", desc: "pgbuddy.lovable.app ತೆರೆದು 'Sign Up' ಕ್ಲಿಕ್ ಮಾಡಿ.", image: "/guide/signup-page.jpg" },
@@ -845,6 +927,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ഘട്ടം", needHelp: "കൂടുതൽ സഹായം വേണോ?",
     needHelpDesc: "support@pgmanager.in ലേക്ക് ഇമെയിൽ അയക്കുക.",
     warningLabel: "⚠️ പ്രധാനം", tipLabel: "💡 നുറുങ്ങ്", importantLabel: "പ്രധാനം",
+    videoSectionTitle: "📹 വീഡിയോ ട്യൂട്ടോറിയലുകൾ",
+    videoSectionDesc: "പൂർണ്ണ ഫ്ലോ മനസ്സിലാക്കാൻ ഈ വീഡിയോകൾ കാണുക.",
+    ownerVideos: [
+      { title: "PG പ്രോപ്പർട്ടി സെറ്റപ്പ്", description: "അക്കൗണ്ട്, പ്രോപ്പർട്ടി, മുറികൾ.", videoId: "owner-setup-demo" },
+      { title: "വാടകക്കാരെ ക്ഷണിക്കുക", description: "ക്ഷണ കോഡ് അയയ്ക്കുക, പേയ്മെന്റ് ട്രാക്ക്.", videoId: "owner-tenants-demo" },
+      { title: "പേയ്മെന്റ് ട്രാക്കിംഗ്", description: "വാടക പേയ്മെന്റുകൾ ട്രാക്ക് ചെയ്യുക.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "വാടകക്കാരനായി ചേരുക", description: "സൈൻ അപ്പ്, ക്ഷണ കോഡ് നൽകുക.", videoId: "tenant-onboard-demo" },
+      { title: "വാടക അടയ്ക്കുക", description: "വാടക കാണുക, തെളിവ് അപ്‌ലോഡ്.", videoId: "tenant-payment-demo" },
+      { title: "വാടകക്കാരൻ ഫീച്ചറുകൾ", description: "പരാതികൾ, ഭക്ഷണം, അറിയിപ്പുകൾ, ചാറ്റ്.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. അക്കൗണ്ട് & ലോഗിൻ", steps: [
         { title: "വെബ്‌സൈറ്റ് തുറക്കുക", desc: "'Sign Up' ക്ലിക്ക് ചെയ്യുക.", image: "/guide/signup-page.jpg" },
@@ -910,6 +1004,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ধাপ", needHelp: "আরও সাহায্য দরকার?",
     needHelpDesc: "support@pgmanager.in এ ইমেইল পাঠান।",
     warningLabel: "⚠️ গুরুত্বপূর্ণ", tipLabel: "💡 পরামর্শ", importantLabel: "গুরুত্বপূর্ণ",
+    videoSectionTitle: "📹 ভিডিও টিউটোরিয়াল",
+    videoSectionDesc: "সম্পূর্ণ প্রবাহ বুঝতে এই ভিডিওগুলি দেখুন।",
+    ownerVideos: [
+      { title: "PG প্রপার্টি সেটআপ", description: "অ্যাকাউন্ট, প্রপার্টি, রুম তৈরি।", videoId: "owner-setup-demo" },
+      { title: "ভাড়াটেদের আমন্ত্রণ", description: "ইনভাইট কোড পাঠানো, পেমেন্ট ট্র্যাক।", videoId: "owner-tenants-demo" },
+      { title: "পেমেন্ট ট্র্যাকিং", description: "ভাড়া পেমেন্ট ট্র্যাক করুন।", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ভাড়াটে হিসেবে যোগদান", description: "সাইন আপ, ইনভাইট কোড দিন।", videoId: "tenant-onboard-demo" },
+      { title: "ভাড়া পরিশোধ", description: "ভাড়া দেখুন, প্রমাণ আপলোড করুন।", videoId: "tenant-payment-demo" },
+      { title: "ভাড়াটে ফিচার", description: "অভিযোগ, খাবার, ঘোষণা, চ্যাট।", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. অ্যাকাউন্ট তৈরি ও লগইন", steps: [
         { title: "ওয়েবসাইট খুলুন", desc: "'Sign Up' ক্লিক করুন।", image: "/guide/signup-page.jpg" },
@@ -975,6 +1081,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "પગલું", needHelp: "વધુ મદદ જોઈએ?",
     needHelpDesc: "support@pgmanager.in પર ઈમેલ કરો.",
     warningLabel: "⚠️ મહત્વપૂર્ણ", tipLabel: "💡 ટિપ", importantLabel: "મહત્વપૂર્ણ",
+    videoSectionTitle: "📹 વીડિયો ટ્યુટોરિયલ",
+    videoSectionDesc: "સંપૂર્ણ ફ્લો સમજવા માટે આ વીડિયો જુઓ.",
+    ownerVideos: [
+      { title: "PG પ્રોપર્ટી સેટઅપ", description: "એકાઉન્ટ, પ્રોપર્ટી, રૂમ.", videoId: "owner-setup-demo" },
+      { title: "ભાડૂતોને આમંત્રણ", description: "ઇન્વાઇટ કોડ મોકલો, પેમેન્ટ ટ્રેક.", videoId: "owner-tenants-demo" },
+      { title: "પેમેન્ટ ટ્રેકિંગ", description: "ભાડું પેમેન્ટ ટ્રેક કરો.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ભાડૂત તરીકે જોડાઓ", description: "સાઇન અપ, ઇન્વાઇટ કોડ દાખલ કરો.", videoId: "tenant-onboard-demo" },
+      { title: "ભાડું ચૂકવો", description: "ભાડું જુઓ, પુરાવો અપલોડ કરો.", videoId: "tenant-payment-demo" },
+      { title: "ભાડૂત ફીચર્સ", description: "ફરિયાદો, ભોજન, જાહેરાતો, ચેટ.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. એકાઉન્ટ બનાવો & લોગિન", steps: [
         { title: "વેબસાઈટ ખોલો", desc: "'Sign Up' ક્લિક કરો.", image: "/guide/signup-page.jpg" },
@@ -1040,6 +1158,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ਕਦਮ", needHelp: "ਹੋਰ ਮਦਦ ਚਾਹੀਦੀ?",
     needHelpDesc: "support@pgmanager.in 'ਤੇ ਈਮੇਲ ਕਰੋ।",
     warningLabel: "⚠️ ਮਹੱਤਵਪੂਰਨ", tipLabel: "💡 ਟਿਪ", importantLabel: "ਮਹੱਤਵਪੂਰਨ",
+    videoSectionTitle: "📹 ਵੀਡੀਓ ਟਿਊਟੋਰੀਅਲ",
+    videoSectionDesc: "ਪੂਰਾ ਫਲੋ ਸਮਝਣ ਲਈ ਇਹ ਵੀਡੀਓ ਦੇਖੋ।",
+    ownerVideos: [
+      { title: "PG ਪ੍ਰਾਪਰਟੀ ਸੈੱਟਅੱਪ", description: "ਅਕਾਊਂਟ, ਪ੍ਰਾਪਰਟੀ, ਕਮਰੇ.", videoId: "owner-setup-demo" },
+      { title: "ਕਿਰਾਏਦਾਰਾਂ ਨੂੰ ਸੱਦਾ", description: "ਸੱਦਾ ਕੋਡ ਭੇਜੋ, ਭੁਗਤਾਨ ਟ੍ਰੈਕ.", videoId: "owner-tenants-demo" },
+      { title: "ਭੁਗਤਾਨ ਟ੍ਰੈਕਿੰਗ", description: "ਕਿਰਾਇਆ ਭੁਗਤਾਨ ਟ੍ਰੈਕ ਕਰੋ.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ਕਿਰਾਏਦਾਰ ਵਜੋਂ ਸ਼ਾਮਲ ਹੋਵੋ", description: "ਸਾਈਨ ਅੱਪ, ਸੱਦਾ ਕੋਡ ਦਾਖਲ ਕਰੋ.", videoId: "tenant-onboard-demo" },
+      { title: "ਕਿਰਾਇਆ ਭਰੋ", description: "ਕਿਰਾਇਆ ਦੇਖੋ, ਸਬੂਤ ਅੱਪਲੋਡ ਕਰੋ.", videoId: "tenant-payment-demo" },
+      { title: "ਕਿਰਾਏਦਾਰ ਫੀਚਰ", description: "ਸ਼ਿਕਾਇਤਾਂ, ਖਾਣਾ, ਘੋਸ਼ਣਾਵਾਂ, ਚੈਟ.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. ਅਕਾਊਂਟ ਬਣਾਓ & ਲੌਗਇਨ", steps: [
         { title: "ਵੈੱਬਸਾਈਟ ਖੋਲ੍ਹੋ", desc: "'Sign Up' ਕਲਿੱਕ ਕਰੋ.", image: "/guide/signup-page.jpg" },
@@ -1105,6 +1235,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "ପଦକ୍ଷେପ", needHelp: "ଅଧିକ ସାହାଯ୍ୟ ଦରକାର?",
     needHelpDesc: "support@pgmanager.in କୁ ଇମେଲ୍ କରନ୍ତୁ।",
     warningLabel: "⚠️ ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ", tipLabel: "💡 ଟିପ୍", importantLabel: "ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ",
+    videoSectionTitle: "📹 ଭିଡିଓ ଟ୍ୟୁଟୋରିଆଲ୍",
+    videoSectionDesc: "ସମ୍ପୂର୍ଣ୍ଣ ଫ୍ଲୋ ବୁଝିବା ପାଇଁ ଏହି ଭିଡିଓ ଦେଖନ୍ତୁ।",
+    ownerVideos: [
+      { title: "PG ପ୍ରପର୍ଟି ସେଟଅପ୍", description: "ଆକାଉଣ୍ଟ, ପ୍ରପର୍ଟି, ରୁମ୍.", videoId: "owner-setup-demo" },
+      { title: "ଭଡ଼ାଟିଆଙ୍କୁ ନିମନ୍ତ୍ରଣ", description: "ନିମନ୍ତ୍ରଣ କୋଡ୍ ପଠାନ୍ତୁ, ପେମେଣ୍ଟ ଟ୍ରାକ୍.", videoId: "owner-tenants-demo" },
+      { title: "ପେମେଣ୍ଟ ଟ୍ରାକିଂ", description: "ଭଡ଼ା ପେମେଣ୍ଟ ଟ୍ରାକ୍ କରନ୍ତୁ.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ଭଡ଼ାଟିଆ ଭାବରେ ଯୋଗ ଦିଅନ୍ତୁ", description: "ସାଇନ୍ ଅପ୍, ନିମନ୍ତ୍ରଣ କୋଡ୍ ଦିଅନ୍ତୁ.", videoId: "tenant-onboard-demo" },
+      { title: "ଭଡ଼ା ଦିଅନ୍ତୁ", description: "ଭଡ଼ା ଦେଖନ୍ତୁ, ପ୍ରମାଣ ଅପଲୋଡ୍.", videoId: "tenant-payment-demo" },
+      { title: "ଭଡ଼ାଟିଆ ଫିଚର୍", description: "ଅଭିଯୋଗ, ଖାଦ୍ୟ, ଘୋଷଣା, ଚାଟ୍.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. ଆକାଉଣ୍ଟ ତିଆରି & ଲଗଇନ୍", steps: [
         { title: "ୱେବସାଇଟ୍ ଖୋଲନ୍ତୁ", desc: "'Sign Up' କ୍ଲିକ୍ କରନ୍ତୁ.", image: "/guide/signup-page.jpg" },
@@ -1170,6 +1312,18 @@ export const guideTranslations: Record<Language, GuideContent> = {
     stepLabel: "পদক্ষেপ", needHelp: "অধিক সহায় লাগে?",
     needHelpDesc: "support@pgmanager.in লৈ ইমেইল কৰক।",
     warningLabel: "⚠️ গুৰুত্বপূৰ্ণ", tipLabel: "💡 পৰামৰ্শ", importantLabel: "গুৰুত্বপূৰ্ণ",
+    videoSectionTitle: "📹 ভিডিঅ' টিউটৰিয়েল",
+    videoSectionDesc: "সম্পূৰ্ণ ফ্ল' বুজিবলৈ এই ভিডিঅ'বোৰ চাওক।",
+    ownerVideos: [
+      { title: "PG প্ৰপাৰ্টি ছেটআপ", description: "একাউণ্ট, প্ৰপাৰ্টি, ৰুম.", videoId: "owner-setup-demo" },
+      { title: "ভাড়াতীয়াক নিমন্ত্ৰণ", description: "নিমন্ত্ৰণ ক'ড পঠিয়াওক, পেমেণ্ট ট্ৰেক.", videoId: "owner-tenants-demo" },
+      { title: "পেমেণ্ট ট্ৰেকিং", description: "ভাড়া পেমেণ্ট ট্ৰেক কৰক.", videoId: "owner-payments-demo" },
+    ],
+    tenantVideos: [
+      { title: "ভাড়াতীয়া হিচাপে যোগদান", description: "ছাইন আপ, নিমন্ত্ৰণ ক'ড দিয়ক.", videoId: "tenant-onboard-demo" },
+      { title: "ভাড়া পৰিশোধ", description: "ভাড়া চাওক, প্ৰমাণ আপলোড.", videoId: "tenant-payment-demo" },
+      { title: "ভাড়াতীয়া ফিচাৰ", description: "অভিযোগ, আহাৰ, ঘোষণা, চ্যাট.", videoId: "tenant-features-demo" },
+    ],
     ownerSections: [
       { title: "1. একাউণ্ট সৃষ্টি & লগইন", steps: [
         { title: "ৱেবছাইট খোলক", desc: "'Sign Up' ক্লিক কৰক.", image: "/guide/signup-page.jpg" },
