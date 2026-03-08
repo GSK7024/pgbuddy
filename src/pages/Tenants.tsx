@@ -423,40 +423,86 @@ const Tenants = () => {
               <p className="text-muted-foreground">Click "Assign Tenant" to add tenants to rooms</p>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {assignments.map(a => (
-              <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(a)}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <UserCheck className="w-5 h-5 text-primary" />
-                        {a.profiles?.full_name || "Unknown Tenant"}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">{a.profiles?.phone || "No phone"}</p>
-                    </div>
-                    <Badge variant={a.is_active ? "default" : "secondary"} className={a.is_active ? "bg-success" : ""}>
-                      {a.is_active ? "Active" : "Moved Out"}
-                    </Badge>
+        ) : (() => {
+          const activeTenants = assignments.filter(a => a.is_active);
+          const movedOutTenants = assignments.filter(a => !a.is_active);
+
+          const TenantCard = ({ a }: { a: TenantAssignment }) => (
+            <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(a)}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <UserCheck className="w-5 h-5 text-primary" />
+                      {a.profiles?.full_name || "Unknown Tenant"}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">{a.profiles?.phone || "No phone"}</p>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-1 text-sm">
-                  <p><span className="text-muted-foreground">Property:</span> {(a as any).properties?.name}</p>
-                  <p><span className="text-muted-foreground">Room:</span> {(a as any).rooms?.room_number}</p>
-                  <p><span className="text-muted-foreground">Move-in:</span> {a.move_in_date}</p>
-                  <p className="flex items-center gap-1 font-semibold">
-                    <IndianRupee className="w-3 h-3" />
-                    {Number(getTenantRent(a)).toLocaleString()}/month
-                  </p>
-                  {a.id_proof_type && (
-                    <p className="flex items-center gap-1"><Shield className="w-3 h-3 text-primary" /> {a.id_proof_type}: {a.id_proof_number}</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  <Badge variant={a.is_active ? "default" : "secondary"} className={a.is_active ? "bg-success" : ""}>
+                    {a.is_active ? "Active" : "Moved Out"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                <p><span className="text-muted-foreground">Property:</span> {(a as any).properties?.name}</p>
+                <p><span className="text-muted-foreground">Room:</span> {(a as any).rooms?.room_number}</p>
+                <p><span className="text-muted-foreground">{a.is_active ? "Move-in:" : "Moved out:"}</span> {a.is_active ? a.move_in_date : a.move_out_date || a.move_in_date}</p>
+                <p className="flex items-center gap-1 font-semibold">
+                  <IndianRupee className="w-3 h-3" />
+                  {Number(getTenantRent(a)).toLocaleString()}/month
+                </p>
+                {a.id_proof_type && (
+                  <p className="flex items-center gap-1"><Shield className="w-3 h-3 text-primary" /> {a.id_proof_type}: {a.id_proof_number}</p>
+                )}
+              </CardContent>
+            </Card>
+          );
+
+          return (
+            <Tabs defaultValue="active" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="active" className="gap-2">
+                  <UserCheck className="w-4 h-4" /> Active
+                  <Badge variant="secondary" className="ml-1 text-xs">{activeTenants.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="moved-out" className="gap-2">
+                  <UserX className="w-4 h-4" /> Moved Out
+                  <Badge variant="secondary" className="ml-1 text-xs">{movedOutTenants.length}</Badge>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="active">
+                {activeTenants.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+                      <Users className="w-10 h-10 text-muted-foreground mb-3" />
+                      <p className="text-muted-foreground">No active tenants</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {activeTenants.map(a => <TenantCard key={a.id} a={a} />)}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="moved-out">
+                {movedOutTenants.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+                      <UserX className="w-10 h-10 text-muted-foreground mb-3" />
+                      <p className="text-muted-foreground">No moved-out tenants</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {movedOutTenants.map(a => <TenantCard key={a.id} a={a} />)}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          );
+        })()}
 
         {/* Tenant Detail Dialog */}
         <Dialog open={!!detailTenant} onOpenChange={(o) => { if (!o) setDetailTenant(null); }}>
