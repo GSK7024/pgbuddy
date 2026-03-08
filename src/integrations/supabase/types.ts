@@ -52,6 +52,53 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          description: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          property_id: string | null
+          record_id: string | null
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          description: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          property_id?: string | null
+          record_id?: string | null
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          property_id?: string | null
+          record_id?: string | null
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_messages: {
         Row: {
           created_at: string
@@ -1173,6 +1220,19 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_audit: {
+        Args: {
+          _action: string
+          _description: string
+          _new_data?: Json
+          _old_data?: Json
+          _property_id: string
+          _record_id: string
+          _table_name: string
+          _user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
