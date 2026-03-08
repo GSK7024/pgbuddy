@@ -19,6 +19,8 @@ interface Payment {
   month: string;
   status: string;
   payment_date: string | null;
+  proof_url: string | null;
+  proof_uploaded_at: string | null;
   rooms?: { room_number: string };
   properties?: { name: string };
 }
