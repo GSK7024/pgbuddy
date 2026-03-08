@@ -58,6 +58,8 @@ const Tenants = () => {
   const [uploading, setUploading] = useState(false);
   const [rentHistory, setRentHistory] = useState<{ id: string; old_rent: number | null; new_rent: number; changed_at: string; notes: string | null }[]>([]);
   const [tenantLimit, setTenantLimit] = useState(5);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterPropertyId, setFilterPropertyId] = useState("all");
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
