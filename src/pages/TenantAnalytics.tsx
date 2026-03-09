@@ -58,6 +58,7 @@ const getPresetRange = (key: PresetKey): { from: Date; to: Date } => {
 
 const TenantAnalytics = () => {
   const { user } = useAuth();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [loading, setLoading] = useState(true);
   const [activePreset, setActivePreset] = useState<PresetKey>("last6m");
   const [dateRange, setDateRange] = useState(getPresetRange("last6m"));
