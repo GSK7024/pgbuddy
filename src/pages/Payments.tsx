@@ -178,6 +178,9 @@ const Payments = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {isOverLimit && (
+          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Payments</h1>
@@ -185,7 +188,7 @@ const Payments = () => {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Generate Rent</Button>
+              <Button className="gradient-primary gap-2" disabled={isReadOnly}><Plus className="w-4 h-4" /> Generate Rent</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Generate Rent Payment</DialogTitle></DialogHeader>
