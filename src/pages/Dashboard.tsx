@@ -39,7 +39,7 @@ const Dashboard = () => {
     const fetchStats = async () => {
       const [propRes, roomRes, tenantRes, pendingPayRes, paidPayRes, complaintRes, expRes, noticeRes, recentCompRes] = await Promise.all([
         supabase.from("properties").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
-        supabase.from("rooms").select("id, is_vacant, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id),
+        supabase.from("rooms").select("id, is_vacant, capacity, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id),
         supabase.from("tenant_assignments").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("is_active", true),
         supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("status", "pending"),
         supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("status", "paid"),
