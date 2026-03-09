@@ -29,6 +29,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchRole = async (userId: string) => {
+    // Auto-link pending staff invitations for this user's email
+    await supabase.rpc("claim_staff_invitation");
+
     const { data } = await supabase
       .from("user_roles")
       .select("role")
