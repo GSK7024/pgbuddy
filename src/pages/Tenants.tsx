@@ -124,7 +124,7 @@ const Tenants = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   // Count active assignments per room
   const getActiveCountForRoom = (roomId: string) => {
