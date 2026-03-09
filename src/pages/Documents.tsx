@@ -31,6 +31,7 @@ const docTypeLabels: Record<string, string> = {
 const Documents = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [docs, setDocs] = useState<TenantDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
