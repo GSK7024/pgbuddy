@@ -52,9 +52,9 @@ const Rooms = () => {
   const [depositAmount, setDepositAmount] = useState("");
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [propRes, roomRes, assignRes] = await Promise.all([
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("*, properties(name)").order("created_at", { ascending: false }),
       supabase.from("tenant_assignments").select("room_id").eq("is_active", true),
     ]);
