@@ -49,7 +49,7 @@ const Expenses = () => {
   });
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [expRes, propRes] = await Promise.all([
       supabase
         .from("expenses")
@@ -58,7 +58,7 @@ const Expenses = () => {
       supabase
         .from("properties")
         .select("id, name")
-        .eq("owner_id", user.id),
+        .eq("owner_id", effectiveOwnerId),
     ]);
     setExpenses(expRes.data ?? []);
     setProperties(propRes.data ?? []);
