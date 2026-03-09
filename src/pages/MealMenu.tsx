@@ -25,14 +25,14 @@ const MealMenu = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    supabase.from("properties").select("id, name").eq("owner_id", user.id).then(({ data }) => {
+    if (!effectiveOwnerId || staffLoading) return;
+    supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId).then(({ data }) => {
       if (data && data.length > 0) {
         setProperties(data);
         setSelectedProperty(data[0].id);
       }
     });
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (!selectedProperty || !selectedDate) return;
