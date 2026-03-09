@@ -89,7 +89,7 @@ const Payments = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { fetchData(); }, [user, staffLoading]);
 
   const handleGenerate = async () => {
     if (!selectedAssignment || !month) return;
