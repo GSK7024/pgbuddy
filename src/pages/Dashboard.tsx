@@ -101,7 +101,7 @@ const Dashboard = () => {
       );
     };
     fetchStats();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   const profit = stats.collectedRevenue - stats.totalExpenses;
   const isNewOwner = stats.properties === 0;
