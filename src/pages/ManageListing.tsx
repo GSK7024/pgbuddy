@@ -74,9 +74,9 @@ const ManageListing = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     const fetchProperties = async () => {
-      const { data } = await supabase.from("properties").select("id, name, video_url, is_featured").eq("owner_id", user.id);
+      const { data } = await supabase.from("properties").select("id, name, video_url, is_featured").eq("owner_id", effectiveOwnerId);
       setProperties((data ?? []) as PropertyBasic[]);
       if (data && data.length > 0) {
         setSelectedProperty(data[0].id);
