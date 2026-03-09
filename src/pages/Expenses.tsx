@@ -35,6 +35,7 @@ const CATEGORIES = ["electricity", "water", "maintenance", "staff", "cleaning", 
 const Expenses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
