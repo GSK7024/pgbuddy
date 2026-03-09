@@ -46,9 +46,9 @@ const PaymentSettings = () => {
   const [accountHolder, setAccountHolder] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     const fetchProperties = async () => {
-      const { data } = await supabase.from("properties").select("id, name").eq("owner_id", user.id);
+      const { data } = await supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId);
       const props = data ?? [];
       setProperties(props);
       if (props.length > 0) setSelectedProperty(props[0].id);
