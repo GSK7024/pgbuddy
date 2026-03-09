@@ -1342,6 +1342,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_staff_invitation: { Args: never; Returns: undefined }
       find_user_by_email: {
         Args: { _email: string }
         Returns: {
