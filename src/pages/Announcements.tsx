@@ -94,6 +94,9 @@ const Announcements = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {isOverLimit && (
+          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Announcements</h1>
@@ -101,7 +104,7 @@ const Announcements = () => {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> New Announcement</Button>
+              <Button className="gradient-primary gap-2" disabled={isReadOnly}><Plus className="w-4 h-4" /> New Announcement</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Post Announcement</DialogTitle></DialogHeader>
