@@ -94,7 +94,20 @@ const Payments = () => {
     setGenerating(true);
 
     const assign = assignments.find(a => a.id === selectedAssignment);
-    if (!assign) return;
+    if (!assign) { setGenerating(false); return; }
+
+    // Check for duplicate
+    const { count } = await supabase
+      .from("rent_payments")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", assign.tenant_id)
+      .eq("month", month);
+
+    if ((count ?? 0) > 0) {
+      toast({ title: "Already exists", description: `Rent for this tenant for ${month} has already been generated.`, variant: "destructive" });
+      setGenerating(false);
+      return;
+    }
 
     const rentAmount = amount ? Number(amount) : Number(assign.rooms?.rent_amount ?? 0);
 
@@ -123,7 +136,24 @@ const Payments = () => {
     if (!month || assignments.length === 0) return;
     setGenerating(true);
 
-    const records = assignments.map(a => ({
+    // Fetch existing payments for this month to avoid duplicates
+    const tenantIds = assignments.map(a => a.tenant_id);
+    const { data: existing } = await supabase
+      .from("rent_payments")
+      .select("tenant_id")
+      .eq("month", month)
+      .in("tenant_id", tenantIds);
+
+    const existingTenantIds = new Set((existing ?? []).map(e => e.tenant_id));
+    const newAssignments = assignments.filter(a => !existingTenantIds.has(a.tenant_id));
+
+    if (newAssignments.length === 0) {
+      toast({ title: "Already generated", description: `Rent for all tenants for ${month} has already been generated.`, variant: "destructive" });
+      setGenerating(false);
+      return;
+    }
+
+    const records = newAssignments.map(a => ({
       tenant_id: a.tenant_id,
       property_id: a.property_id,
       room_id: a.room_id,
@@ -136,7 +166,11 @@ const Payments = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: `${records.length} rent records created for ${month}!` });
+      const skipped = assignments.length - newAssignments.length;
+      const msg = skipped > 0
+        ? `${records.length} rent records created for ${month} (${skipped} already existed, skipped).`
+        : `${records.length} rent records created for ${month}!`;
+      toast({ title: msg });
       setDialogOpen(false);
       fetchData();
     }
