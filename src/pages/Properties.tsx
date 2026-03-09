@@ -29,6 +29,7 @@ interface Property {
 const Properties = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, isStaff, loading: staffLoading } = useStaffAccess();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,19 +46,19 @@ const Properties = () => {
   const [amenitiesStr, setAmenitiesStr] = useState("");
 
   const fetchProperties = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const { data } = await supabase
       .from("properties")
       .select("*")
-      .eq("owner_id", user.id)
+      .eq("owner_id", effectiveOwnerId)
       .order("created_at", { ascending: false });
     setProperties(data ?? []);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchProperties();
-  }, [user]);
+    if (!staffLoading) fetchProperties();
+  }, [effectiveOwnerId, staffLoading]);
 
   const resetForm = () => {
     setName(""); setAddress(""); setCity(""); setLocality("");
