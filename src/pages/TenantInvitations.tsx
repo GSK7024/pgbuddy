@@ -29,6 +29,7 @@ interface Invitation {
 const TenantInvitations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [rooms, setRooms] = useState<{ id: string; room_number: string; property_id: string; is_vacant: boolean }[]>([]);
