@@ -94,9 +94,9 @@ const TenantAnalytics = () => {
   }, [dateRange, rawData]);
 
   const fetchRawData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [propRes, roomRes, assignRes, payRes] = await Promise.all([
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("id, property_id, capacity, is_vacant"),
       supabase.from("tenant_assignments").select("id, property_id, is_active, move_in_date, move_out_date, custom_rent, rooms(rent_amount)"),
       supabase.from("rent_payments").select("property_id, amount, status, created_at"),
