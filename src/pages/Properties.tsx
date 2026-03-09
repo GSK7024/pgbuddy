@@ -86,7 +86,7 @@ const Properties = () => {
       gender_preference: genderPref,
       contact_phone: contactPhone || null,
       amenities: amenitiesStr.split(",").map(a => a.trim()).filter(Boolean),
-      owner_id: user.id,
+      owner_id: effectiveOwnerId!,
     };
 
     let error;
