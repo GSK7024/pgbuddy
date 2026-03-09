@@ -63,6 +63,7 @@ const ManageListing = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { limits, isPro, isBusiness } = useSubscriptionPlan();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [properties, setProperties] = useState<PropertyBasic[]>([]);
   const [selectedProperty, setSelectedProperty] = useState("");
   const [photos, setPhotos] = useState<Photo[]>([]);
