@@ -51,7 +51,7 @@ const AuditLogs = () => {
       setProperties(data ?? []);
     };
     fetchProperties();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (!user) return;
