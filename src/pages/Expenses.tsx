@@ -66,8 +66,8 @@ const Expenses = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [user]);
+    if (!staffLoading) fetchData();
+  }, [effectiveOwnerId, staffLoading]);
 
   const handleAdd = async () => {
     if (!form.property_id || !form.amount) {
