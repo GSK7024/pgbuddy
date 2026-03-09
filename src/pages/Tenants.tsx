@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import OverLimitBanner from "@/components/OverLimitBanner";
 
 interface TenantAssignment {
   id: string;
