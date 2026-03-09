@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import OverLimitBanner from "@/components/OverLimitBanner";
 
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "#f59e0b", "#ef4444", "#10b981", "#8b5cf6", "#06b6d4", "#ec4899"];
 
