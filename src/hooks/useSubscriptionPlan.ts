@@ -11,6 +11,7 @@ export interface PlanLimits {
   videoTour: boolean;
   enquiryAnalytics: boolean;
   featuredBadge: boolean;
+  tenantLimit: number;
 }
 
 const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
@@ -21,6 +22,7 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
     videoTour: false,
     enquiryAnalytics: false,
     featuredBadge: false,
+    tenantLimit: 5,
   },
   pro: {
     slug: "pro",
@@ -29,6 +31,7 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
     videoTour: true,
     enquiryAnalytics: false,
     featuredBadge: false,
+    tenantLimit: 25,
   },
   business: {
     slug: "business",
@@ -37,6 +40,7 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
     videoTour: true,
     enquiryAnalytics: true,
     featuredBadge: true,
+    tenantLimit: Infinity,
   },
 };
 
@@ -54,13 +58,23 @@ export const useSubscriptionPlan = () => {
     const fetchPlan = async () => {
       const { data } = await supabase
         .from("subscriptions")
-        .select("subscription_plans(slug)")
+        .select("subscription_plans(slug), status, current_period_end")
         .eq("user_id", user.id)
         .eq("status", "active")
         .maybeSingle();
 
-      const slug = (data as any)?.subscription_plans?.slug as PlanSlug;
-      setPlanSlug(slug || "free");
+      if (data) {
+        const periodEnd = data.current_period_end;
+        // If period has expired, treat as free regardless of status
+        if (periodEnd && new Date(periodEnd) < new Date()) {
+          setPlanSlug("free");
+        } else {
+          const slug = (data as any)?.subscription_plans?.slug as PlanSlug;
+          setPlanSlug(slug || "free");
+        }
+      } else {
+        setPlanSlug("free");
+      }
       setLoading(false);
     };
 

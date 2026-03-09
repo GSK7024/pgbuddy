@@ -11,6 +11,8 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import OverLimitBanner from "@/components/OverLimitBanner";
 
 interface Payment {
   id: string;
@@ -40,6 +42,7 @@ interface ActiveAssignment {
 const Payments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [assignments, setAssignments] = useState<ActiveAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,6 +178,9 @@ const Payments = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {isOverLimit && (
+          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Payments</h1>
@@ -182,7 +188,7 @@ const Payments = () => {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Generate Rent</Button>
+              <Button className="gradient-primary gap-2" disabled={isReadOnly}><Plus className="w-4 h-4" /> Generate Rent</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Generate Rent Payment</DialogTitle></DialogHeader>

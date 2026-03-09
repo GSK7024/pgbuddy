@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import OverLimitBanner from "@/components/OverLimitBanner";
 
 interface TenantAssignment {
   id: string;
@@ -47,6 +49,7 @@ interface RoomWithCapacity {
 const Tenants = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
   const [assignments, setAssignments] = useState<TenantAssignment[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [rooms, setRooms] = useState<RoomWithCapacity[]>([]);
@@ -418,6 +421,9 @@ const Tenants = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {isOverLimit && (
+          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+        )}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold">Tenants</h1>
@@ -457,7 +463,7 @@ const Tenants = () => {
             )}
             <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Assign Tenant</Button>
+                <Button className="gradient-primary gap-2" disabled={isReadOnly}><Plus className="w-4 h-4" /> Assign Tenant</Button>
               </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Assign Tenant to Room</DialogTitle></DialogHeader>

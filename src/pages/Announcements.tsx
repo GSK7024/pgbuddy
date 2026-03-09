@@ -12,6 +12,8 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import OverLimitBanner from "@/components/OverLimitBanner";
 
 interface Announcement {
   id: string;
@@ -26,6 +28,7 @@ interface Announcement {
 const Announcements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +94,9 @@ const Announcements = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {isOverLimit && (
+          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Announcements</h1>
@@ -98,7 +104,7 @@ const Announcements = () => {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> New Announcement</Button>
+              <Button className="gradient-primary gap-2" disabled={isReadOnly}><Plus className="w-4 h-4" /> New Announcement</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Post Announcement</DialogTitle></DialogHeader>
