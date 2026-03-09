@@ -44,10 +44,10 @@ const TenantInvitations = () => {
   const [tenantPhone, setTenantPhone] = useState("");
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [invRes, propRes, roomRes] = await Promise.all([
       supabase.from("tenant_invitations").select("*, rooms(room_number), properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("id, room_number, property_id, is_vacant"),
     ]);
     setInvitations(invRes.data ?? []);
