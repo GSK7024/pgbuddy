@@ -340,14 +340,14 @@ const Dashboard = () => {
                 <div className="flex items-center gap-4 mb-3">
                   <div className="flex-1">
                     <div className="h-3 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(occupancy.occupied / stats.rooms) * 100}%` }} />
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${((occupancy.occupied) / (occupancy.occupied + occupancy.vacant || 1)) * 100}%` }} />
                     </div>
                   </div>
-                  <span className="text-lg font-bold">{Math.round((occupancy.occupied / stats.rooms) * 100)}%</span>
+                  <span className="text-lg font-bold">{Math.round((occupancy.occupied / (occupancy.occupied + occupancy.vacant || 1)) * 100)}%</span>
                 </div>
                 <div className="flex gap-4 text-sm">
-                  <Badge variant="default">{occupancy.occupied} Occupied</Badge>
-                  <Badge variant="secondary">{occupancy.vacant} Vacant</Badge>
+                  <Badge variant="default">{occupancy.occupied} Occupied Beds</Badge>
+                  <Badge variant="secondary">{occupancy.vacant} Vacant Beds</Badge>
                 </div>
               </CardContent>
             </Card>
