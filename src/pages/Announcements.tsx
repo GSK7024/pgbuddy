@@ -28,6 +28,7 @@ interface Announcement {
 const Announcements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
