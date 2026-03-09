@@ -17,6 +17,7 @@ const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "#f59e0b",
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isOverLimit, tenantCount, limits } = useSubscriptionGuard();
   const [stats, setStats] = useState({
     properties: 0,
     rooms: 0,
