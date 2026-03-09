@@ -29,24 +29,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchRole = async (userId: string) => {
+    // Auto-link pending staff invitations for this user's email
+    await supabase.rpc("claim_staff_invitation");
+
     const { data } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
       .maybeSingle();
     setRole((data?.role as UserRole) ?? null);
-
-    // Auto-link pending staff invitations for this user's email
-    const { data: userData } = await supabase.auth.getUser();
-    const userEmail = userData?.user?.email;
-    if (userEmail) {
-      await supabase
-        .from("staff_members")
-        .update({ staff_user_id: userId, status: "active" })
-        .eq("invited_email", userEmail)
-        .eq("status", "pending")
-        .is("staff_user_id", null);
-    }
   };
 
   useEffect(() => {
