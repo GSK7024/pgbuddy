@@ -42,12 +42,12 @@ const AuditLogs = () => {
   const [filterProperty, setFilterProperty] = useState<string>("all");
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     const fetchProperties = async () => {
       const { data } = await supabase
         .from("properties")
         .select("id, name")
-        .eq("owner_id", user.id);
+        .eq("owner_id", effectiveOwnerId);
       setProperties(data ?? []);
     };
     fetchProperties();

@@ -56,7 +56,7 @@ const TenantInvitations = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   const vacantRoomsForProperty = rooms.filter(r => r.property_id === propertyId && r.is_vacant);
 
