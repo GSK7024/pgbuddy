@@ -55,7 +55,7 @@ const PaymentSettings = () => {
       setLoading(false);
     };
     fetchProperties();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (!selectedProperty) return;
