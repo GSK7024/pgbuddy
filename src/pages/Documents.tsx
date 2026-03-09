@@ -48,7 +48,7 @@ const Documents = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchDocs(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchDocs(); }, [effectiveOwnerId, staffLoading]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("tenant_documents").update({
