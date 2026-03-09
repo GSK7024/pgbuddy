@@ -94,7 +94,20 @@ const Payments = () => {
     setGenerating(true);
 
     const assign = assignments.find(a => a.id === selectedAssignment);
-    if (!assign) return;
+    if (!assign) { setGenerating(false); return; }
+
+    // Check for duplicate
+    const { count } = await supabase
+      .from("rent_payments")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", assign.tenant_id)
+      .eq("month", month);
+
+    if ((count ?? 0) > 0) {
+      toast({ title: "Already exists", description: `Rent for this tenant for ${month} has already been generated.`, variant: "destructive" });
+      setGenerating(false);
+      return;
+    }
 
     const rentAmount = amount ? Number(amount) : Number(assign.rooms?.rent_amount ?? 0);
 
