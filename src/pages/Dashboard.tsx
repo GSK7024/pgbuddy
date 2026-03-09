@@ -68,10 +68,10 @@ const Dashboard = () => {
 
       setRecentComplaints(recentCompRes.data ?? []);
 
-      // Occupancy — use actual tenant assignments as source of truth
+      // Occupancy — use bed capacity and active tenant count
       const activeTenants = tenantRes.data?.length ?? 0;
-      const totalRooms = rooms.length;
-      setOccupancy({ occupied: activeTenants, vacant: Math.max(0, totalRooms - activeTenants) });
+      const totalBeds = rooms.reduce((sum, r) => sum + (r.capacity ?? 1), 0);
+      setOccupancy({ occupied: activeTenants, vacant: Math.max(0, totalBeds - activeTenants) });
 
       // Expense by category
       const catMap: Record<string, number> = {};
