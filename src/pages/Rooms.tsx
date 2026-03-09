@@ -34,6 +34,7 @@ interface Property {
 const Rooms = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
