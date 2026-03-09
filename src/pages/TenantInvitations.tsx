@@ -11,6 +11,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Invitation {
   id: string;
@@ -28,6 +29,7 @@ interface Invitation {
 const TenantInvitations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [rooms, setRooms] = useState<{ id: string; room_number: string; property_id: string; is_vacant: boolean }[]>([]);
@@ -42,10 +44,10 @@ const TenantInvitations = () => {
   const [tenantPhone, setTenantPhone] = useState("");
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [invRes, propRes, roomRes] = await Promise.all([
       supabase.from("tenant_invitations").select("*, rooms(room_number), properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("id, room_number, property_id, is_vacant"),
     ]);
     setInvitations(invRes.data ?? []);
@@ -54,7 +56,7 @@ const TenantInvitations = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   const vacantRoomsForProperty = rooms.filter(r => r.property_id === propertyId && r.is_vacant);
 

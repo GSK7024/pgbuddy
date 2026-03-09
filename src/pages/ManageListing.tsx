@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionPlan } from "@/hooks/useSubscriptionPlan";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { Link } from "react-router-dom";
 
 interface Photo {
@@ -62,6 +63,7 @@ const ManageListing = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { limits, isPro, isBusiness } = useSubscriptionPlan();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [properties, setProperties] = useState<PropertyBasic[]>([]);
   const [selectedProperty, setSelectedProperty] = useState("");
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -72,9 +74,9 @@ const ManageListing = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     const fetchProperties = async () => {
-      const { data } = await supabase.from("properties").select("id, name, video_url, is_featured").eq("owner_id", user.id);
+      const { data } = await supabase.from("properties").select("id, name, video_url, is_featured").eq("owner_id", effectiveOwnerId);
       setProperties((data ?? []) as PropertyBasic[]);
       if (data && data.length > 0) {
         setSelectedProperty(data[0].id);
@@ -82,7 +84,7 @@ const ManageListing = () => {
       setLoading(false);
     };
     fetchProperties();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (!selectedProperty) return;

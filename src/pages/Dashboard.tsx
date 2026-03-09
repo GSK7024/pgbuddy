@@ -12,12 +12,14 @@ import { motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import OverLimitBanner from "@/components/OverLimitBanner";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "#f59e0b", "#ef4444", "#10b981", "#8b5cf6", "#06b6d4", "#ec4899"];
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { isOverLimit, tenantCount, limits } = useSubscriptionGuard();
+  const { effectiveOwnerId, isStaff, loading: staffLoading } = useStaffAccess();
   const [stats, setStats] = useState({
     properties: 0,
     rooms: 0,
@@ -35,18 +37,19 @@ const Dashboard = () => {
   const [recentComplaints, setRecentComplaints] = useState<{ id: string; title: string; status: string; category: string; created_at: string }[]>([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
+    const ownerId = effectiveOwnerId;
     const fetchStats = async () => {
       const [propRes, roomRes, tenantRes, pendingPayRes, paidPayRes, complaintRes, expRes, noticeRes, recentCompRes] = await Promise.all([
-        supabase.from("properties").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
-        supabase.from("rooms").select("id, is_vacant, capacity, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id),
-        supabase.from("tenant_assignments").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("is_active", true),
-        supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("status", "pending"),
-        supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("status", "paid"),
-        supabase.from("complaints").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("status", "open"),
-        supabase.from("expenses").select("amount, category, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id),
-        supabase.from("vacancy_notices").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).eq("status", "submitted"),
-        supabase.from("complaints").select("id, title, status, category, created_at, property_id, properties!inner(owner_id)").eq("properties.owner_id", user.id).order("created_at", { ascending: false }).limit(5),
+        supabase.from("properties").select("id", { count: "exact", head: true }).eq("owner_id", ownerId),
+        supabase.from("rooms").select("id, is_vacant, capacity, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId),
+        supabase.from("tenant_assignments").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("is_active", true),
+        supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "pending"),
+        supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "paid"),
+        supabase.from("complaints").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "open"),
+        supabase.from("expenses").select("amount, category, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId),
+        supabase.from("vacancy_notices").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "submitted"),
+        supabase.from("complaints").select("id, title, status, category, created_at, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).order("created_at", { ascending: false }).limit(5),
       ]);
 
       const rooms = roomRes.data ?? [];
@@ -98,7 +101,7 @@ const Dashboard = () => {
       );
     };
     fetchStats();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   const profit = stats.collectedRevenue - stats.totalExpenses;
   const isNewOwner = stats.properties === 0;

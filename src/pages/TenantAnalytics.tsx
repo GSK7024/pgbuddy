@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
 
@@ -57,6 +58,7 @@ const getPresetRange = (key: PresetKey): { from: Date; to: Date } => {
 
 const TenantAnalytics = () => {
   const { user } = useAuth();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [loading, setLoading] = useState(true);
   const [activePreset, setActivePreset] = useState<PresetKey>("last6m");
   const [dateRange, setDateRange] = useState(getPresetRange("last6m"));
@@ -81,9 +83,9 @@ const TenantAnalytics = () => {
   }>({ properties: [], rooms: [], assignments: [], payments: [] });
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     fetchRawData();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (rawData.properties.length > 0 || !loading) {
@@ -92,9 +94,9 @@ const TenantAnalytics = () => {
   }, [dateRange, rawData]);
 
   const fetchRawData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [propRes, roomRes, assignRes, payRes] = await Promise.all([
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("id, property_id, capacity, is_vacant"),
       supabase.from("tenant_assignments").select("id, property_id, is_active, move_in_date, move_out_date, custom_rent, rooms(rent_amount)"),
       supabase.from("rent_payments").select("property_id, amount, status, created_at"),

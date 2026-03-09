@@ -11,6 +11,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface PaymentInfoData {
   id?: string;
@@ -30,6 +31,7 @@ interface Property {
 const PaymentSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState("");
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfoData | null>(null);
@@ -44,16 +46,16 @@ const PaymentSettings = () => {
   const [accountHolder, setAccountHolder] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     const fetchProperties = async () => {
-      const { data } = await supabase.from("properties").select("id, name").eq("owner_id", user.id);
+      const { data } = await supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId);
       const props = data ?? [];
       setProperties(props);
       if (props.length > 0) setSelectedProperty(props[0].id);
       setLoading(false);
     };
     fetchProperties();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (!selectedProperty) return;

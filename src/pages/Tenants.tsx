@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import OverLimitBanner from "@/components/OverLimitBanner";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface TenantAssignment {
   id: string;
@@ -50,6 +51,7 @@ const Tenants = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [assignments, setAssignments] = useState<TenantAssignment[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [rooms, setRooms] = useState<RoomWithCapacity[]>([]);
@@ -96,12 +98,12 @@ const Tenants = () => {
   const [swapping, setSwapping] = useState(false);
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [assignRes, propRes, roomRes, subRes] = await Promise.all([
       supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant"),
-      supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+      supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", effectiveOwnerId).eq("status", "active").maybeSingle(),
     ]);
 
     const data = assignRes.data ?? [];
@@ -122,7 +124,7 @@ const Tenants = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   // Count active assignments per room
   const getActiveCountForRoom = (roomId: string) => {

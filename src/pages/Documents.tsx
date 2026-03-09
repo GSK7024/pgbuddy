@@ -8,6 +8,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface TenantDoc {
   id: string;
@@ -30,23 +31,24 @@ const docTypeLabels: Record<string, string> = {
 const Documents = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [docs, setDocs] = useState<TenantDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [selectedProp, setSelectedProp] = useState("all");
 
   const fetchDocs = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [docRes, propRes] = await Promise.all([
       supabase.from("tenant_documents").select("*, properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
     setDocs(docRes.data ?? []);
     setProperties(propRes.data ?? []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchDocs(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchDocs(); }, [effectiveOwnerId, staffLoading]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("tenant_documents").update({

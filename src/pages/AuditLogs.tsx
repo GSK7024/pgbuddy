@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface AuditLog {
   id: string;
@@ -32,6 +33,7 @@ const actionColors: Record<string, string> = {
 
 const AuditLogs = () => {
   const { user } = useAuth();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterTable, setFilterTable] = useState<string>("all");
@@ -40,16 +42,16 @@ const AuditLogs = () => {
   const [filterProperty, setFilterProperty] = useState<string>("all");
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     const fetchProperties = async () => {
       const { data } = await supabase
         .from("properties")
         .select("id, name")
-        .eq("owner_id", user.id);
+        .eq("owner_id", effectiveOwnerId);
       setProperties(data ?? []);
     };
     fetchProperties();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (!user) return;

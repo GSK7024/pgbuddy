@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import OverLimitBanner from "@/components/OverLimitBanner";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Announcement {
   id: string;
@@ -29,6 +30,7 @@ const Announcements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,17 +43,17 @@ const Announcements = () => {
   const [priority, setPriority] = useState("normal");
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [annRes, propRes] = await Promise.all([
       supabase.from("announcements").select("*, properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
     setAnnouncements(annRes.data ?? []);
     setProperties(propRes.data ?? []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

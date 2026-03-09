@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import OverLimitBanner from "@/components/OverLimitBanner";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Payment {
   id: string;
@@ -43,6 +44,7 @@ const Payments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [assignments, setAssignments] = useState<ActiveAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ const Payments = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { fetchData(); }, [user, staffLoading]);
 
   const handleGenerate = async () => {
     if (!selectedAssignment || !month) return;

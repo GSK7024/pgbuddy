@@ -11,6 +11,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Visitor {
   id: string;
@@ -28,6 +29,7 @@ const purposes = ["visit", "delivery", "maintenance", "interview", "other"];
 const VisitorLog = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -40,10 +42,10 @@ const VisitorLog = () => {
   const [notes, setNotes] = useState("");
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [visRes, propRes] = await Promise.all([
       supabase.from("visitor_logs").select("*, properties(name)").order("check_in", { ascending: false }).limit(50),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
     setVisitors(visRes.data ?? []);
     const props = propRes.data ?? [];
@@ -52,7 +54,7 @@ const VisitorLog = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

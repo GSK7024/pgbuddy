@@ -12,6 +12,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Expense {
   id: string;
@@ -34,6 +35,7 @@ const CATEGORIES = ["electricity", "water", "maintenance", "staff", "cleaning", 
 const Expenses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ const Expenses = () => {
   });
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [expRes, propRes] = await Promise.all([
       supabase
         .from("expenses")
@@ -56,7 +58,7 @@ const Expenses = () => {
       supabase
         .from("properties")
         .select("id, name")
-        .eq("owner_id", user.id),
+        .eq("owner_id", effectiveOwnerId),
     ]);
     setExpenses(expRes.data ?? []);
     setProperties(propRes.data ?? []);
@@ -64,8 +66,8 @@ const Expenses = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [user]);
+    if (!staffLoading) fetchData();
+  }, [effectiveOwnerId, staffLoading]);
 
   const handleAdd = async () => {
     if (!form.property_id || !form.amount) {
