@@ -31,6 +31,7 @@ interface Property {
 const PaymentSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState("");
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfoData | null>(null);
