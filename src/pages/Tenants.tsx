@@ -421,6 +421,9 @@ const Tenants = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {isOverLimit && (
+          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+        )}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold">Tenants</h1>
