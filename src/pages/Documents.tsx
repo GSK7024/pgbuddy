@@ -38,10 +38,10 @@ const Documents = () => {
   const [selectedProp, setSelectedProp] = useState("all");
 
   const fetchDocs = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [docRes, propRes] = await Promise.all([
       supabase.from("tenant_documents").select("*, properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
     setDocs(docRes.data ?? []);
     setProperties(propRes.data ?? []);
