@@ -33,6 +33,7 @@ const actionColors: Record<string, string> = {
 
 const AuditLogs = () => {
   const { user } = useAuth();
+  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterTable, setFilterTable] = useState<string>("all");
