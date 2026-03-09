@@ -98,12 +98,12 @@ const Tenants = () => {
   const [swapping, setSwapping] = useState(false);
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [assignRes, propRes, roomRes, subRes] = await Promise.all([
       supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant"),
-      supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+      supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", effectiveOwnerId).eq("status", "active").maybeSingle(),
     ]);
 
     const data = assignRes.data ?? [];
