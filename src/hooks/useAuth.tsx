@@ -35,6 +35,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .maybeSingle();
     setRole((data?.role as UserRole) ?? null);
+
+    // Auto-link pending staff invitations for this user's email
+    const { data: userData } = await supabase.auth.getUser();
+    const userEmail = userData?.user?.email;
+    if (userEmail) {
+      await supabase
+        .from("staff_members")
+        .update({ staff_user_id: userId, status: "active" })
+        .eq("invited_email", userEmail)
+        .eq("status", "pending")
+        .is("staff_user_id", null);
+    }
   };
 
   useEffect(() => {
