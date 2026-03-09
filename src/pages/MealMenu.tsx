@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 const MealMenu = () => {
   const { user } = useAuth();
