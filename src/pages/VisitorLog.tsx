@@ -54,7 +54,7 @@ const VisitorLog = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
