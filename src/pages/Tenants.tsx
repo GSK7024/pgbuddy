@@ -463,7 +463,7 @@ const Tenants = () => {
             )}
             <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Assign Tenant</Button>
+                <Button className="gradient-primary gap-2" disabled={isReadOnly}><Plus className="w-4 h-4" /> Assign Tenant</Button>
               </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Assign Tenant to Room</DialogTitle></DialogHeader>
