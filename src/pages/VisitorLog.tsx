@@ -42,10 +42,10 @@ const VisitorLog = () => {
   const [notes, setNotes] = useState("");
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [visRes, propRes] = await Promise.all([
       supabase.from("visitor_logs").select("*, properties(name)").order("check_in", { ascending: false }).limit(50),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
     setVisitors(visRes.data ?? []);
     const props = propRes.data ?? [];
