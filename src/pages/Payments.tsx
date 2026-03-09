@@ -42,6 +42,7 @@ interface ActiveAssignment {
 const Payments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [assignments, setAssignments] = useState<ActiveAssignment[]>([]);
   const [loading, setLoading] = useState(true);
