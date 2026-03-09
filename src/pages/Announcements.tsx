@@ -43,10 +43,10 @@ const Announcements = () => {
   const [priority, setPriority] = useState("normal");
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [annRes, propRes] = await Promise.all([
       supabase.from("announcements").select("*, properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", user.id),
+      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
     setAnnouncements(annRes.data ?? []);
     setProperties(propRes.data ?? []);
