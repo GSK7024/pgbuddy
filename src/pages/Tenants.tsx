@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import OverLimitBanner from "@/components/OverLimitBanner";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface TenantAssignment {
   id: string;
