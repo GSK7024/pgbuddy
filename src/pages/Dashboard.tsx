@@ -68,9 +68,10 @@ const Dashboard = () => {
 
       setRecentComplaints(recentCompRes.data ?? []);
 
-      // Occupancy
-      const occupied = rooms.filter((r) => !r.is_vacant).length;
-      setOccupancy({ occupied, vacant: rooms.length - occupied });
+      // Occupancy — use actual tenant assignments as source of truth
+      const activeTenants = tenantRes.data?.length ?? 0;
+      const totalRooms = rooms.length;
+      setOccupancy({ occupied: activeTenants, vacant: Math.max(0, totalRooms - activeTenants) });
 
       // Expense by category
       const catMap: Record<string, number> = {};
