@@ -49,6 +49,7 @@ interface RoomWithCapacity {
 const Tenants = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
   const [assignments, setAssignments] = useState<TenantAssignment[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [rooms, setRooms] = useState<RoomWithCapacity[]>([]);
