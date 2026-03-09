@@ -70,7 +70,7 @@ const Rooms = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   const resetForm = () => {
     setPropertyId(""); setRoomNumber(""); setRoomType("single");
