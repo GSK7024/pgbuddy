@@ -83,9 +83,9 @@ const TenantAnalytics = () => {
   }>({ properties: [], rooms: [], assignments: [], payments: [] });
 
   useEffect(() => {
-    if (!user) return;
+    if (!effectiveOwnerId || staffLoading) return;
     fetchRawData();
-  }, [user]);
+  }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
     if (rawData.properties.length > 0 || !loading) {
