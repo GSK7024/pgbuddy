@@ -10,6 +10,7 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 
 const cityData: Record<string, { title: string; description: string }> = {
   mumbai: { title: "Best PGs in Mumbai", description: "Find affordable and verified PG accommodations across Mumbai - Andheri, Powai, Bandra, Thane and more." },
