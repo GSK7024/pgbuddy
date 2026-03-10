@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import PropertyMap from "@/components/PropertyMap";
+import SEOHead from "@/components/SEOHead";
 
 interface RoomInfo {
   id: string;
