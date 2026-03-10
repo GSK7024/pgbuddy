@@ -10,6 +10,7 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 
 const cityData: Record<string, { title: string; description: string }> = {
   mumbai: { title: "Best PGs in Mumbai", description: "Find affordable and verified PG accommodations across Mumbai - Andheri, Powai, Bandra, Thane and more." },
@@ -55,6 +56,11 @@ const CityPGs = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={cityInfo.title}
+        description={cityInfo.description}
+        canonical={`/pgs/${city?.toLowerCase()}`}
+      />
       <Navbar />
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4 space-y-8">

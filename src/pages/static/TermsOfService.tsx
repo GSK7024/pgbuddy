@@ -1,7 +1,7 @@
 import StaticPageLayout from "./StaticPageLayout";
 
 const TermsOfService = () => (
-  <StaticPageLayout title="Terms of Service">
+  <StaticPageLayout title="Terms of Service" description="PG Buddy terms of service. Rules and guidelines for using our PG management platform." canonical="/terms">
     <p className="text-sm">Last updated: March 1, 2026</p>
 
     <h2 className="text-xl font-semibold text-foreground">1. Acceptance of Terms</h2>

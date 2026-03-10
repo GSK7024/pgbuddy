@@ -10,7 +10,7 @@ const plans = [
 ];
 
 const Pricing = () => (
-  <StaticPageLayout title="Pricing">
+  <StaticPageLayout title="Pricing" description="Simple, transparent pricing for PG owners. Free starter plan, Pro at ₹499/mo, Business at ₹999/mo. 14-day free trial." canonical="/pricing">
     <p className="text-center">Simple, transparent pricing for PG owners of all sizes.</p>
 
     <div className="grid gap-6 md:grid-cols-3 mt-8 not-prose">

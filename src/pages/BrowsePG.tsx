@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import PropertyMap from "@/components/PropertyMap";
+import SEOHead from "@/components/SEOHead";
 
 interface RoomInfo {
   id: string;
@@ -220,6 +221,11 @@ const BrowsePG = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Find PG Accommodation in India"
+        description="Browse verified PG accommodations across India. Compare prices, check amenities, read reviews and find your perfect paying guest room."
+        canonical="/browse"
+      />
       <Navbar />
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4 space-y-8">

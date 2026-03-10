@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import SEOHead from "@/components/SEOHead";
 
 const benefits = [
   { icon: Building2, title: "Manage Properties", description: "Add multiple PGs, rooms, and track occupancy in one place" },
@@ -22,6 +23,11 @@ const steps = [
 const ListPG = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="List Your PG Property"
+        description="List and manage your PG property for free. Add rooms, manage tenants, track payments, and grow your PG business with PG Buddy."
+        canonical="/list-pg"
+      />
       <Navbar />
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">

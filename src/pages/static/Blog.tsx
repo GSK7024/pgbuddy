@@ -8,7 +8,7 @@ const posts = [
 ];
 
 const Blog = () => (
-  <StaticPageLayout title="Blog">
+  <StaticPageLayout title="Blog" description="Tips, guides, and insights for PG owners and tenants. Learn how to manage your PG business better." canonical="/blog">
     <p>Tips, guides, and insights for PG owners and tenants.</p>
 
     <div className="space-y-6 mt-4">
