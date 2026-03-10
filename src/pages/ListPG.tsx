@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import SEOHead from "@/components/SEOHead";
 
 const benefits = [
   { icon: Building2, title: "Manage Properties", description: "Add multiple PGs, rooms, and track occupancy in one place" },
