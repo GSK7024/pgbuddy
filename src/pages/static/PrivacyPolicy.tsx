@@ -1,7 +1,7 @@
 import StaticPageLayout from "./StaticPageLayout";
 
 const PrivacyPolicy = () => (
-  <StaticPageLayout title="Privacy Policy">
+  <StaticPageLayout title="Privacy Policy" description="PG Buddy privacy policy. Learn how we collect, use, and protect your personal data." canonical="/privacy">
     <p className="text-sm">Last updated: March 1, 2026</p>
 
     <h2 className="text-xl font-semibold text-foreground">1. Information We Collect</h2>

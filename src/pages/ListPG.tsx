@@ -23,6 +23,11 @@ const steps = [
 const ListPG = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="List Your PG Property"
+        description="List and manage your PG property for free. Add rooms, manage tenants, track payments, and grow your PG business with PG Buddy."
+        canonical="/list-pg"
+      />
       <Navbar />
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
