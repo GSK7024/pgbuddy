@@ -56,6 +56,11 @@ const CityPGs = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={cityInfo.title}
+        description={cityInfo.description}
+        canonical={`/pgs/${city?.toLowerCase()}`}
+      />
       <Navbar />
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4 space-y-8">
