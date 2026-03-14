@@ -17,6 +17,7 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
+    { name: "Features", href: "/features", icon: Sparkles },
     { name: "Find PG", href: "/browse", icon: Home },
     { name: "List Your PG", href: "/list-pg", icon: Building2 },
     { name: "About", href: "/about", icon: Users },
