@@ -64,6 +64,7 @@ import PrivacyPolicy from "./pages/static/PrivacyPolicy";
 import TermsOfService from "./pages/static/TermsOfService";
 import Pricing from "./pages/static/Pricing";
 import UserGuide from "./pages/static/UserGuide";
+import Features from "./pages/static/Features";
 
 
 const queryClient = new QueryClient();
