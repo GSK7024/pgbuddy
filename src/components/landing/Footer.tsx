@@ -4,7 +4,7 @@ import { Building2, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin 
 const Footer = () => {
   const footerLinks = {
     product: [
-      { name: "Features", href: "#features" },
+      { name: "Features", href: "/features" },
       { name: "Pricing", href: "/pricing" },
       { name: "Find PG", href: "/browse" },
       { name: "List Your PG", href: "/list-pg" },
