@@ -12,7 +12,7 @@ interface SEOHeadProps {
 const SITE_NAME = "PG Buddy";
 const DEFAULT_DESC = "Complete PG management platform for property owners and tenants. Manage properties, rooms, rent payments, complaints and more.";
 const BASE_URL = "https://pgbuddy.lovable.app";
-const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/21c9c19c-348c-4a38-9084-fc6f19578629";
+const DEFAULT_OG = "https://pgbuddy.lovable.app/og-image.png";
 
 const SEOHead = ({
   title,
