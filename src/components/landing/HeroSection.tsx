@@ -112,6 +112,23 @@ const HeroSection = () => {
               </div>
             ))}
           </motion.div>
+
+          {/* Dashboard Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.5 }}
+            className="mt-14 max-w-3xl mx-auto"
+          >
+            <div className="rounded-2xl border border-border/50 shadow-card overflow-hidden bg-card/50 backdrop-blur-sm p-2">
+              <img
+                src={heroDashboard}
+                alt="PG Buddy dashboard showing property management, occupancy tracking and rent collection"
+                className="w-full rounded-xl"
+                loading="eager"
+              />
+            </div>
+          </motion.div>
         </div>
 
         {/* Floating Cards */}
