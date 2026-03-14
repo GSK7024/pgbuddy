@@ -138,6 +138,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/guide" element={<UserGuide />} />
+              <Route path="/features" element={<Features />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
