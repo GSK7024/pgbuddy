@@ -1,0 +1,1 @@
+UPDATE subscription_plans SET monthly_price = 2, yearly_price = 20 WHERE slug = 'pro';
