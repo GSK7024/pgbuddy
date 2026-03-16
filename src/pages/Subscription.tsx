@@ -42,6 +42,7 @@ const PLAN_ICONS: Record<string, typeof Crown> = {
   free: Building2,
   pro: Zap,
   business: Crown,
+  enterprise: Star,
 };
 
 const Subscription = () => {
