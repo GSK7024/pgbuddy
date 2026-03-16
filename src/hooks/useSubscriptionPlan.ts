@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-export type PlanSlug = "free" | "pro" | "business";
+export type PlanSlug = "free" | "pro" | "business" | "enterprise";
 
 export interface PlanLimits {
   slug: PlanSlug;
@@ -31,11 +31,20 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
     videoTour: true,
     enquiryAnalytics: false,
     featuredBadge: false,
-    tenantLimit: 25,
+    tenantLimit: 50,
   },
   business: {
     slug: "business",
     name: "Business",
+    maxPhotos: Infinity,
+    videoTour: true,
+    enquiryAnalytics: true,
+    featuredBadge: true,
+    tenantLimit: 100,
+  },
+  enterprise: {
+    slug: "enterprise",
+    name: "Enterprise",
     maxPhotos: Infinity,
     videoTour: true,
     enquiryAnalytics: true,
@@ -85,7 +94,8 @@ export const useSubscriptionPlan = () => {
     planSlug,
     limits: PLAN_LIMITS[planSlug],
     loading,
-    isPro: planSlug === "pro" || planSlug === "business",
-    isBusiness: planSlug === "business",
+    isPro: planSlug === "pro" || planSlug === "business" || planSlug === "enterprise",
+    isBusiness: planSlug === "business" || planSlug === "enterprise",
+    isEnterprise: planSlug === "enterprise",
   };
 };
