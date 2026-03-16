@@ -118,12 +118,23 @@ const Subscription = () => {
         name: "PGManager",
         description: `${data.plan_name} Plan (${data.billing_cycle})`,
         handler: async function (response: any) {
-          toast({ title: "Payment successful!", description: "Your subscription is now active." });
+          toast({ title: "Payment successful!", description: "Activating your subscription..." });
+          try {
+            // Verify and activate subscription server-side
+            await supabase.functions.invoke("verify-subscription-payment", {
+              body: {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+            });
+            toast({ title: "Subscription activated!", description: "You now have access to Pro features." });
+          } catch (e) {
+            console.error("Verify failed, will retry via webhook", e);
+          }
           // Refresh subscription
-          setTimeout(async () => {
-            const { data: subData } = await supabase.from("subscriptions").select("*").eq("user_id", user.id).eq("status", "active").maybeSingle();
-            setCurrentSub(subData);
-          }, 2000);
+          const { data: subData } = await supabase.from("subscriptions").select("*").eq("user_id", user.id).eq("status", "active").maybeSingle();
+          setCurrentSub(subData);
         },
         prefill: {
           email: user.email,
