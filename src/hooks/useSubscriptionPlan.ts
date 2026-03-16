@@ -31,7 +31,7 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
     videoTour: true,
     enquiryAnalytics: false,
     featuredBadge: false,
-    tenantLimit: 25,
+    tenantLimit: 50,
   },
   business: {
     slug: "business",
