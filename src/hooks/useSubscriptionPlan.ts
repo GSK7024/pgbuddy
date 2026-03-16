@@ -40,6 +40,15 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
     videoTour: true,
     enquiryAnalytics: true,
     featuredBadge: true,
+    tenantLimit: 100,
+  },
+  enterprise: {
+    slug: "enterprise",
+    name: "Enterprise",
+    maxPhotos: Infinity,
+    videoTour: true,
+    enquiryAnalytics: true,
+    featuredBadge: true,
     tenantLimit: Infinity,
   },
 };
