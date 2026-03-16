@@ -94,7 +94,8 @@ export const useSubscriptionPlan = () => {
     planSlug,
     limits: PLAN_LIMITS[planSlug],
     loading,
-    isPro: planSlug === "pro" || planSlug === "business",
-    isBusiness: planSlug === "business",
+    isPro: planSlug === "pro" || planSlug === "business" || planSlug === "enterprise",
+    isBusiness: planSlug === "business" || planSlug === "enterprise",
+    isEnterprise: planSlug === "enterprise",
   };
 };

@@ -206,7 +206,7 @@ const Subscription = () => {
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {plans.map((plan) => {
               const Icon = PLAN_ICONS[plan.slug] || Building2;
               const price = yearly ? plan.yearly_price : plan.monthly_price;
