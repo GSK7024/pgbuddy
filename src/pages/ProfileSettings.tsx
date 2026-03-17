@@ -115,10 +115,10 @@ const ProfileSettings = ({ Layout }: { Layout: React.ComponentType<{ children: R
             </CardContent>
           </Card>
 
-          {/* App & Notifications */}
+          {/* App and Notifications */}
           <Separator />
           <div>
-            <h2 className="text-lg font-semibold mb-3">App & Notifications</h2>
+            <h2 className="text-lg font-semibold mb-3">App &amp; Notifications</h2>
             <InstallPWA />
           </div>
         )}
