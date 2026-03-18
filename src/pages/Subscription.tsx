@@ -10,6 +10,8 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { useNavigate } from "react-router-dom";
 
 interface Plan {
   id: string;
@@ -48,11 +50,20 @@ const PLAN_ICONS: Record<string, typeof Crown> = {
 const Subscription = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isStaff, loading: staffLoading } = useStaffAccess();
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [currentSub, setCurrentSub] = useState<Subscription | null>(null);
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState<string | null>(null);
+
+  // Redirect staff to dashboard
+  useEffect(() => {
+    if (!staffLoading && isStaff) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isStaff, staffLoading, navigate]);
   const [tenantCount, setTenantCount] = useState(0);
 
   useEffect(() => {

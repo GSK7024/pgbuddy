@@ -66,7 +66,7 @@ const Rooms = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
-  const { isOverLimit, isBedLimitReached, bedCount, bedLimit, limits } = useSubscriptionGuard();
+  const { isOverLimit, isBedLimitReached, bedCount, bedLimit, limits, refetchBedCount } = useSubscriptionGuard();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [bedsMap, setBedsMap] = useState<Record<string, BedInfo[]>>({});
@@ -276,6 +276,24 @@ const Rooms = () => {
     }
     setSubmitting(true);
 
+    // === LIVE BED LIMIT CHECK ===
+    if (bedLimit !== Infinity && !editingRoom) {
+      // Re-count beds from DB right now
+      const { data: ownerProps } = await supabase.from("properties").select("id").eq("owner_id", effectiveOwnerId!);
+      const pIds = (ownerProps ?? []).map(p => p.id);
+      if (pIds.length > 0) {
+        const { data: currentRooms } = await supabase.from("rooms").select("capacity").in("property_id", pIds);
+        const currentBeds = (currentRooms ?? []).reduce((s, r) => s + (r.capacity || 0), 0);
+        const newBeds = processedBeds.length;
+        if (currentBeds + newBeds > bedLimit) {
+          toast({ title: "Bed limit reached", description: `You have ${currentBeds} beds and are trying to add ${newBeds}. Your plan allows ${bedLimit}.`, variant: "destructive" });
+          setSubmitting(false);
+          refetchBedCount();
+          return;
+        }
+      }
+    }
+
     // Derive room-level fields from beds
     const capacity = processedBeds.length;
     const primaryType = processedBeds[0]?.sharing_type || "single";
@@ -356,12 +374,13 @@ const Rooms = () => {
 
     toast({ title: editingRoom ? "Room updated!" : "Room added!" });
     setDialogOpen(false); resetForm(); fetchData();
+    refetchBedCount();
     setSubmitting(false);
   };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("rooms").delete().eq("id", id);
-    if (!error) { toast({ title: "Room deleted" }); fetchData(); }
+    if (!error) { toast({ title: "Room deleted" }); fetchData(); refetchBedCount(); }
   };
 
   const toggleExpand = (roomId: string) => {

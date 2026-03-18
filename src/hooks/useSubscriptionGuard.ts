@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { useSubscriptionPlan } from "@/hooks/useSubscriptionPlan";
@@ -8,6 +8,12 @@ export const useSubscriptionGuard = () => {
   const { planSlug, limits, loading: planLoading } = useSubscriptionPlan(effectiveOwnerId);
   const [bedCount, setBedCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Call this after adding/removing beds to force a recount
+  const refetchBedCount = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
 
   useEffect(() => {
     if (!effectiveOwnerId || planLoading || staffLoading) return;
@@ -39,9 +45,9 @@ export const useSubscriptionGuard = () => {
     };
 
     fetchBedCount();
-  }, [effectiveOwnerId, planLoading, staffLoading]);
+  }, [effectiveOwnerId, planLoading, staffLoading, refreshKey]);
 
-  const bedLimit = limits.tenantLimit; // tenantLimit == bed limit
+  const bedLimit = limits.tenantLimit;
   const isOverLimit = bedLimit !== Infinity && bedCount > bedLimit;
   const isReadOnly = isOverLimit;
   const isBedLimitReached = bedLimit !== Infinity && bedCount >= bedLimit;
@@ -54,6 +60,7 @@ export const useSubscriptionGuard = () => {
     isOverLimit,
     isReadOnly,
     isBedLimitReached,
+    refetchBedCount,
     loading: loading || planLoading || staffLoading,
   };
 };
