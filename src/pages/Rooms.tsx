@@ -66,7 +66,7 @@ const Rooms = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
-  const { isOverLimit, isBedLimitReached, tenantCount, bedCount, limits } = useSubscriptionGuard();
+  const { isOverLimit, isBedLimitReached, bedCount, bedLimit, limits } = useSubscriptionGuard();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [bedsMap, setBedsMap] = useState<Record<string, BedInfo[]>>({});
@@ -390,7 +390,7 @@ const Rooms = () => {
             <p className="text-muted-foreground">Manage rooms and individual beds across properties</p>
           </div>
           {isOverLimit && (
-            <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+            <OverLimitBanner bedCount={bedCount} bedLimit={bedLimit} planName={limits.name} />
           )}
           {isBedLimitReached && !isOverLimit && (
             <div className="rounded-lg border border-warning/50 bg-warning/10 px-4 py-3 text-sm">

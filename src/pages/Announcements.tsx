@@ -29,7 +29,7 @@ interface Announcement {
 const Announcements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
+  const { isReadOnly, isOverLimit, bedCount, bedLimit, limits } = useSubscriptionGuard();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
@@ -112,7 +112,7 @@ const Announcements = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {isOverLimit && (
-          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+          <OverLimitBanner bedCount={bedCount} bedLimit={bedLimit} planName={limits.name} />
         )}
         <div className="flex items-center justify-between">
           <div>

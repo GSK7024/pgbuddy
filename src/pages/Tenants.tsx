@@ -64,7 +64,7 @@ interface BedOption {
 const Tenants = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
+  const { isReadOnly, isOverLimit, bedCount, bedLimit, limits } = useSubscriptionGuard();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [assignments, setAssignments] = useState<TenantAssignment[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
@@ -529,7 +529,7 @@ const Tenants = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {isOverLimit && (
-          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+          <OverLimitBanner bedCount={bedCount} bedLimit={bedLimit} planName={limits.name} />
         )}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>

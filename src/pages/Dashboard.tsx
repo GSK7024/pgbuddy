@@ -44,7 +44,7 @@ const getPresetRange = (key: PresetKey): { from: Date; to: Date } => {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { isOverLimit, tenantCount, limits } = useSubscriptionGuard();
+  const { isOverLimit, bedCount, bedLimit, limits } = useSubscriptionGuard();
   const { effectiveOwnerId, isStaff, staffPropertyId, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [filterPropertyId, setFilterPropertyId] = useState<string>("all");
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
@@ -194,7 +194,7 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {isOverLimit && (
-          <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+          <OverLimitBanner bedCount={bedCount} bedLimit={bedLimit} planName={limits.name} />
         )}
         <div className="flex items-center justify-between">
           <div>
