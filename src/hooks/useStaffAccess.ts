@@ -9,6 +9,8 @@ interface StaffAccess {
   effectiveOwnerId: string | null;
   /** The staff role (manager, accountant, caretaker) — null if user is the actual owner */
   staffRole: string | null;
+  /** The single property_id this staff is assigned to (null = all properties, or user is owner) */
+  staffPropertyId: string | null;
   /** Property IDs this user can access (own properties + staff-assigned properties) */
   accessiblePropertyIds: string[];
   /** True while loading staff access info */
@@ -28,6 +30,7 @@ export const useStaffAccess = (): StaffAccess => {
   const [isStaff, setIsStaff] = useState(false);
   const [effectiveOwnerId, setEffectiveOwnerId] = useState<string | null>(null);
   const [staffRole, setStaffRole] = useState<string | null>(null);
+  const [staffPropertyId, setStaffPropertyId] = useState<string | null>(null);
   const [accessiblePropertyIds, setAccessiblePropertyIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,6 +55,7 @@ export const useStaffAccess = (): StaffAccess => {
         setIsStaff(true);
         setEffectiveOwnerId(staffData.owner_id);
         setStaffRole(staffData.role);
+        setStaffPropertyId(staffData.property_id ?? null);
 
         // Get accessible property IDs via the RPC
         const { data: propIds } = await supabase.rpc("get_staff_property_ids", {
@@ -63,6 +67,7 @@ export const useStaffAccess = (): StaffAccess => {
         setIsStaff(false);
         setEffectiveOwnerId(user.id);
         setStaffRole(null);
+        setStaffPropertyId(null);
 
         // Get owner's own property IDs
         const { data: ownProps } = await supabase
@@ -78,5 +83,5 @@ export const useStaffAccess = (): StaffAccess => {
     fetchAccess();
   }, [user]);
 
-  return { isStaff, effectiveOwnerId, staffRole, accessiblePropertyIds, loading };
+  return { isStaff, effectiveOwnerId, staffRole, staffPropertyId, accessiblePropertyIds, loading };
 };

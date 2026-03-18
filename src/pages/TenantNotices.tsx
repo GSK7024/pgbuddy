@@ -34,6 +34,7 @@ const TenantNotices = () => {
   // Form
   const [reason, setReason] = useState("");
   const [moveOutDate, setMoveOutDate] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     if (!user) return;
@@ -68,7 +69,8 @@ const TenantNotices = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !assignment) return;
+    if (!user || !assignment || submitting) return;
+    setSubmitting(true);
 
     // Validate min 1 month notice
     const moveOut = new Date(moveOutDate);
@@ -78,6 +80,7 @@ const TenantNotices = () => {
 
     if (moveOut < minDate) {
       toast({ title: "Minimum 1-month notice required", description: "Please select a move-out date at least 1 month from today.", variant: "destructive" });
+      setSubmitting(false);
       return;
     }
 
@@ -97,6 +100,7 @@ const TenantNotices = () => {
       setReason("");
       fetchData();
     }
+    setSubmitting(false);
   };
 
   return (
@@ -130,7 +134,7 @@ const TenantNotices = () => {
                     <Label>Reason for leaving</Label>
                     <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Optional - why are you moving out?" rows={3} />
                   </div>
-                  <Button type="submit" className="w-full gradient-primary">Submit Notice</Button>
+                  <Button type="submit" className="w-full gradient-primary" disabled={submitting}>{submitting ? "Submitting..." : "Submit Notice"}</Button>
                 </form>
               </DialogContent>
             </Dialog>

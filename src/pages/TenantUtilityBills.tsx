@@ -48,7 +48,7 @@ const TenantUtilityBills = () => {
         .eq("tenant_id", user.id)
         .order("created_at", { ascending: false }),
       supabase.from("tenant_assignments")
-        .select("property_id")
+        .select("property_id, properties(owner_id)")
         .eq("tenant_id", user.id)
         .eq("is_active", true)
         .maybeSingle(),
@@ -56,11 +56,30 @@ const TenantUtilityBills = () => {
     setBills(billRes.data ?? []);
 
     if (assignRes.data) {
-      const { data: info } = await supabase
+      let info = null;
+
+      // Try property specific
+      const { data: propSpecific } = await supabase
         .from("payment_info")
         .select("upi_id, bank_name, account_number, ifsc_code, account_holder")
         .eq("property_id", assignRes.data.property_id)
         .maybeSingle();
+      info = propSpecific;
+
+      // Fallback to owner default
+      if (!info) {
+        const ownerId = (assignRes.data as any).properties?.owner_id;
+        if (ownerId) {
+          const { data: ownerDefault } = await (supabase as any)
+            .from("payment_info")
+            .select("upi_id, bank_name, account_number, ifsc_code, account_holder")
+            .is("property_id", null)
+            .eq("owner_id", ownerId)
+            .maybeSingle();
+          info = ownerDefault;
+        }
+      }
+
       setPaymentInfo(info as unknown as PaymentInfo | null);
     }
     setLoading(false);

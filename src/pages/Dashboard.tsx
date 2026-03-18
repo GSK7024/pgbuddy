@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
-import { Building2, Users, Home, CreditCard, TrendingUp, AlertCircle, IndianRupee, Receipt, Plus, ArrowRight, MessageSquare, BellDot } from "lucide-react";
+import { Building2, Users, Home, CreditCard, TrendingUp, AlertCircle, IndianRupee, Receipt, Plus, ArrowRight, MessageSquare, BellDot, Filter, CalendarIcon } from "lucide-react";
+import { format, subMonths } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,10 +21,51 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "#f59e0b", "#ef4444", "#10b981", "#8b5cf6", "#06b6d4", "#ec4899"];
 
+type PresetKey = "last30" | "last3m" | "last6m" | "last12m" | "custom";
+
+const presets: { key: PresetKey; label: string }[] = [
+  { key: "last30", label: "Last 30 days" },
+  { key: "last3m", label: "Last 3 months" },
+  { key: "last6m", label: "Last 6 months" },
+  { key: "last12m", label: "Last 12 months" },
+  { key: "custom", label: "Custom range" },
+];
+
+const getPresetRange = (key: PresetKey): { from: Date; to: Date } => {
+  const now = new Date();
+  switch (key) {
+    case "last30": return { from: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30), to: now };
+    case "last3m": return { from: subMonths(now, 3), to: now };
+    case "last6m": return { from: subMonths(now, 6), to: now };
+    case "last12m": return { from: subMonths(now, 12), to: now };
+    default: return { from: subMonths(now, 3), to: now };
+  }
+};
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { isOverLimit, tenantCount, limits } = useSubscriptionGuard();
-  const { effectiveOwnerId, isStaff, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, staffPropertyId, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
+  const [filterPropertyId, setFilterPropertyId] = useState<string>("all");
+  const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
+
+  const [activePreset, setActivePreset] = useState<PresetKey>("last3m");
+  const [dateRange, setDateRange] = useState(getPresetRange("last3m"));
+  const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
+  const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
+
+  const handlePreset = (key: PresetKey) => {
+    setActivePreset(key);
+    if (key !== "custom") {
+      setDateRange(getPresetRange(key));
+    }
+  };
+
+  const applyCustomRange = () => {
+    if (customFrom && customTo) {
+      setDateRange({ from: customFrom, to: customTo });
+    }
+  };
   const [stats, setStats] = useState({
     properties: 0,
     rooms: 0,
@@ -40,16 +86,40 @@ const Dashboard = () => {
     if (!effectiveOwnerId || staffLoading) return;
     const ownerId = effectiveOwnerId;
     const fetchStats = async () => {
+      // Fetch properties list for filter dropdown
+      const { data: propList } = await supabase.from("properties").select("id, name").eq("owner_id", ownerId);
+      const allProps = propList ?? [];
+      setProperties(allProps);
+
+      // For staff with assigned property, auto-lock
+      if (isStaff && staffPropertyId) {
+        setFilterPropertyId(staffPropertyId);
+      }
+
+      // Determine which property IDs to filter by
+      const effectivePropIds = isStaff && staffPropertyId
+        ? [staffPropertyId]
+        : filterPropertyId !== "all"
+        ? [filterPropertyId]
+        : allProps.map(p => p.id);
+
+      if (effectivePropIds.length === 0) {
+        return;
+      }
+
+      const fromISO = dateRange.from.toISOString();
+      const toISO = dateRange.to.toISOString();
+
       const [propRes, roomRes, tenantRes, pendingPayRes, paidPayRes, complaintRes, expRes, noticeRes, recentCompRes] = await Promise.all([
-        supabase.from("properties").select("id", { count: "exact", head: true }).eq("owner_id", ownerId),
-        supabase.from("rooms").select("id, is_vacant, capacity, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId),
-        supabase.from("tenant_assignments").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("is_active", true),
-        supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "pending"),
-        supabase.from("rent_payments").select("id, amount, month, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "paid"),
-        supabase.from("complaints").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "open"),
-        supabase.from("expenses").select("amount, category, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId),
-        supabase.from("vacancy_notices").select("id, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).eq("status", "submitted"),
-        supabase.from("complaints").select("id, title, status, category, created_at, property_id, properties!inner(owner_id)").eq("properties.owner_id", ownerId).order("created_at", { ascending: false }).limit(5),
+        supabase.from("properties").select("id", { count: "exact", head: true }).in("id", effectivePropIds),
+        supabase.from("rooms").select("id, is_vacant, capacity, property_id").in("property_id", effectivePropIds),
+        supabase.from("tenant_assignments").select("id, property_id").in("property_id", effectivePropIds).eq("is_active", true),
+        supabase.from("rent_payments").select("id, amount, month, property_id").in("property_id", effectivePropIds).eq("status", "pending").gte("created_at", fromISO).lte("created_at", toISO),
+        supabase.from("rent_payments").select("id, amount, month, property_id").in("property_id", effectivePropIds).eq("status", "paid").gte("created_at", fromISO).lte("created_at", toISO),
+        supabase.from("complaints").select("id, property_id").in("property_id", effectivePropIds).eq("status", "open").gte("created_at", fromISO).lte("created_at", toISO),
+        supabase.from("expenses").select("amount, category, property_id").in("property_id", effectivePropIds).gte("created_at", fromISO).lte("created_at", toISO),
+        supabase.from("vacancy_notices").select("id, property_id").in("property_id", effectivePropIds).eq("status", "submitted"),
+        supabase.from("complaints").select("id, title, status, category, created_at, property_id").in("property_id", effectivePropIds).gte("created_at", fromISO).lte("created_at", toISO).order("created_at", { ascending: false }).limit(5),
       ]);
 
       const rooms = roomRes.data ?? [];
@@ -101,10 +171,14 @@ const Dashboard = () => {
       );
     };
     fetchStats();
-  }, [effectiveOwnerId, staffLoading]);
+  }, [effectiveOwnerId, staffLoading, filterPropertyId, isStaff, staffPropertyId, dateRange]);
 
   const profit = stats.collectedRevenue - stats.totalExpenses;
   const isNewOwner = stats.properties === 0;
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Track data loading via stats
+  useEffect(() => { if (stats.properties >= 0 && !staffLoading) setDataLoading(false); }, [stats, staffLoading]);
 
   // Onboarding steps
   const onboardingSteps = [
@@ -128,6 +202,25 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Welcome back! Here's your PG overview.</p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
+            {/* Property filter for owners, auto-locked for staff */}
+            {!isStaff && properties.length > 1 && (
+              <Select value={filterPropertyId} onValueChange={setFilterPropertyId}>
+                <SelectTrigger className="w-[180px] h-9">
+                  <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="All Properties" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Properties</SelectItem>
+                  {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+            {isStaff && staffPropertyId && (
+              <Badge variant="outline" className="h-9 px-3 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                {properties.find(p => p.id === staffPropertyId)?.name || "Assigned Property"}
+              </Badge>
+            )}
             <Button variant="outline" size="sm" asChild>
               <Link to="/dashboard/payments"><CreditCard className="w-4 h-4 mr-1" /> Payments</Link>
             </Button>
@@ -136,6 +229,70 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
+
+        {/* Date Range Filters */}
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {presets.map(p => (
+                <Button
+                  key={p.key}
+                  size="sm"
+                  variant={activePreset === p.key ? "default" : "outline"}
+                  onClick={() => handlePreset(p.key)}
+                  className={activePreset === p.key ? "gradient-primary" : ""}
+                >
+                  {p.label}
+                </Button>
+              ))}
+
+              {activePreset === "custom" && (
+                <div className="flex flex-wrap items-center gap-2 ml-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("gap-1.5", !customFrom && "text-muted-foreground")}>
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        {customFrom ? format(customFrom, "MMM d, yyyy") : "From"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customFrom}
+                        onSelect={setCustomFrom}
+                        disabled={(date: Date) => date > new Date()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-muted-foreground text-sm">→</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("gap-1.5", !customTo && "text-muted-foreground")}>
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        {customTo ? format(customTo, "MMM d, yyyy") : "To"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customTo}
+                        onSelect={setCustomTo}
+                        disabled={(date: Date) => date > new Date() || (customFrom ? date < customFrom : false)}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Button size="sm" onClick={applyCustomRange} disabled={!customFrom || !customTo}>
+                    Apply
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Onboarding progress - show if not fully set up */}
         {completedSteps < 4 && (

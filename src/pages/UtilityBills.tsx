@@ -13,6 +13,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Bill {
   id: string;
@@ -42,6 +43,7 @@ interface RoomInfo {
 const UtilityBills = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [bills, setBills] = useState<Bill[]>([]);
   const [tenants, setTenants] = useState<RoomInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,21 +58,31 @@ const UtilityBills = () => {
   const [rate, setRate] = useState("8");
   const [billMonth, setBillMonth] = useState(new Date().toISOString().slice(0, 7));
   const [splitBill, setSplitBill] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const [billRes, tenantRes] = await Promise.all([
       supabase.from("utility_bills").select("*, rooms(room_number), properties(name)").order("created_at", { ascending: false }),
       supabase.from("tenant_assignments")
         .select("tenant_id, room_id, property_id, rooms(room_number), properties(name)")
         .eq("is_active", true),
     ]);
-    setBills(billRes.data ?? []);
-    setTenants((tenantRes.data ?? []) as unknown as RoomInfo[]);
+
+    let fetchedBills = billRes.data ?? [];
+    let fetchedTenants = tenantRes.data ?? [];
+
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetchedBills = fetchedBills.filter(b => accessiblePropertyIds.includes(b.property_id));
+      fetchedTenants = fetchedTenants.filter(t => accessiblePropertyIds.includes(t.property_id));
+    }
+
+    setBills(fetchedBills);
+    setTenants(fetchedTenants as unknown as RoomInfo[]);
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchData(); }, [effectiveOwnerId, staffLoading]);
 
   // Group tenants by room for split billing
   const roomGroups = tenants.reduce((acc, t) => {
@@ -90,7 +102,8 @@ const UtilityBills = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRoomData) return;
+    if (!selectedRoomData || submitting) return;
+    setSubmitting(true);
 
     const tenantsToCharge = splitBill ? selectedRoomData.tenantIds : [selectedRoomData.tenantIds[0]];
 
@@ -117,6 +130,7 @@ const UtilityBills = () => {
       setPrevReading(""); setCurrReading("");
       fetchData();
     }
+    setSubmitting(false);
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -209,8 +223,8 @@ const UtilityBills = () => {
                     )}
                   </div>
                 )}
-                <Button type="submit" className="w-full gradient-primary">
-                  Generate Bill{splitBill && roommateCount > 1 ? ` (${roommateCount} tenants)` : ""}
+                <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
+                  {submitting ? "Generating..." : `Generate Bill${splitBill && roommateCount > 1 ? ` (${roommateCount} tenants)` : ""}`}
                 </Button>
               </form>
             </DialogContent>

@@ -29,7 +29,7 @@ const purposes = ["visit", "delivery", "maintenance", "interview", "other"];
 const VisitorLog = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -40,6 +40,7 @@ const VisitorLog = () => {
   const [purpose, setPurpose] = useState("visit");
   const [propId, setPropId] = useState("");
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     if (!effectiveOwnerId) return;
@@ -47,8 +48,15 @@ const VisitorLog = () => {
       supabase.from("visitor_logs").select("*, properties(name)").order("check_in", { ascending: false }).limit(50),
       supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
-    setVisitors(visRes.data ?? []);
-    const props = propRes.data ?? [];
+    let fetchedVisitors = visRes.data ?? [];
+    let props = propRes.data ?? [];
+
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetchedVisitors = fetchedVisitors.filter(v => accessiblePropertyIds.includes(v.property_id));
+      props = props.filter(p => accessiblePropertyIds.includes(p.id));
+    }
+
+    setVisitors(fetchedVisitors);
     setProperties(props);
     if (props.length === 1 && !propId) setPropId(props[0].id);
     setLoading(false);
@@ -58,7 +66,8 @@ const VisitorLog = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !propId) return;
+    if (!user || !propId || submitting) return;
+    setSubmitting(true);
 
     const { error } = await supabase.from("visitor_logs").insert({
       property_id: propId,
@@ -77,6 +86,7 @@ const VisitorLog = () => {
       setName(""); setPhone(""); setNotes("");
       fetchData();
     }
+    setSubmitting(false);
   };
 
   const checkOut = async (id: string) => {
@@ -136,7 +146,7 @@ const VisitorLog = () => {
                   <Label>Notes</Label>
                   <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes" />
                 </div>
-                <Button type="submit" className="w-full gradient-primary">Check In</Button>
+                <Button type="submit" className="w-full gradient-primary" disabled={submitting}>{submitting ? "Checking In..." : "Check In"}</Button>
               </form>
             </DialogContent>
           </Dialog>

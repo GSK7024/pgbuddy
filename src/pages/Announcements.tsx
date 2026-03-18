@@ -30,7 +30,7 @@ const Announcements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
-  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +41,7 @@ const Announcements = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [priority, setPriority] = useState("normal");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     if (!effectiveOwnerId) return;
@@ -48,8 +49,16 @@ const Announcements = () => {
       supabase.from("announcements").select("*, properties(name)").order("created_at", { ascending: false }),
       supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
-    setAnnouncements(annRes.data ?? []);
-    setProperties(propRes.data ?? []);
+    let fetchedAnns = annRes.data ?? [];
+    let fetchedProps = propRes.data ?? [];
+
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetchedAnns = fetchedAnns.filter(a => accessiblePropertyIds.includes(a.property_id));
+      fetchedProps = fetchedProps.filter(p => accessiblePropertyIds.includes(p.id));
+    }
+
+    setAnnouncements(fetchedAnns);
+    setProperties(fetchedProps);
     setLoading(false);
   };
 
@@ -57,23 +66,29 @@ const Announcements = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!propertyId) return;
+    if (!propertyId || submitting) return;
+    setSubmitting(true);
 
-    const { error } = await supabase.from("announcements").insert({
-      property_id: propertyId,
+    const targetPropertyIds = propertyId === "all" ? properties.map(p => p.id) : [propertyId];
+
+    const records = targetPropertyIds.map(pid => ({
+      property_id: pid,
       title,
       content,
       priority,
-    });
+    }));
+
+    const { error } = await supabase.from("announcements").insert(records);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Announcement posted!" });
+      toast({ title: `Announcement posted to ${targetPropertyIds.length} ${targetPropertyIds.length > 1 ? "properties" : "property"}!` });
       setDialogOpen(false);
-      setTitle(""); setContent(""); setPriority("normal");
+      setTitle(""); setContent(""); setPriority("normal"); setPropertyId("");
       fetchData();
     }
+    setSubmitting(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -116,6 +131,7 @@ const Announcements = () => {
                   <Select value={propertyId} onValueChange={setPropertyId}>
                     <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
                     <SelectContent>
+                      {properties.length > 1 && <SelectItem value="all">All Properties</SelectItem>}
                       {properties.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -139,7 +155,7 @@ const Announcements = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" className="w-full gradient-primary">Post Announcement</Button>
+                <Button type="submit" className="w-full gradient-primary" disabled={submitting}>{submitting ? "Posting..." : "Post Announcement"}</Button>
               </form>
             </DialogContent>
           </Dialog>

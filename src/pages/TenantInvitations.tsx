@@ -42,6 +42,7 @@ const TenantInvitations = () => {
   const [tenantName, setTenantName] = useState("");
   const [tenantEmail, setTenantEmail] = useState("");
   const [tenantPhone, setTenantPhone] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     if (!effectiveOwnerId) return;
@@ -62,7 +63,8 @@ const TenantInvitations = () => {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!propertyId || !roomId) return;
+    if (!propertyId || !roomId || submitting) return;
+    setSubmitting(true);
 
     const { error } = await supabase.from("tenant_invitations").insert({
       property_id: propertyId,
@@ -81,6 +83,7 @@ const TenantInvitations = () => {
       setPropertyId(""); setRoomId("");
       fetchData();
     }
+    setSubmitting(false);
   };
 
   const copyLink = (code: string) => {
@@ -140,7 +143,7 @@ const TenantInvitations = () => {
                   <Label>Tenant Phone (optional)</Label>
                   <Input value={tenantPhone} onChange={e => setTenantPhone(e.target.value)} placeholder="+91..." />
                 </div>
-                <Button type="submit" className="w-full gradient-primary" disabled={!propertyId || !roomId}>Create Invitation</Button>
+                <Button type="submit" className="w-full gradient-primary" disabled={!propertyId || !roomId || submitting}>{submitting ? "Creating..." : "Create Invitation"}</Button>
               </form>
             </DialogContent>
           </Dialog>

@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import TenantLayout from "@/components/dashboard/TenantLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +19,9 @@ interface Payment {
   month: string;
   status: string;
   payment_date: string | null;
+  payment_type?: string;
+  payment_method?: string | null;
+  transaction_id?: string | null;
   proof_url: string | null;
   proof_uploaded_at: string | null;
   rooms: { room_number: string } | null;
@@ -40,6 +45,12 @@ const TenantPayments = () => {
   const [uploading, setUploading] = useState<string | null>(null);
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
 
+  // Upload Proof Dialog
+  const [proofDialogOpen, setProofDialogOpen] = useState(false);
+  const [proofPaymentId, setProofPaymentId] = useState<string | null>(null);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofRefNumber, setProofRefNumber] = useState("");
+
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
@@ -51,7 +62,7 @@ const TenantPayments = () => {
           .order("created_at", { ascending: false }),
         supabase
           .from("tenant_assignments")
-          .select("property_id")
+          .select("property_id, properties(owner_id)")
           .eq("tenant_id", user.id)
           .eq("is_active", true)
           .maybeSingle(),
@@ -59,11 +70,30 @@ const TenantPayments = () => {
       setPayments((payRes.data as unknown as Payment[]) ?? []);
 
       if (assignRes.data) {
-        const { data: info } = await supabase
+        let info = null;
+        
+        // Try property specific
+        const { data: propSpecific } = await supabase
           .from("payment_info")
           .select("upi_id, bank_name, account_number, ifsc_code, account_holder")
           .eq("property_id", assignRes.data.property_id)
           .maybeSingle();
+        info = propSpecific;
+
+        // Fallback to owner default
+        if (!info) {
+          const ownerId = (assignRes.data as any).properties?.owner_id;
+          if (ownerId) {
+            const { data: ownerDefault } = await (supabase as any)
+              .from("payment_info")
+              .select("upi_id, bank_name, account_number, ifsc_code, account_holder")
+              .is("property_id", null)
+              .eq("owner_id", ownerId)
+              .maybeSingle();
+            info = ownerDefault;
+          }
+        }
+        
         setPaymentInfo(info as unknown as PaymentInfo | null);
       }
       setLoading(false);
@@ -71,7 +101,7 @@ const TenantPayments = () => {
     fetchData();
   }, [user]);
 
-  const handleUploadProof = async (paymentId: string, file: File) => {
+  const handleUploadProof = async (paymentId: string, file: File, refNumber: string) => {
     if (!user) return;
     setUploading(paymentId);
 
@@ -93,10 +123,14 @@ const TenantPayments = () => {
     await supabase.from("rent_payments").update({
       proof_url: urlData.publicUrl,
       proof_uploaded_at: new Date().toISOString(),
+      transaction_id: refNumber || null,
     }).eq("id", paymentId);
 
-    toast({ title: "Payment proof uploaded!" });
+    toast({ title: "Payment proof submitted for approval!" });
     setUploading(null);
+    setProofDialogOpen(false);
+    setProofFile(null);
+    setProofRefNumber("");
 
     // Refresh
     const { data } = await supabase
@@ -202,7 +236,12 @@ const TenantPayments = () => {
                     <div className="flex items-center gap-4">
                       {statusIcon(p.status)}
                       <div>
-                        <p className="font-medium">{p.properties?.name} · Room {p.rooms?.room_number}</p>
+                        <p className="font-medium">
+                          {p.properties?.name} · Room {p.rooms?.room_number}
+                          {p.payment_type === "deposit" && (
+                            <Badge variant="outline" className="ml-2 text-[10px] bg-primary/10 text-primary border-primary/20">Security Deposit</Badge>
+                          )}
+                        </p>
                         <p className="text-sm text-muted-foreground">{p.month}</p>
                       </div>
                     </div>
@@ -221,42 +260,40 @@ const TenantPayments = () => {
                       {p.proof_url ? (
                         <div className="flex items-center gap-2 text-sm">
                           <CheckCircle className="w-4 h-4 text-success" />
-                          <span className="text-muted-foreground">Proof uploaded</span>
+                          <span className="text-muted-foreground">Proof submitted · Awaiting approval</span>
                           <a href={p.proof_url} target="_blank" rel="noopener noreferrer" className="text-primary text-xs underline">View</a>
                         </div>
                       ) : (
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="file"
-                            accept="image/*,.pdf"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleUploadProof(p.id, file);
-                            }}
-                            disabled={uploading === p.id}
-                          />
-                          <Button variant="outline" size="sm" className="gap-2" disabled={uploading === p.id} asChild>
-                            <span>
-                              <Upload className="w-3 h-3" />
-                              {uploading === p.id ? "Uploading..." : "Upload Payment Proof"}
-                            </span>
-                          </Button>
-                        </label>
+                        <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+                          setProofPaymentId(p.id);
+                          setProofFile(null);
+                          setProofRefNumber("");
+                          setProofDialogOpen(true);
+                        }}>
+                          <Upload className="w-3 h-3" /> Submit Payment Proof
+                        </Button>
                       )}
                     </div>
                   )}
                   {p.status === "paid" && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
-                      {p.proof_url && (
-                        <>
-                          <CheckCircle className="w-3 h-3 text-success" />
-                          <span>Proof attached</span>
-                          <a href={p.proof_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">View</a>
-                        </>
+                    <div className="flex flex-col gap-3 pt-3 border-t border-border mt-3">
+                      {(p.payment_method || p.transaction_id) && (
+                        <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                          {p.payment_method && <p><strong>Method:</strong> <span className="uppercase">{p.payment_method.replace('_', ' ')}</span></p>}
+                          {p.transaction_id && <p><strong>Ref No:</strong> {p.transaction_id}</p>}
+                        </div>
                       )}
-                      <div className="ml-auto">
-                        <RentReceipt payment={p} />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {p.proof_url && (
+                          <>
+                            <CheckCircle className="w-3 h-3 text-success" />
+                            <span>Proof attached</span>
+                            <a href={p.proof_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">View</a>
+                          </>
+                        )}
+                        <div className="ml-auto">
+                          <RentReceipt payment={p as any} />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -266,6 +303,44 @@ const TenantPayments = () => {
           </div>
         )}
       </div>
+
+      {/* Upload Proof Dialog */}
+      <Dialog open={proofDialogOpen} onOpenChange={setProofDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Submit Payment Proof</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Upload Screenshot / Receipt *</Label>
+              <Input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Reference / Transaction ID (Optional)</Label>
+              <Input
+                placeholder="e.g. UTR number, UPI ref"
+                value={proofRefNumber}
+                onChange={(e) => setProofRefNumber(e.target.value)}
+              />
+            </div>
+            <Button
+              onClick={() => {
+                if (proofPaymentId && proofFile) {
+                  handleUploadProof(proofPaymentId, proofFile, proofRefNumber);
+                }
+              }}
+              className="w-full gradient-primary"
+              disabled={!proofFile || uploading === proofPaymentId}
+            >
+              {uploading === proofPaymentId ? "Uploading..." : "Submit for Approval"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </TenantLayout>
   );
 };

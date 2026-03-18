@@ -32,12 +32,13 @@ const TenantComplaints = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [assignment, setAssignment] = useState<{ property_id: string } | null>(null);
+  const [assignment, setAssignment] = useState<{ property_id: string; room_number?: string; bed_label?: string; sharing_type?: string } | null>(null);
 
   // Form
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("general");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     if (!user) return;
@@ -49,13 +50,29 @@ const TenantComplaints = () => {
         .order("created_at", { ascending: false }),
       supabase
         .from("tenant_assignments")
-        .select("property_id")
+        .select("property_id, room_id, bed_id, rooms(room_number)")
         .eq("tenant_id", user.id)
         .eq("is_active", true)
         .maybeSingle(),
     ]);
     setComplaints(compRes.data ?? []);
-    setAssignment(assignRes.data);
+
+    // Enrich assignment with bed info
+    if (assignRes.data) {
+      const a = assignRes.data as any;
+      let bedLabel: string | undefined;
+      let sharingType: string | undefined;
+      if (a.bed_id) {
+        const { data: bed } = await (supabase as any).from("beds").select("bed_label, sharing_type").eq("id", a.bed_id).maybeSingle();
+        if (bed) { bedLabel = (bed as any).bed_label; sharingType = (bed as any).sharing_type; }
+      }
+      setAssignment({
+        property_id: a.property_id,
+        room_number: a.rooms?.room_number,
+        bed_label: bedLabel,
+        sharing_type: sharingType,
+      });
+    }
     setLoading(false);
   };
 
@@ -63,7 +80,8 @@ const TenantComplaints = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !assignment) return;
+    if (!user || !assignment || submitting) return;
+    setSubmitting(true);
 
     const { error } = await supabase.from("complaints").insert({
       tenant_id: user.id,
@@ -81,6 +99,7 @@ const TenantComplaints = () => {
       setTitle(""); setDescription(""); setCategory("general");
       fetchData();
     }
+    setSubmitting(false);
   };
 
   const statusColor = (s: string) => {
@@ -128,7 +147,7 @@ const TenantComplaints = () => {
                     <Label>Description</Label>
                     <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe the issue in detail..." rows={4} />
                   </div>
-                  <Button type="submit" className="w-full gradient-primary">Submit Complaint</Button>
+                  <Button type="submit" className="w-full gradient-primary" disabled={submitting}>{submitting ? "Submitting..." : "Submit Complaint"}</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -153,7 +172,13 @@ const TenantComplaints = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold">{c.title}</h3>
-                      <p className="text-sm text-muted-foreground capitalize">{c.category} · {new Date(c.created_at).toLocaleDateString()}</p>
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {c.category}
+                        {assignment?.room_number && <> · Room {assignment.room_number}</>}
+                        {assignment?.sharing_type && <> · {assignment.sharing_type}</>}
+                        {assignment?.bed_label && <> · Bed {assignment.bed_label}</>}
+                        {" · "}{new Date(c.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                     <Badge className={statusColor(c.status)}>{c.status}</Badge>
                   </div>

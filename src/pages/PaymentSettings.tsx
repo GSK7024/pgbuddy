@@ -15,7 +15,8 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface PaymentInfoData {
   id?: string;
-  property_id: string;
+  property_id: string | null;
+  owner_id: string | null;
   upi_id: string;
   bank_name: string;
   account_number: string;
@@ -31,9 +32,9 @@ interface Property {
 const PaymentSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, loading: staffLoading } = useStaffAccess();
   const [properties, setProperties] = useState<Property[]>([]);
-  const [selectedProperty, setSelectedProperty] = useState("");
+  const [selectedProperty, setSelectedProperty] = useState("default");
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,20 +52,24 @@ const PaymentSettings = () => {
       const { data } = await supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId);
       const props = data ?? [];
       setProperties(props);
-      if (props.length > 0) setSelectedProperty(props[0].id);
+      // Even if no properties, default can be selected
+      setSelectedProperty("default");
       setLoading(false);
     };
     fetchProperties();
   }, [effectiveOwnerId, staffLoading]);
 
   useEffect(() => {
-    if (!selectedProperty) return;
+    if (!selectedProperty || !effectiveOwnerId) return;
     const fetchInfo = async () => {
-      const { data } = await supabase
-        .from("payment_info")
-        .select("*")
-        .eq("property_id", selectedProperty)
-        .maybeSingle();
+      let query = (supabase as any).from("payment_info").select("*");
+      if (selectedProperty === "default") {
+        query = query.is("property_id", null).eq("owner_id", effectiveOwnerId);
+      } else {
+        query = query.eq("property_id", selectedProperty);
+      }
+      
+      const { data } = await query.maybeSingle();
       if (data) {
         setPaymentInfo(data as unknown as PaymentInfoData);
         setUpiId(data.upi_id ?? "");
@@ -78,14 +83,15 @@ const PaymentSettings = () => {
       }
     };
     fetchInfo();
-  }, [selectedProperty]);
+  }, [selectedProperty, effectiveOwnerId]);
 
   const handleSave = async () => {
-    if (!selectedProperty) return;
+    if (!selectedProperty || !effectiveOwnerId) return;
     setSaving(true);
 
     const payload = {
-      property_id: selectedProperty,
+      property_id: selectedProperty === "default" ? null : selectedProperty,
+      owner_id: effectiveOwnerId,
       upi_id: upiId || null,
       bank_name: bankName || null,
       account_number: accountNumber || null,
@@ -105,7 +111,13 @@ const PaymentSettings = () => {
     } else {
       toast({ title: "Payment info saved!" });
       // Refresh
-      const { data } = await supabase.from("payment_info").select("*").eq("property_id", selectedProperty).maybeSingle();
+      let query = (supabase as any).from("payment_info").select("*");
+      if (selectedProperty === "default") {
+        query = query.is("property_id", null).eq("owner_id", effectiveOwnerId);
+      } else {
+        query = query.eq("property_id", selectedProperty);
+      }
+      const { data } = await query.maybeSingle();
       setPaymentInfo(data as unknown as PaymentInfoData);
     }
     setSaving(false);
@@ -123,22 +135,15 @@ const PaymentSettings = () => {
 
         {loading ? (
           <p className="text-muted-foreground">Loading...</p>
-        ) : properties.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Building2 className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No properties yet</h3>
-              <p className="text-muted-foreground">Add a property first to set up payment details</p>
-            </CardContent>
-          </Card>
         ) : (
           <>
             {/* Property selector */}
             <div className="max-w-xs">
-              <Label>Select Property</Label>
+              <Label>Select Property scope</Label>
               <Select value={selectedProperty} onValueChange={setSelectedProperty}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="default" className="font-semibold text-primary">Default (All Properties)</SelectItem>
                   {properties.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
@@ -158,7 +163,7 @@ const PaymentSettings = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label>UPI ID</Label>
-                    <Input value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="yourname@upi or 9876543210@paytm" />
+                    <Input value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="yourname@upi or 9876543210@paytm" disabled={isStaff} />
                   </div>
                   {upiQrUrl && (
                     <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-muted/50">
@@ -182,28 +187,30 @@ const PaymentSettings = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label>Account Holder Name</Label>
-                    <Input value={accountHolder} onChange={e => setAccountHolder(e.target.value)} placeholder="John Doe" />
+                    <Input value={accountHolder} onChange={e => setAccountHolder(e.target.value)} placeholder="John Doe" disabled={isStaff} />
                   </div>
                   <div className="space-y-2">
                     <Label>Bank Name</Label>
-                    <Input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="State Bank of India" />
+                    <Input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="State Bank of India" disabled={isStaff} />
                   </div>
                   <div className="space-y-2">
                     <Label>Account Number</Label>
-                    <Input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="1234567890" />
+                    <Input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="1234567890" disabled={isStaff} />
                   </div>
                   <div className="space-y-2">
                     <Label>IFSC Code</Label>
-                    <Input value={ifscCode} onChange={e => setIfscCode(e.target.value)} placeholder="SBIN0001234" />
+                    <Input value={ifscCode} onChange={e => setIfscCode(e.target.value)} placeholder="SBIN0001234" disabled={isStaff} />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Button onClick={handleSave} disabled={saving} className="gradient-primary">
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? "Saving..." : "Save Payment Details"}
-            </Button>
+            {!isStaff && (
+              <Button onClick={handleSave} disabled={saving} className="gradient-primary">
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? "Saving..." : "Save Payment Details"}
+              </Button>
+            )}
           </>
         )}
       </div>

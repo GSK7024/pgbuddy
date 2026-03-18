@@ -246,22 +246,7 @@ const Subscription = () => {
                         {plan.tenant_limit === -1 ? "Unlimited" : `Up to ${plan.tenant_limit}`} tenants
                       </p>
 
-                      {/* Listing features highlight */}
-                      <div className="rounded-lg bg-muted/50 p-2.5 space-y-1.5">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Listing Features</p>
-                        <div className="flex items-center gap-1.5 text-sm">
-                          <Camera className="w-3.5 h-3.5 text-primary shrink-0" />
-                          <span>{plan.slug === "free" ? "3 photos" : plan.slug === "pro" ? "10 photos" : "Unlimited photos"}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm">
-                          <Video className={`w-3.5 h-3.5 shrink-0 ${plan.slug === "free" ? "text-muted-foreground/40" : "text-primary"}`} />
-                          <span className={plan.slug === "free" ? "text-muted-foreground line-through" : ""}>Video tour</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm">
-                          <Star className={`w-3.5 h-3.5 shrink-0 ${plan.slug === "business" ? "text-warning" : "text-muted-foreground/40"}`} />
-                          <span className={plan.slug !== "business" ? "text-muted-foreground line-through" : ""}>Featured badge</span>
-                        </div>
-                      </div>
+
 
                       {(plan.features as string[]).filter(f =>
                         !f.toLowerCase().includes("photo") &&

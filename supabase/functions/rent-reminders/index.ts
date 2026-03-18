@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     const { data: pendingPayments, error: payErr } = await supabase
       .from("rent_payments")
       .select(
-        "id, tenant_id, amount, month, status, property_id, room_id, properties:property_id(name), rooms:room_id(room_number)"
+        "id, tenant_id, tenant_email, tenant_phone, amount, month, status, property_id, room_id, properties:property_id(name), rooms:room_id(room_number)"
       )
       .eq("status", "pending")
       .eq("month", currentMonth);
@@ -110,16 +110,22 @@ Deno.serve(async (req) => {
     const alreadyNotified = new Set(
       (existingNotifs ?? [])
         .filter((n: any) => n.metadata?.reminder_type === reminderType && n.metadata?.month === currentMonth)
-        .map((n: any) => `${n.user_id}_${n.metadata?.payment_id}`)
+        .map((n: any) => {
+          if (n.user_id) return `${n.user_id}_${n.metadata?.payment_id}`;
+          return `${n.metadata?.tenant_email}_${n.metadata?.payment_id}`;
+        })
     );
 
     // Create notifications for tenants who haven't been reminded yet
     const notifications = pendingPayments
       .filter(
-        (p: any) => !alreadyNotified.has(`${p.tenant_id}_${p.id}`)
+        (p: any) => {
+          const key = p.tenant_id ? `${p.tenant_id}_${p.id}` : `${p.tenant_email}_${p.id}`;
+          return !alreadyNotified.has(key);
+        }
       )
       .map((p: any) => ({
-        user_id: p.tenant_id,
+        user_id: p.tenant_id, // Can be null
         title: titleTemplate,
         message: messageTemplate(
           (p as any).properties?.name || "your PG",
@@ -133,6 +139,7 @@ Deno.serve(async (req) => {
           month: currentMonth,
           amount: p.amount,
           property_id: p.property_id,
+          tenant_email: p.tenant_email,
         },
       }));
 
@@ -153,6 +160,46 @@ Deno.serve(async (req) => {
         );
       }
       sent = notifications.length;
+
+      // ── Also send WhatsApp rent reminders via Twilio ──
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+        // Group by tenant and send one WhatsApp per tenant
+        for (const p of pendingPayments.filter(
+          (pay: any) => {
+             const key = pay.tenant_id ? `${pay.tenant_id}_${pay.id}` : `${pay.tenant_email}_${pay.id}`;
+             return !alreadyNotified.has(key);
+          }
+        )) {
+          // If no profile number, use the one stored in the payment record
+          const phoneNumber = p.tenant_phone;
+          
+          if (phoneNumber || p.tenant_id) {
+            await fetch(`${supabaseUrl}/functions/v1/twilio-notifications`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${serviceRoleKey}`,
+              },
+              body: JSON.stringify({
+                action: "send-rent-reminder",
+                tenant_ids: p.tenant_id ? [p.tenant_id] : [],
+                tenant_phone: phoneNumber, // Added this field to twilio-notifications
+                property_name: (p as any).properties?.name ?? "your PG",
+                room_number: (p as any).rooms?.room_number ?? "N/A",
+                amount: p.amount,
+                month: currentMonth,
+              }),
+            });
+          }
+        }
+        console.log("WhatsApp rent reminders dispatched");
+      } catch (waErr: any) {
+        // Non-fatal – push/in-app notifications still went through
+        console.error("WhatsApp dispatch error (non-fatal):", waErr.message);
+      }
     }
 
     console.log(

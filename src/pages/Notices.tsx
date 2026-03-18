@@ -7,6 +7,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Notice {
   id: string;
@@ -22,20 +23,26 @@ interface Notice {
 const Notices = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotices = async () => {
-    if (!user) return;
+    if (!effectiveOwnerId) return;
     const { data } = await supabase
       .from("vacancy_notices")
       .select("*, rooms(room_number), properties(name)")
       .order("created_at", { ascending: false });
-    setNotices(data ?? []);
+      
+    let fetched = data ?? [];
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetched = fetched.filter(n => accessiblePropertyIds.includes(n.property_id));
+    }
+    setNotices(fetched);
     setLoading(false);
   };
 
-  useEffect(() => { fetchNotices(); }, [user]);
+  useEffect(() => { if (!staffLoading) fetchNotices(); }, [effectiveOwnerId, staffLoading]);
 
   const acknowledgeNotice = async (id: string) => {
     await supabase.from("vacancy_notices").update({ status: "acknowledged" }).eq("id", id);

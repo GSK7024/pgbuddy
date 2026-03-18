@@ -35,11 +35,12 @@ const CATEGORIES = ["electricity", "water", "maintenance", "staff", "cleaning", 
 const Expenses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     property_id: "",
     amount: "",
@@ -60,8 +61,16 @@ const Expenses = () => {
         .select("id, name")
         .eq("owner_id", effectiveOwnerId),
     ]);
-    setExpenses(expRes.data ?? []);
-    setProperties(propRes.data ?? []);
+    let fetchedExpenses = expRes.data ?? [];
+    let fetchedProperties = propRes.data ?? [];
+
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetchedExpenses = fetchedExpenses.filter(e => accessiblePropertyIds.includes(e.property_id));
+      fetchedProperties = fetchedProperties.filter(p => accessiblePropertyIds.includes(p.id));
+    }
+
+    setExpenses(fetchedExpenses);
+    setProperties(fetchedProperties);
     setLoading(false);
   };
 
@@ -70,10 +79,11 @@ const Expenses = () => {
   }, [effectiveOwnerId, staffLoading]);
 
   const handleAdd = async () => {
-    if (!form.property_id || !form.amount) {
-      toast({ title: "Fill required fields", variant: "destructive" });
+    if (!form.property_id || !form.amount || submitting) {
+      if (!form.property_id || !form.amount) toast({ title: "Fill required fields", variant: "destructive" });
       return;
     }
+    setSubmitting(true);
     const { error } = await supabase.from("expenses").insert({
       property_id: form.property_id,
       amount: Number(form.amount),
@@ -83,11 +93,13 @@ const Expenses = () => {
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+      setSubmitting(false);
       return;
     }
     toast({ title: "Expense added!" });
     setDialogOpen(false);
     setForm({ property_id: "", amount: "", category: "maintenance", description: "", expense_date: new Date().toISOString().split("T")[0] });
+    setSubmitting(false);
     fetchData();
   };
 
@@ -170,7 +182,7 @@ const Expenses = () => {
                   <Label>Description</Label>
                   <Textarea placeholder="Optional notes..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </div>
-                <Button onClick={handleAdd} className="w-full gradient-primary">Add Expense</Button>
+                <Button onClick={handleAdd} className="w-full gradient-primary" disabled={submitting}>{submitting ? "Adding..." : "Add Expense"}</Button>
               </div>
             </DialogContent>
           </Dialog>

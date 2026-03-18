@@ -58,7 +58,7 @@ const getPresetRange = (key: PresetKey): { from: Date; to: Date } => {
 
 const TenantAnalytics = () => {
   const { user } = useAuth();
-  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [loading, setLoading] = useState(true);
   const [activePreset, setActivePreset] = useState<PresetKey>("last6m");
   const [dateRange, setDateRange] = useState(getPresetRange("last6m"));
@@ -95,14 +95,30 @@ const TenantAnalytics = () => {
 
   const fetchRawData = async () => {
     if (!effectiveOwnerId) return;
-    const [propRes, roomRes, assignRes, payRes] = await Promise.all([
-      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
-      supabase.from("rooms").select("id, property_id, capacity, is_vacant"),
-      supabase.from("tenant_assignments").select("id, property_id, is_active, move_in_date, move_out_date, custom_rent, rooms(rent_amount)"),
-      supabase.from("rent_payments").select("property_id, amount, status, created_at"),
+    
+    // First fetch properties so we can get all property IDs for this owner if they aren't staff
+    const { data: propData } = await supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId);
+    let effectivePropIds = (propData ?? []).map(p => p.id);
+    
+    // If staff, restrict to their accessible properties
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      effectivePropIds = effectivePropIds.filter(id => accessiblePropertyIds.includes(id));
+    }
+    
+    if (effectivePropIds.length === 0) {
+      setRawData({ properties: [], rooms: [], assignments: [], payments: [] });
+      setLoading(false);
+      return;
+    }
+
+    const [roomRes, assignRes, payRes] = await Promise.all([
+      supabase.from("rooms").select("id, property_id, capacity, is_vacant").in("property_id", effectivePropIds),
+      supabase.from("tenant_assignments").select("id, property_id, is_active, move_in_date, move_out_date, custom_rent, rooms(rent_amount)").in("property_id", effectivePropIds),
+      supabase.from("rent_payments").select("property_id, amount, status, created_at").in("property_id", effectivePropIds),
     ]);
+    
     setRawData({
-      properties: propRes.data ?? [],
+      properties: (propData ?? []).filter(p => effectivePropIds.includes(p.id)),
       rooms: roomRes.data ?? [],
       assignments: assignRes.data ?? [],
       payments: payRes.data ?? [],

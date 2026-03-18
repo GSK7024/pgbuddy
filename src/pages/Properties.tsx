@@ -29,11 +29,12 @@ interface Property {
 const Properties = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { effectiveOwnerId, isStaff, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -52,7 +53,12 @@ const Properties = () => {
       .select("*")
       .eq("owner_id", effectiveOwnerId)
       .order("created_at", { ascending: false });
-    setProperties(data ?? []);
+    let fetched = data ?? [];
+    // Staff can only see their assigned properties
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetched = fetched.filter(p => accessiblePropertyIds.includes(p.id));
+    }
+    setProperties(fetched);
     setLoading(false);
   };
 
@@ -78,7 +84,8 @@ const Properties = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || submitting) return;
+    setSubmitting(true);
 
     const payload = {
       name, address, city, locality: locality || null,
@@ -104,6 +111,7 @@ const Properties = () => {
       resetForm();
       fetchProperties();
     }
+    setSubmitting(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -178,8 +186,8 @@ const Properties = () => {
                   <Label>Amenities (comma-separated)</Label>
                   <Input value={amenitiesStr} onChange={e => setAmenitiesStr(e.target.value)} placeholder="WiFi, AC, Food, Laundry" />
                 </div>
-                <Button type="submit" className="w-full gradient-primary">
-                  {editingProperty ? "Update Property" : "Add Property"}
+                <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
+                  {submitting ? (editingProperty ? "Updating..." : "Adding...") : (editingProperty ? "Update Property" : "Add Property")}
                 </Button>
               </form>
             </DialogContent>

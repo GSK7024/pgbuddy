@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX, Download, ArrowUpDown, ArrowLeftRight, MoveRight } from "lucide-react";
+import { Users, Plus, UserCheck, Search, Upload, FileText, Phone, Shield, X, Eye, IndianRupee, History, UserX, Download, ArrowUpDown, ArrowLeftRight, MoveRight, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,11 @@ interface TenantAssignment {
   id_proof_number: string | null;
   notes: string | null;
   custom_rent: number | null;
-  rooms?: { room_number: string; rent_amount: number };
+  tenant_email?: string | null;
+  tenant_phone?: string | null;
+  tenant_name?: string | null;
+  deposit_status?: string | null;
+  rooms?: { room_number: string };
   properties?: { name: string };
   profiles?: { full_name: string; phone: string | null };
 }
@@ -47,14 +51,25 @@ interface RoomWithCapacity {
   is_vacant: boolean;
 }
 
+interface BedOption {
+  id: string;
+  room_id: string;
+  bed_label: string;
+  sharing_type: string;
+  rent_amount: number;
+  deposit_amount: number;
+  is_vacant: boolean;
+}
+
 const Tenants = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isReadOnly, isOverLimit, tenantCount, limits } = useSubscriptionGuard();
-  const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
+  const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [assignments, setAssignments] = useState<TenantAssignment[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [rooms, setRooms] = useState<RoomWithCapacity[]>([]);
+  const [allBeds, setAllBeds] = useState<BedOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailTenant, setDetailTenant] = useState<TenantAssignment | null>(null);
@@ -66,16 +81,22 @@ const Tenants = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPropertyId, setFilterPropertyId] = useState("all");
   const [sortBy, setSortBy] = useState("name-asc");
+  const [assignmentType, setAssignmentType] = useState<"existing" | "new">("existing");
+  const [checkingRent, setCheckingRent] = useState(false);
+  const [lastRentStatus, setLastRentStatus] = useState<{ status: string; amount: number } | null>(null);
 
   // Form - assign
   const [tenantEmail, setTenantEmail] = useState("");
   const [propertyId, setPropertyId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [bedId, setBedId] = useState("");
   const [moveInDate, setMoveInDate] = useState(new Date().toISOString().split("T")[0]);
   const [customRent, setCustomRent] = useState("");
   const [assignPhone, setAssignPhone] = useState("");
   const [foundTenant, setFoundTenant] = useState<{ user_id: string; full_name: string } | null>(null);
   const [searching, setSearching] = useState(false);
+  const [initialRentPaid, setInitialRentPaid] = useState(false);
+  const [depositStatus, setDepositStatus] = useState<"pending" | "paid">("pending");
 
   // Form - detail edit
   const [emergencyName, setEmergencyName] = useState("");
@@ -99,11 +120,12 @@ const Tenants = () => {
 
   const fetchData = async () => {
     if (!effectiveOwnerId) return;
-    const [assignRes, propRes, roomRes, subRes] = await Promise.all([
+    const [assignRes, propRes, roomRes, subRes, bedRes] = await Promise.all([
       supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").order("created_at", { ascending: false }),
       supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
       supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant"),
       supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", effectiveOwnerId).eq("status", "active").maybeSingle(),
+      (supabase as any).from("beds").select("*").eq("is_vacant", true).order("bed_label", { ascending: true }),
     ]);
 
     const data = assignRes.data ?? [];
@@ -114,9 +136,19 @@ const Tenants = () => {
       profiles?.forEach(p => { profilesMap[p.user_id] = p; });
     }
 
-    setAssignments(data.map(a => ({ ...a, profiles: profilesMap[a.tenant_id] })));
-    setProperties(propRes.data ?? []);
-    setRooms(roomRes.data ?? []);
+    let fetchedAssignments = data.map(a => ({ ...a, profiles: a.tenant_id ? profilesMap[a.tenant_id] : null }));
+    let fetchedProps = propRes.data ?? [];
+    let fetchedRooms = roomRes.data ?? [];
+    // Staff can only see their assigned properties
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetchedProps = fetchedProps.filter(p => accessiblePropertyIds.includes(p.id));
+      fetchedRooms = fetchedRooms.filter(r => accessiblePropertyIds.includes(r.property_id));
+      fetchedAssignments = fetchedAssignments.filter(a => accessiblePropertyIds.includes(a.property_id));
+    }
+    setAssignments(fetchedAssignments);
+    setProperties(fetchedProps);
+    setRooms(fetchedRooms);
+    setAllBeds((bedRes.data ?? []) as unknown as BedOption[]);
 
     // Set tenant limit from subscription
     const limit = (subRes.data as any)?.subscription_plans?.tenant_limit;
@@ -141,21 +173,52 @@ const Tenants = () => {
   // When room is selected, pre-fill rent
   const handleRoomSelect = (rId: string) => {
     setRoomId(rId);
-    const room = rooms.find(r => r.id === rId);
-    if (room) {
-      setCustomRent(String(room.rent_amount));
+    setBedId("");
+    // If the room has vacant beds, don't auto-fill rent — wait for bed selection
+    const vacantBeds = allBeds.filter(b => b.room_id === rId);
+    if (vacantBeds.length === 0) {
+      // Fallback: use room rent
+      const room = rooms.find(r => r.id === rId);
+      if (room) setCustomRent(String(room.rent_amount));
+    } else if (vacantBeds.length === 1) {
+      // Auto-select single bed
+      setBedId(vacantBeds[0].id);
+      setCustomRent(String(vacantBeds[0].rent_amount));
+    } else {
+      setCustomRent("");
     }
   };
+
+  const handleBedSelect = (bId: string) => {
+    setBedId(bId);
+    const bed = allBeds.find(b => b.id === bId);
+    if (bed) setCustomRent(String(bed.rent_amount));
+  };
+
+  const vacantBedsForRoom = roomId ? allBeds.filter(b => b.room_id === roomId) : [];
 
   const searchTenant = async () => {
     if (!tenantEmail.trim()) return;
     setSearching(true);
     setFoundTenant(null);
+    setLastRentStatus(null);
     const { data, error } = await supabase.rpc("find_user_by_email", { _email: tenantEmail.trim() });
     if (error || !data || data.length === 0) {
-      toast({ title: "Tenant not found", description: "No account found with this email.", variant: "destructive" });
+      toast({ title: "Email not registered yet", description: "You can still assign the room; they'll be linked once they sign up." });
     } else {
       setFoundTenant(data[0]);
+      // Check last rent status
+      setCheckingRent(true);
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const { data: rentData } = await supabase
+        .from("rent_payments")
+        .select("status, amount")
+        .eq("tenant_id", data[0].user_id)
+        .eq("month", currentMonth)
+        .maybeSingle();
+      if (rentData) setLastRentStatus(rentData);
+      setCheckingRent(false);
     }
     setSearching(false);
   };
@@ -176,7 +239,7 @@ const Tenants = () => {
 
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !foundTenant || !propertyId || !roomId) return;
+    if (!user || !tenantEmail || !propertyId || !roomId) return;
 
     // Check tenant limit
     const activeTenants = assignments.filter(a => a.is_active).length;
@@ -193,25 +256,65 @@ const Tenants = () => {
 
     const rentValue = customRent ? parseFloat(customRent) : null;
 
-    const { error } = await supabase.from("tenant_assignments").insert({
-      tenant_id: foundTenant.user_id,
+    const { error: assignError } = await supabase.from("tenant_assignments").insert({
+      tenant_id: foundTenant ? foundTenant.user_id : null,
+      tenant_email: tenantEmail.trim(),
+      tenant_phone: assignPhone.trim(),
       property_id: propertyId,
       room_id: roomId,
+      bed_id: bedId || null,
       move_in_date: moveInDate,
       custom_rent: rentValue,
+      deposit_status: depositStatus,
     });
 
-    // Save phone number to tenant profile
-    if (!error && assignPhone.trim()) {
-      await supabase.from("profiles").update({ phone: assignPhone.trim() }).eq("user_id", foundTenant.user_id);
-    }
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (assignError) {
+      toast({ title: "Error", description: assignError.message, variant: "destructive" });
       setAssigning(false);
       return;
     }
 
+    // Auto-generate paid rent if requested
+    if (initialRentPaid) {
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      await supabase.from("rent_payments").insert({
+        tenant_id: foundTenant ? foundTenant.user_id : null,
+        tenant_email: tenantEmail.trim(),
+        tenant_phone: assignPhone.trim(),
+        property_id: propertyId,
+        room_id: roomId,
+        amount: rentValue || (rooms.find(r => r.id === roomId)?.rent_amount ?? 0),
+        month: currentMonth,
+        status: "paid",
+        payment_date: new Date().toISOString(),
+        payment_type: "rent",
+      });
+    }
+
+    // Auto-generate Deposit record if applicable
+    const selectedBedRaw = allBeds.find(b => b.id === bedId);
+    if (selectedBedRaw && selectedBedRaw.deposit_amount > 0) {
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      await supabase.from("rent_payments").insert({
+        tenant_id: foundTenant ? foundTenant.user_id : null,
+        tenant_email: tenantEmail.trim(),
+        tenant_phone: assignPhone.trim(),
+        property_id: propertyId,
+        room_id: roomId,
+        amount: selectedBedRaw.deposit_amount,
+        month: currentMonth,
+        status: depositStatus,
+        payment_date: depositStatus === "paid" ? new Date().toISOString() : null,
+        payment_type: "deposit",
+      });
+    }
+
+    // Mark bed as occupied
+    if (bedId) {
+      await (supabase as any).from("beds").update({ is_vacant: false }).eq("id", bedId);
+    }
     await updateRoomVacancy(roomId);
     toast({ title: "Tenant assigned successfully!" });
     setDialogOpen(false);
@@ -224,6 +327,8 @@ const Tenants = () => {
     setTenantEmail(""); setPropertyId(""); setRoomId("");
     setMoveInDate(new Date().toISOString().split("T")[0]);
     setCustomRent(""); setAssignPhone(""); setFoundTenant(null);
+    setInitialRentPaid(false);
+    setDepositStatus("pending");
   };
 
   const handleDeactivate = async (id: string, rId: string) => {
@@ -480,17 +585,57 @@ const Tenants = () => {
                 </div>
               ) : (
               <form onSubmit={handleAssign} className="space-y-4">
+                <div className="flex p-1 bg-muted rounded-lg">
+                  <button
+                    type="button"
+                    className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${assignmentType === "existing" ? "bg-background shadow-sm" : "hover:text-primary"}`}
+                    onClick={() => { setAssignmentType("existing"); resetForm(); }}
+                  >
+                    Existing Tenant
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${assignmentType === "new" ? "bg-background shadow-sm" : "hover:text-primary"}`}
+                    onClick={() => { setAssignmentType("new"); resetForm(); setAssignmentType("new"); }}
+                  >
+                    New Tenant (Email Only)
+                  </button>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Tenant Email *</Label>
                   <div className="flex gap-2">
-                    <Input type="email" value={tenantEmail} onChange={e => setTenantEmail(e.target.value)} placeholder="tenant@example.com" required />
-                    <Button type="button" variant="outline" onClick={searchTenant} disabled={searching}>
-                      <Search className="w-4 h-4" />
-                    </Button>
+                    <Input type="email" value={tenantEmail} onChange={e => { setTenantEmail(e.target.value); setFoundTenant(null); }} placeholder="tenant@example.com" required />
+                    {assignmentType === "existing" && (
+                      <Button type="button" variant="outline" onClick={searchTenant} disabled={searching}>
+                        <Search className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
+                  {searching && <p className="text-[10px] text-muted-foreground animate-pulse">Searching for tenant...</p>}
                   {foundTenant && (
-                    <div className="p-2 rounded-lg bg-success/10 text-success text-sm flex items-center gap-2">
-                      <UserCheck className="w-4 h-4" /> Found: {foundTenant.full_name}
+                    <div className="space-y-2">
+                      <div className="p-2 rounded-lg bg-success/10 text-success text-xs flex items-center gap-2">
+                        <UserCheck className="w-3 h-4" /> Found: {foundTenant.full_name}
+                      </div>
+                      {checkingRent ? (
+                         <p className="text-[10px] text-muted-foreground">Checking rent status...</p>
+                      ) : lastRentStatus ? (
+                        <div className={`p-2 rounded-lg text-xs flex items-center justify-between ${lastRentStatus.status === "paid" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
+                          <div className="flex items-center gap-2">
+                            {lastRentStatus.status === "paid" ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                            <span>Rent for this month: {lastRentStatus.status === "paid" ? "Paid" : "Pending"}</span>
+                          </div>
+                          <span className="font-bold">₹{lastRentStatus.amount}</span>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground">No rent records found for this month.</p>
+                      )}
+                    </div>
+                  )}
+                  {assignmentType === "new" && tenantEmail && !foundTenant && !searching && (
+                    <div className="p-2 rounded-lg bg-warning/10 text-warning text-[10px] flex items-center gap-1.5">
+                      <History className="w-3 h-3" /> They'll be automatically linked when they sign up.
                     </div>
                   )}
                 </div>
@@ -510,15 +655,46 @@ const Tenants = () => {
                     <SelectContent>
                       {availableRoomsForProperty.map(r => {
                         const active = getActiveCountForRoom(r.id);
+                        const roomVacantBeds = allBeds.filter(b => b.room_id === r.id);
+                        const sharingTypes = [...new Set(roomVacantBeds.map(b => b.sharing_type))];
+                        const sharingInfo = sharingTypes.length > 0 ? ` · ${sharingTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(", ")} vacant` : "";
                         return (
                           <SelectItem key={r.id} value={r.id}>
-                            Room {r.room_number} ({active}/{r.capacity} occupied)
+                            Room {r.room_number} ({r.capacity - active}/{r.capacity} beds free){sharingInfo}
                           </SelectItem>
                         );
                       })}
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Bed selection — grouped by sharing type */}
+                {vacantBedsForRoom.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Select Bed * ({vacantBedsForRoom.length} vacant)</Label>
+                    <Select value={bedId} onValueChange={handleBedSelect}>
+                      <SelectTrigger><SelectValue placeholder="Choose a bed" /></SelectTrigger>
+                      <SelectContent>
+                        {(() => {
+                          const grouped: Record<string, BedOption[]> = {};
+                          vacantBedsForRoom.forEach(b => {
+                            if (!grouped[b.sharing_type]) grouped[b.sharing_type] = [];
+                            grouped[b.sharing_type].push(b);
+                          });
+                          return Object.entries(grouped).map(([type, beds]) => (
+                            <div key={type}>
+                              <div className="px-2 py-1 text-xs font-semibold text-muted-foreground capitalize border-b">{type} Sharing ({beds.length} bed{beds.length > 1 ? "s" : ""})</div>
+                              {beds.map(b => (
+                                <SelectItem key={b.id} value={b.id}>
+                                  {b.bed_label ? `Bed ${b.bed_label}` : "Bed"} · ₹{Number(b.rent_amount).toLocaleString()}/mo
+                                </SelectItem>
+                              ))}
+                            </div>
+                          ));
+                        })()}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Move-in Date</Label>
@@ -529,13 +705,43 @@ const Tenants = () => {
                     <Input type="tel" value={assignPhone} onChange={e => setAssignPhone(e.target.value)} placeholder="+91 XXXXXXXXXX" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Rent (₹)</Label>
                     <Input type="number" value={customRent} onChange={e => setCustomRent(e.target.value)} placeholder="Room default" />
                   </div>
+
+                  {bedId && (() => {
+                    const selectedBedConf = allBeds.find(b => b.id === bedId);
+                    if (selectedBedConf && selectedBedConf.deposit_amount > 0) {
+                      return (
+                        <div className="space-y-2">
+                          <Label>Security Deposit (₹{selectedBedConf.deposit_amount})</Label>
+                          <Select value={depositStatus} onValueChange={(v: "pending" | "paid") => setDepositStatus(v)}>
+                            <SelectTrigger><SelectValue placeholder="Deposit Status" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="paid">Paid successfully</SelectItem>
+                              <SelectItem value="pending">Pending (will log as Pending Deposit)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  <div className="flex items-center space-x-2 pt-2 col-span-2 bg-muted/30 p-2 rounded-lg border border-border">
+                  <input
+                    type="checkbox"
+                    id="initialRentPaid"
+                    checked={initialRentPaid}
+                    onChange={e => setInitialRentPaid(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="initialRentPaid" className="text-xs cursor-pointer">
+                    Mark current month rent as <strong>Paid</strong>?
+                  </Label>
                 </div>
-                <Button type="submit" className="w-full gradient-primary" disabled={!foundTenant || !propertyId || !roomId || assigning}>
+
+                <Button type="submit" className="w-full gradient-primary" disabled={!tenantEmail || !propertyId || !roomId || assigning}>
                   {assigning ? "Assigning..." : "Assign Tenant"}
                 </Button>
               </form>
@@ -626,10 +832,16 @@ const Tenants = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <UserCheck className="w-5 h-5 text-primary" />
-                      {a.profiles?.full_name || "Unknown Tenant"}
+                       {a.tenant_id ? (
+                        <UserCheck className="w-5 h-5 text-primary" />
+                      ) : (
+                        <History className="w-5 h-5 text-warning" />
+                      )}
+                      {a.profiles?.full_name || a.tenant_email || "Unknown Tenant"}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">{a.profiles?.phone || "No phone"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {a.profiles?.phone || (a.tenant_id ? "No phone" : "Pending Registration")}
+                    </p>
                   </div>
                   <Badge variant={a.is_active ? "default" : "secondary"} className={a.is_active ? "bg-success" : ""}>
                     {a.is_active ? "Active" : "Moved Out"}

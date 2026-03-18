@@ -23,6 +23,7 @@ interface RecentPayment {
   month: string;
   status: string;
   payment_date: string | null;
+  payment_type?: string;
 }
 
 interface RecentComplaint {
@@ -57,7 +58,7 @@ const TenantDashboard = () => {
         supabase.from("rent_payments").select("amount").eq("tenant_id", user.id).eq("status", "pending"),
         supabase.from("complaints").select("id", { count: "exact", head: true }).eq("tenant_id", user.id).eq("status", "open"),
         supabase.from("vacancy_notices").select("id", { count: "exact", head: true }).eq("tenant_id", user.id).eq("status", "submitted"),
-        supabase.from("rent_payments").select("id, amount, month, status, payment_date").eq("tenant_id", user.id).order("created_at", { ascending: false }).limit(3),
+        supabase.from("rent_payments").select("id, amount, month, status, payment_date, payment_type").eq("tenant_id", user.id).order("created_at", { ascending: false }).limit(3),
         supabase.from("complaints").select("id, title, status, category, created_at").eq("tenant_id", user.id).order("created_at", { ascending: false }).limit(3),
       ]);
 
@@ -66,7 +67,7 @@ const TenantDashboard = () => {
       setPendingDues(payRes.data?.reduce((s, p) => s + Number(p.amount), 0) ?? 0);
       setOpenComplaints(complaintRes.count ?? 0);
       setActiveNotice((noticeRes.count ?? 0) > 0);
-      setRecentPayments(recentPayRes.data ?? []);
+      setRecentPayments((recentPayRes.data as any[]) ?? []);
       setRecentComplaints(recentCompRes.data ?? []);
       
       if (assign) {
@@ -245,7 +246,12 @@ const TenantDashboard = () => {
                       <div className="flex items-center gap-3">
                         {statusIcon(p.status)}
                         <div>
-                          <p className="text-sm font-medium">{p.month}</p>
+                          <p className="text-sm font-medium">
+                            {p.month}
+                            {p.payment_type === "deposit" && (
+                              <span className="text-[10px] ml-2 text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">Deposit</span>
+                            )}
+                          </p>
                           <p className="text-xs text-muted-foreground capitalize">{p.status}</p>
                         </div>
                       </div>

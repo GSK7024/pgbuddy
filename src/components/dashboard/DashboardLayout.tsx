@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -19,17 +20,16 @@ const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("sidebar.properties"), href: "/dashboard/properties", icon: Building2 },
   { name: t("sidebar.rooms"), href: "/dashboard/rooms", icon: Home },
   { name: t("sidebar.tenants"), href: "/dashboard/tenants", icon: Users },
-  { name: t("sidebar.invitations"), href: "/dashboard/invitations", icon: Share2 },
+  // { name: t("sidebar.invitations"), href: "/dashboard/invitations", icon: Share2 },
   { name: t("sidebar.payments"), href: "/dashboard/payments", icon: CreditCard },
   { name: t("sidebar.paymentSetup"), href: "/dashboard/payment-settings", icon: QrCode },
   { name: t("sidebar.expenses"), href: "/dashboard/expenses", icon: Receipt },
   { name: t("sidebar.complaints"), href: "/dashboard/complaints", icon: MessageSquare },
-  { name: t("sidebar.notices"), href: "/dashboard/notices", icon: BellDot },
   { name: t("sidebar.announcements"), href: "/dashboard/announcements", icon: Megaphone },
-  { name: t("sidebar.manageListing"), href: "/dashboard/listing", icon: Camera },
+  // { name: t("sidebar.manageListing"), href: "/dashboard/listing", icon: Camera },
   { name: t("sidebar.mealMenu"), href: "/dashboard/meal-menu", icon: UtensilsCrossed },
-  { name: "Refer & Earn", href: "/dashboard/referrals", icon: Gift },
-  { name: "Documents", href: "/dashboard/documents", icon: FileText },
+  // { name: "Refer & Earn", href: "/dashboard/referrals", icon: Gift },
+  // { name: "Documents", href: "/dashboard/documents", icon: FileText },
   { name: "Visitor Log", href: "/dashboard/visitors", icon: UserCheck },
   { name: "Utility Bills", href: "/dashboard/utility-bills", icon: Zap },
   { name: "Analytics", href: "/dashboard/analytics", icon: PieChart },
@@ -41,11 +41,17 @@ const getSidebarLinks = (t: (k: string) => string) => [
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut, user } = useAuth();
+  const { isStaff } = useStaffAccess();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
   const [currentPlan, setCurrentPlan] = useState<string>("Free");
-  const sidebarLinks = getSidebarLinks(t);
+  
+  // Filter out Staff link for staff members
+  const sidebarLinks = getSidebarLinks(t).filter(link => 
+    !(isStaff && link.name === "Staff")
+  );
+  
   const currentPath = location.pathname;
 
   useEffect(() => {
