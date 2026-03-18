@@ -54,6 +54,10 @@ import AuditLogs from "./pages/AuditLogs";
 import StaffManagement from "./pages/StaffManagement";
 import MoveOutManagement from "./pages/MoveOutManagement";
 import TenantMoveOut from "./pages/TenantMoveOut";
+import MessPlans from "./pages/MessPlans";
+import MessMembers from "./pages/MessMembers";
+import MessAttendance from "./pages/MessAttendance";
+import MessPayments from "./pages/MessPayments";
 import AboutUs from "./pages/static/AboutUs";
 import Careers from "./pages/static/Careers";
 import Blog from "./pages/static/Blog";
@@ -110,6 +114,11 @@ const App = () => (
               <Route path="/dashboard/audit-logs" element={<ProtectedRoute requiredRole="owner"><AuditLogs /></ProtectedRoute>} />
               <Route path="/dashboard/staff" element={<ProtectedRoute requiredRole="owner"><StaffManagement /></ProtectedRoute>} />
               <Route path="/dashboard/move-out" element={<ProtectedRoute requiredRole="owner"><MoveOutManagement /></ProtectedRoute>} />
+              {/* Mess routes */}
+              <Route path="/dashboard/mess/plans" element={<ProtectedRoute requiredRole="owner"><MessPlans /></ProtectedRoute>} />
+              <Route path="/dashboard/mess/members" element={<ProtectedRoute requiredRole="owner"><MessMembers /></ProtectedRoute>} />
+              <Route path="/dashboard/mess/attendance" element={<ProtectedRoute requiredRole="owner"><MessAttendance /></ProtectedRoute>} />
+              <Route path="/dashboard/mess/payments" element={<ProtectedRoute requiredRole="owner"><MessPayments /></ProtectedRoute>} />
               {/* Tenant routes */}
               <Route path="/tenant" element={<ProtectedRoute requiredRole="tenant"><TenantDashboard /></ProtectedRoute>} />
               <Route path="/tenant/payments" element={<ProtectedRoute requiredRole="tenant"><TenantPayments /></ProtectedRoute>} />
