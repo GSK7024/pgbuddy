@@ -41,7 +41,7 @@ const getSidebarLinks = (t: (k: string) => string) => [
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut, user } = useAuth();
-  const { isStaff } = useStaffAccess();
+  const { isStaff, effectiveOwnerId } = useStaffAccess();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
@@ -55,12 +55,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const currentPath = location.pathname;
 
   useEffect(() => {
-    if (!user) return;
+    const targetId = effectiveOwnerId || user?.id;
+    if (!targetId) return;
     const fetchPlan = async () => {
       const { data } = await supabase
         .from("subscriptions")
         .select("subscription_plans(name)")
-        .eq("user_id", user.id)
+        .eq("user_id", targetId)
         .eq("status", "active")
         .maybeSingle();
       if ((data as any)?.subscription_plans?.name) {
@@ -68,7 +69,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       }
     };
     fetchPlan();
-  }, [user]);
+  }, [user, effectiveOwnerId]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -98,32 +99,34 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         })}
       </nav>
       <div className="px-3 py-4 border-t border-border/50 space-y-0.5">
-        <Link
-          to="/dashboard/subscription"
-          onClick={onClick}
-          className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-            currentPath === "/dashboard/subscription"
-              ? "gradient-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-          }`}
-        >
-          <span className="flex items-center gap-3">
-            <Crown className="w-4 h-4" />
-            {t("sidebar.subscription")}
-          </span>
-          <Badge
-            variant="secondary"
-            className={`text-[10px] px-1.5 py-0 ${
-              currentPlan === "Free"
-                ? "bg-muted text-muted-foreground"
-                : currentPlan === "Pro"
-                ? "bg-primary/10 text-primary"
-                : "bg-warning/10 text-warning"
+        {!isStaff && (
+          <Link
+            to="/dashboard/subscription"
+            onClick={onClick}
+            className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              currentPath === "/dashboard/subscription"
+                ? "gradient-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
             }`}
           >
-            {currentPlan}
-          </Badge>
-        </Link>
+            <span className="flex items-center gap-3">
+              <Crown className="w-4 h-4" />
+              {t("sidebar.subscription")}
+            </span>
+            <Badge
+              variant="secondary"
+              className={`text-[10px] px-1.5 py-0 ${
+                currentPlan === "Free"
+                  ? "bg-muted text-muted-foreground"
+                  : currentPlan === "Pro"
+                  ? "bg-primary/10 text-primary"
+                  : "bg-warning/10 text-warning"
+              }`}
+            >
+              {currentPlan}
+            </Badge>
+          </Link>
+        )}
         <Link
           to="/dashboard/profile"
           onClick={onClick}

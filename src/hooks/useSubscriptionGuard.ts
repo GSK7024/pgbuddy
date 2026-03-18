@@ -14,18 +14,33 @@ export const useSubscriptionGuard = () => {
     if (!effectiveOwnerId || planLoading || staffLoading) return;
 
     const fetchCounts = async () => {
-      // Count active tenants for this owner
+      // First get all property IDs for this owner
+      const { data: ownerProps } = await supabase
+        .from("properties")
+        .select("id")
+        .eq("owner_id", effectiveOwnerId);
+
+      const propIds = (ownerProps ?? []).map(p => p.id);
+
+      if (propIds.length === 0) {
+        setTenantCount(0);
+        setBedCount(0);
+        setLoading(false);
+        return;
+      }
+
+      // Count active tenants across those properties
       const { count: tCount } = await supabase
         .from("tenant_assignments")
-        .select("id, property_id, properties!inner(owner_id)", { count: "exact", head: true })
-        .eq("properties.owner_id", effectiveOwnerId)
+        .select("id", { count: "exact", head: true })
+        .in("property_id", propIds)
         .eq("is_active", true);
 
-      // Count total beds (capacity) across all owner's rooms
+      // Count total beds (capacity) across all rooms in those properties
       const { data: rooms } = await supabase
         .from("rooms")
-        .select("capacity, property_id, properties!inner(owner_id)")
-        .eq("properties.owner_id", effectiveOwnerId);
+        .select("capacity")
+        .in("property_id", propIds);
 
       const totalBeds = (rooms ?? []).reduce((sum, r) => sum + (r.capacity || 0), 0);
 
