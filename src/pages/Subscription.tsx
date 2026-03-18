@@ -57,6 +57,7 @@ const Subscription = () => {
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [tenantCount, setTenantCount] = useState(0);
 
   // Redirect staff to dashboard
   useEffect(() => {
@@ -64,10 +65,9 @@ const Subscription = () => {
       navigate("/dashboard", { replace: true });
     }
   }, [isStaff, staffLoading, navigate]);
-  const [tenantCount, setTenantCount] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isStaff) return;
     const fetchData = async () => {
       const [plansRes, subRes, tenantRes] = await Promise.all([
         supabase.from("subscription_plans").select("*").eq("is_active", true).order("monthly_price"),
@@ -94,7 +94,10 @@ const Subscription = () => {
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       document.body.appendChild(script);
     }
-  }, [user]);
+  }, [user, isStaff]);
+
+  // Don't render anything for staff
+  if (staffLoading || isStaff) return null;
 
   const getCurrentPlan = () => {
     if (!currentSub) return plans.find(p => p.slug === "free");
