@@ -1,6 +1,9 @@
+-- Enable uuid-ossp extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Mess One-time Meals (for guest entries)
 CREATE TABLE IF NOT EXISTS public.mess_one_time_meals (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     guest_name TEXT NOT NULL,
     guest_phone TEXT,
@@ -13,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.mess_one_time_meals (
 
 -- Mess Expenses (for tracking mess specific costs)
 CREATE TABLE IF NOT EXISTS public.mess_expenses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
@@ -41,16 +44,16 @@ FOR ALL
 TO authenticated
 USING (
     EXISTS (
-        SELECT 1 FROM public.staff_management s
-        WHERE s.staff_id = auth.uid()
+        SELECT 1 FROM public.staff_members s
+        WHERE s.staff_user_id = auth.uid()
         AND s.owner_id = mess_one_time_meals.owner_id
         AND s.status = 'active'
     )
 )
 WITH CHECK (
     EXISTS (
-        SELECT 1 FROM public.staff_management s
-        WHERE s.staff_id = auth.uid()
+        SELECT 1 FROM public.staff_members s
+        WHERE s.staff_user_id = auth.uid()
         AND s.owner_id = mess_one_time_meals.owner_id
         AND s.status = 'active'
     )
@@ -70,16 +73,16 @@ FOR ALL
 TO authenticated
 USING (
     EXISTS (
-        SELECT 1 FROM public.staff_management s
-        WHERE s.staff_id = auth.uid()
+        SELECT 1 FROM public.staff_members s
+        WHERE s.staff_user_id = auth.uid()
         AND s.owner_id = mess_expenses.owner_id
         AND s.status = 'active'
     )
 )
 WITH CHECK (
     EXISTS (
-        SELECT 1 FROM public.staff_management s
-        WHERE s.staff_id = auth.uid()
+        SELECT 1 FROM public.staff_members s
+        WHERE s.staff_user_id = auth.uid()
         AND s.owner_id = mess_expenses.owner_id
         AND s.status = 'active'
     )

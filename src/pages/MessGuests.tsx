@@ -65,14 +65,14 @@ const MessGuests = () => {
   };
 
   const handleSave = async () => {
-    if (!guestName || !amount) {
-      toast({ title: "Error", description: "Name and Amount are required", variant: "destructive" });
+    if (!amount) {
+      toast({ title: "Error", description: "Amount is required", variant: "destructive" });
       return;
     }
     setSaving(true);
     const { error } = await supabase.from("mess_one_time_meals" as any).insert({
       owner_id: effectiveOwnerId!,
-      guest_name: guestName,
+      guest_name: guestName || "Guest",
       guest_phone: guestPhone || null,
       meal_type: mealType,
       amount: parseFloat(amount),
@@ -129,18 +129,8 @@ const MessGuests = () => {
             <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Record Guest Meal</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Record One-time Meal</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Quick Record Meal</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Guest Name</Label>
-                  <Input placeholder="Guest name" value={guestName} onChange={e => setGuestName(e.target.value)} />
-                </div>
-                <div>
-                  <Label>Guest Phone (Optional)</Label>
-                  <Input placeholder="9876543210" value={guestPhone} onChange={e => setGuestPhone(e.target.value)} />
-                </div>
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Meal Type</Label>
@@ -164,13 +154,19 @@ const MessGuests = () => {
                     <SelectContent>
                       <SelectItem value="cash">Cash</SelectItem>
                       <SelectItem value="upi">UPI / Online</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label>Date</Label>
                   <Input type="date" value={mealDate} onChange={e => setMealDate(e.target.value)} />
+                </div>
+              </div>
+              <div className="pt-2 border-t">
+                <Label className="text-xs text-muted-foreground uppercase">Optional Guest Info</Label>
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <Input placeholder="Guest Name" value={guestName} onChange={e => setGuestName(e.target.value)} />
+                  <Input placeholder="Guest Phone" value={guestPhone} onChange={e => setGuestPhone(e.target.value)} />
                 </div>
               </div>
               <Button onClick={handleSave} disabled={saving} className="w-full gradient-primary">
