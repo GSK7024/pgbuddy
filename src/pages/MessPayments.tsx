@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
   partial: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
 };
 
-const MessPayments = () => {
+const MessPayments = ({ standalone = true }: { standalone?: boolean }) => {
   const { toast } = useToast();
   const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const currentMonth = format(new Date(), "yyyy-MM");
@@ -182,17 +182,18 @@ const MessPayments = () => {
     pending: payments.filter(p => p.status === "pending").reduce((s, p) => s + p.final_amount, 0),
   };
 
-  return (
-    <DashboardLayout>
+  const content = (
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <IndianRupee className="w-6 h-6 text-primary" />
-              Mess Payments
-            </h1>
-            <p className="text-muted-foreground">Monthly billing and payment tracking</p>
-          </div>
+          {!standalone ? null : (
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <IndianRupee className="w-6 h-6 text-primary" />
+                Mess Payments
+              </h1>
+              <p className="text-muted-foreground">Monthly billing and payment tracking</p>
+            </div>
+          )}
           <div className="flex gap-2 items-center">
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
@@ -293,8 +294,9 @@ const MessPayments = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </DashboardLayout>
   );
+
+  return standalone ? <DashboardLayout>{content}</DashboardLayout> : content;
 };
 
 export default MessPayments;

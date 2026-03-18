@@ -38,7 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
 };
 
-const MessMembers = () => {
+const MessMembers = ({ standalone = true }: { standalone?: boolean }) => {
   const { toast } = useToast();
   const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [members, setMembers] = useState<MessMember[]>([]);
@@ -69,7 +69,7 @@ const MessMembers = () => {
       supabase.from("mess_plans" as any).select("id, name, monthly_price").eq("owner_id", effectiveOwnerId!).eq("is_active", true),
     ]);
 
-    const plansData = (plansRes.data ?? []) as Plan[];
+    const plansData = (plansRes.data as any ?? []) as Plan[];
     setPlans(plansData);
 
     const planMap: Record<string, string> = {};
@@ -159,17 +159,18 @@ const MessMembers = () => {
     paused: members.filter(m => m.status === "paused").length,
   };
 
-  return (
-    <DashboardLayout>
+  const content = (
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Users className="w-6 h-6 text-primary" />
-              Mess Members
-            </h1>
-            <p className="text-muted-foreground">Manage your meal subscribers</p>
-          </div>
+          {!standalone ? null : (
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Users className="w-6 h-6 text-primary" />
+                Mess Members
+              </h1>
+              <p className="text-muted-foreground">Manage your meal subscribers</p>
+            </div>
+          )}
           <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Add Member</Button>
@@ -303,8 +304,9 @@ const MessMembers = () => {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
+
+  return standalone ? <DashboardLayout>{content}</DashboardLayout> : content;
 };
 
 export default MessMembers;

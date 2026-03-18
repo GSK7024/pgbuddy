@@ -29,7 +29,7 @@ const MEAL_OPTIONS = [
   { key: "dinner", label: "Dinner", emoji: "🌙" },
 ];
 
-const MessPlans = () => {
+const MessPlans = ({ standalone = true }: { standalone?: boolean }) => {
   const { toast } = useToast();
   const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [plans, setPlans] = useState<MessPlan[]>([]);
@@ -136,17 +136,18 @@ const MessPlans = () => {
     );
   };
 
-  return (
-    <DashboardLayout>
+  const content = (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <UtensilsCrossed className="w-6 h-6 text-primary" />
-              Mess Plans
-            </h1>
-            <p className="text-muted-foreground">Create and manage meal subscription plans</p>
-          </div>
+          {!standalone ? null : (
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <UtensilsCrossed className="w-6 h-6 text-primary" />
+                Mess Plans
+              </h1>
+              <p className="text-muted-foreground">Create and manage meal subscription plans</p>
+            </div>
+          )}
           <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Create Plan</Button>
@@ -246,8 +247,9 @@ const MessPlans = () => {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
+
+  return standalone ? <DashboardLayout>{content}</DashboardLayout> : content;
 };
 
 export default MessPlans;

@@ -21,7 +21,7 @@ interface MemberRow {
   isOffDay: boolean;
 }
 
-const MessAttendance = () => {
+const MessAttendance = ({ standalone = true }: { standalone?: boolean }) => {
   const { toast } = useToast();
   const { effectiveOwnerId, loading: staffLoading } = useStaffAccess();
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -126,17 +126,18 @@ const MessAttendance = () => {
     offDay: rows.filter(r => r.isOffDay).length,
   };
 
-  return (
-    <DashboardLayout>
+  const content = (
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <CalendarDays className="w-6 h-6 text-primary" />
-              Mess Attendance
-            </h1>
-            <p className="text-muted-foreground">Mark daily meal attendance</p>
-          </div>
+          {!standalone ? null : (
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <CalendarDays className="w-6 h-6 text-primary" />
+                Mess Attendance
+              </h1>
+              <p className="text-muted-foreground">Mark daily meal attendance</p>
+            </div>
+          )}
           <div className="flex gap-2 items-center">
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-44" />
             <Button onClick={handleSave} disabled={saving} className="gradient-primary gap-2">
@@ -235,8 +236,9 @@ const MessAttendance = () => {
           </Card>
         )}
       </div>
-    </DashboardLayout>
   );
+
+  return standalone ? <DashboardLayout>{content}</DashboardLayout> : content;
 };
 
 export default MessAttendance;
