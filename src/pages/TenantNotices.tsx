@@ -11,6 +11,7 @@ import TenantLayout from "@/components/dashboard/TenantLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useWhatsAppNotify } from "@/hooks/useWhatsAppNotify";
 
 interface Notice {
   id: string;
@@ -25,6 +26,7 @@ interface Notice {
 const TenantNotices = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { send: sendWhatsApp } = useWhatsAppNotify();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -99,6 +101,13 @@ const TenantNotices = () => {
       setDialogOpen(false);
       setReason("");
       fetchData();
+
+      // WhatsApp alert to owner + manager (non-blocking)
+      sendWhatsApp("send-vacancy-alert", {
+        property_id: assignment.property_id,
+        tenant_name: user.user_metadata?.full_name || user.email,
+        expected_move_out: moveOutDate,
+      });
     }
     setSubmitting(false);
   };

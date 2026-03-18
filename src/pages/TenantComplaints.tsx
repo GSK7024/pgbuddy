@@ -12,6 +12,7 @@ import TenantLayout from "@/components/dashboard/TenantLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useWhatsAppNotify } from "@/hooks/useWhatsAppNotify";
 
 interface Complaint {
   id: string;
@@ -29,6 +30,7 @@ const categories = ["plumbing", "electrical", "cleaning", "food", "noise", "secu
 const TenantComplaints = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { send: sendWhatsApp } = useWhatsAppNotify();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -98,6 +100,15 @@ const TenantComplaints = () => {
       setDialogOpen(false);
       setTitle(""); setDescription(""); setCategory("general");
       fetchData();
+
+      // WhatsApp alert to owner + manager (non-blocking)
+      sendWhatsApp("send-complaint-alert", {
+        property_id: assignment.property_id,
+        title,
+        category,
+        tenant_name: user.user_metadata?.full_name || user.email,
+        room_number: assignment.room_number,
+      });
     }
     setSubmitting(false);
   };

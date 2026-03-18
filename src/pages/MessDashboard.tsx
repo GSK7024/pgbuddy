@@ -45,7 +45,7 @@ const MessDashboard = () => {
       .eq("month", monthStr)
       .eq("status", "paid");
 
-    const memberRevenue = payments?.reduce((sum, p) => sum + Number(p.final_amount), 0) || 0;
+    const memberRevenue = (payments as any[])?.reduce((sum, p) => sum + Number(p.final_amount), 0) || 0;
 
     // 3. Revenue (One-time) - Safe catch if table doesn't exist yet
     let guestRevenue = 0;
@@ -58,7 +58,7 @@ const MessDashboard = () => {
         .gte("meal_date", format(start, "yyyy-MM-dd"))
         .lte("meal_date", format(end, "yyyy-MM-dd"));
       
-      guestRevenue = guests?.reduce((sum, g) => sum + Number(g.amount), 0) || 0;
+      guestRevenue = (guests as any[])?.reduce((sum, g) => sum + Number(g.amount), 0) || 0;
       guestCount = guests?.length || 0;
     } catch (e) { console.log("Expansion tables missing"); }
 
@@ -72,7 +72,7 @@ const MessDashboard = () => {
         .gte("expense_date", format(start, "yyyy-MM-dd"))
         .lte("expense_date", format(end, "yyyy-MM-dd"));
       
-      expensesTotal = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+      expensesTotal = (expenses as any[])?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
     } catch (e) {}
 
     // 5. Attendance Rate (Simplified: Present / (Active * DaysInMonth))
@@ -83,7 +83,7 @@ const MessDashboard = () => {
       .gte("attendance_date", format(start, "yyyy-MM-dd"))
       .lte("attendance_date", format(new Date(), "yyyy-MM-dd"));
 
-    const totalCheckins = attendance?.reduce((sum, a) => sum + (a.breakfast ? 1 : 0) + (a.lunch ? 1 : 0) + (a.dinner ? 1 : 0), 0) || 0;
+    const totalCheckins = (attendance as any[])?.reduce((sum, a) => sum + (a.breakfast ? 1 : 0) + (a.lunch ? 1 : 0) + (a.dinner ? 1 : 0), 0) || 0;
     const possibleCheckins = activeCount * daysPassed * 3; // Approx 3 meals/day
     const attendanceRate = possibleCheckins > 0 ? Math.round((totalCheckins / possibleCheckins) * 100) : 0;
 
@@ -105,63 +105,63 @@ const MessDashboard = () => {
     <div className="space-y-6">
       {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="gradient-info text-white border-none">
+        <Card className="gradient-info text-white border-none shadow-md">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-white/80 text-sm">Monthly Revenue</p>
+                <p className="text-white font-medium text-sm">Monthly Revenue</p>
                 <h3 className="text-2xl font-bold mt-1">₹{stats.monthlyRevenue.toLocaleString("en-IN")}</h3>
               </div>
               <div className="p-2 bg-white/20 rounded-lg">
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-xs mt-4 text-white/70">Includes ₹{stats.oneTimeRevenue} from guest meals</p>
+            <p className="text-xs mt-4 text-blue-50 font-medium">Includes ₹{stats.oneTimeRevenue} from guest meals</p>
           </CardContent>
         </Card>
 
-        <Card className="gradient-destructive text-white border-none">
+        <Card className="gradient-destructive text-white border-none shadow-md">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-white/80 text-sm">Monthly Expenses</p>
+                <p className="text-white font-medium text-sm">Monthly Expenses</p>
                 <h3 className="text-2xl font-bold mt-1">₹{stats.monthlyExpenses.toLocaleString("en-IN")}</h3>
               </div>
               <div className="p-2 bg-white/20 rounded-lg">
                 <TrendingDown className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-xs mt-4 text-white/70">Groceries, gas, and utilities</p>
+            <p className="text-xs mt-4 text-red-50 font-medium">Groceries, gas, and utilities</p>
           </CardContent>
         </Card>
 
-        <Card className="gradient-primary text-white border-none">
+        <Card className="gradient-primary text-white border-none shadow-md">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-white/80 text-sm">Active Members</p>
+                <p className="text-white font-medium text-sm">Active Members</p>
                 <h3 className="text-2xl font-bold mt-1">{stats.activeMembers}</h3>
               </div>
               <div className="p-2 bg-white/20 rounded-lg">
                 <Users className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-xs mt-4 text-white/70">Out of {stats.totalMembers} total subscribers</p>
+            <p className="text-xs mt-4 text-purple-50 font-medium">Out of {stats.totalMembers} total subscribers</p>
           </CardContent>
         </Card>
 
-        <Card className={netProfit >= 0 ? "gradient-success text-white border-none" : "gradient-destructive text-white border-none"}>
+        <Card className={netProfit >= 0 ? "gradient-success text-white border-none shadow-md" : "gradient-destructive text-white border-none shadow-md"}>
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-white/80 text-sm">Net Profit</p>
+                <p className="text-white font-medium text-sm">Net Profit</p>
                 <h3 className="text-2xl font-bold mt-1">₹{netProfit.toLocaleString("en-IN")}</h3>
               </div>
               <div className="p-2 bg-white/20 rounded-lg">
                 <IndianRupee className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-xs mt-4 text-white/70">For the month of {format(new Date(), "MMMM")}</p>
+            <p className="text-xs mt-4 text-emerald-50 font-medium">For the month of {format(new Date(), "MMMM")}</p>
           </CardContent>
         </Card>
       </div>

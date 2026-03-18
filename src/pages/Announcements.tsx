@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import OverLimitBanner from "@/components/OverLimitBanner";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { useWhatsAppNotify } from "@/hooks/useWhatsAppNotify";
 
 interface Announcement {
   id: string;
@@ -31,6 +32,7 @@ const Announcements = () => {
   const { toast } = useToast();
   const { isReadOnly, isOverLimit, bedCount, bedLimit, limits } = useSubscriptionGuard();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
+  const { send: sendWhatsApp } = useWhatsAppNotify();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,6 +89,17 @@ const Announcements = () => {
       setDialogOpen(false);
       setTitle(""); setContent(""); setPriority("normal"); setPropertyId("");
       fetchData();
+
+      // Fire WhatsApp notification to tenants (non-blocking)
+      for (const pid of targetPropertyIds) {
+        const propName = properties.find(p => p.id === pid)?.name || "Your PG";
+        sendWhatsApp("send-announcement", {
+          property_id: pid,
+          title,
+          content,
+          property_name: propName,
+        });
+      }
     }
     setSubmitting(false);
   };

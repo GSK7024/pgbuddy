@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarDays, Check, CheckCheck, Users } from "lucide-react";
+import { CalendarDays, Check, CheckCheck, Users, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -120,6 +120,45 @@ const MessAttendance = ({ standalone = true }: { standalone?: boolean }) => {
     toast({ title: "Attendance saved!" });
   };
 
+  const handleDownloadMonthly = async () => {
+    const startOfMonth = new Date(date);
+    startOfMonth.setDate(1);
+    const endOfMonth = new Date(date);
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+    endOfMonth.setDate(0);
+
+    const { data: attendance, error } = await supabase
+      .from("mess_attendance" as any)
+      .select("*, mess_members(full_name)")
+      .eq("owner_id", effectiveOwnerId!)
+      .gte("attendance_date", format(startOfMonth, "yyyy-MM-dd"))
+      .lte("attendance_date", format(endOfMonth, "yyyy-MM-dd"))
+      .order("attendance_date", { ascending: true });
+
+    if (error || !attendance || attendance.length === 0) {
+      toast({ title: "No data", description: "No records found for this month", variant: "destructive" });
+      return;
+    }
+
+    const headers = ["Date", "Member", "Breakfast", "Lunch", "Dinner"];
+    const rows = attendance.map((a: any) => [
+      a.attendance_date,
+      a.mess_members?.full_name || "Unknown",
+      a.breakfast ? "P" : "-",
+      a.lunch ? "P" : "-",
+      a.dinner ? "P" : "-"
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mess_attendance_${format(startOfMonth, "MMM_yyyy")}.csv`;
+    link.click();
+    toast({ title: "Success", description: "Monthly sheet downloaded" });
+  };
+
   const stats = {
     total: rows.length,
     present: rows.filter(r => r.breakfast || r.lunch || r.dinner).length,
@@ -139,6 +178,9 @@ const MessAttendance = ({ standalone = true }: { standalone?: boolean }) => {
             </div>
           )}
           <div className="flex gap-2 items-center">
+            <Button variant="outline" size="icon" onClick={handleDownloadMonthly} title="Download Monthly CSV">
+              <Download className="w-4 h-4" />
+            </Button>
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-44" />
             <Button onClick={handleSave} disabled={saving} className="gradient-primary gap-2">
               <Check className="w-4 h-4" /> {saving ? "Saving..." : "Save"}
