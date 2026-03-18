@@ -53,13 +53,14 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
   },
 };
 
-export const useSubscriptionPlan = () => {
+export const useSubscriptionPlan = (ownerId?: string | null) => {
   const { user } = useAuth();
   const [planSlug, setPlanSlug] = useState<PlanSlug>("free");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    const targetUserId = ownerId || user?.id;
+    if (!targetUserId) {
       setLoading(false);
       return;
     }
@@ -68,7 +69,7 @@ export const useSubscriptionPlan = () => {
       const { data } = await supabase
         .from("subscriptions")
         .select("subscription_plans(slug), status, current_period_end")
-        .eq("user_id", user.id)
+        .eq("user_id", targetUserId)
         .eq("status", "active")
         .maybeSingle();
 
@@ -88,7 +89,7 @@ export const useSubscriptionPlan = () => {
     };
 
     fetchPlan();
-  }, [user]);
+  }, [user, ownerId]);
 
   return {
     planSlug,

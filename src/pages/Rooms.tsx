@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import OverLimitBanner from "@/components/OverLimitBanner";
 
 interface BedInfo {
   id: string;
@@ -64,6 +66,7 @@ const Rooms = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
+  const { isOverLimit, isBedLimitReached, tenantCount, bedCount, limits } = useSubscriptionGuard();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [bedsMap, setBedsMap] = useState<Record<string, BedInfo[]>>({});
@@ -386,6 +389,14 @@ const Rooms = () => {
             <h1 className="text-2xl font-bold">Rooms & Beds</h1>
             <p className="text-muted-foreground">Manage rooms and individual beds across properties</p>
           </div>
+          {isOverLimit && (
+            <OverLimitBanner tenantCount={tenantCount} tenantLimit={limits.tenantLimit} planName={limits.name} />
+          )}
+          {isBedLimitReached && !isOverLimit && (
+            <div className="rounded-lg border border-warning/50 bg-warning/10 px-4 py-3 text-sm">
+              <strong>Bed limit reached:</strong> You have {bedCount} beds across all properties (plan limit: {limits.tenantLimit}). Upgrade your plan to add more rooms.
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <Select value={filterProperty} onValueChange={setFilterProperty}>
               <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filter by property" /></SelectTrigger>
@@ -396,7 +407,7 @@ const Rooms = () => {
             </Select>
             <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Add Room</Button>
+                <Button className="gradient-primary gap-2" disabled={isBedLimitReached}><Plus className="w-4 h-4" /> Add Room</Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle>{editingRoom ? "Edit Room" : "Add New Room"}</DialogTitle></DialogHeader>
