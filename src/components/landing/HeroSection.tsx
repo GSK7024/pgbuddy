@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Building2, Users, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, Search, Building2, Users, Shield, Sparkles, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
@@ -71,9 +71,9 @@ const HeroSection = () => {
               className="gradient-primary text-base px-8 py-6 shadow-lg hover:shadow-glow transition-all duration-300 group rounded-xl"
               asChild
             >
-              <Link to="/auth?mode=signup&role=owner">
-                <Building2 className="w-5 h-5 mr-2" />
-                List Your PG
+              <Link to="/auth?mode=signup">
+                <Sparkles className="w-5 h-5 mr-2" />
+                Get Started
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
@@ -83,9 +83,9 @@ const HeroSection = () => {
               className="text-base px-8 py-6 border-2 hover:bg-primary/5 rounded-xl"
               asChild
             >
-              <Link to="/browse">
-                <Search className="w-5 h-5 mr-2" />
-                Find a PG
+              <Link to="/auth">
+                <LogIn className="w-5 h-5 mr-2" />
+                Login
               </Link>
             </Button>
           </motion.div>
