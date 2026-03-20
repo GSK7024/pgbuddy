@@ -115,7 +115,14 @@ const Subscription = () => {
         body: { plan_slug: plan.slug, billing_cycle: billingCycle },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Full error object:", error);
+        // Try to get a specific error message from any possible location in the response
+        const errorMsg = error.context?.error?.message || 
+                        error.message || 
+                        (typeof error === 'object' ? JSON.stringify(error) : String(error));
+        throw new Error(`Server Error: ${errorMsg}`);
+      }
 
       if (data.free) {
         toast({ title: "You're on the Free plan!" });

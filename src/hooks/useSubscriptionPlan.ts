@@ -53,6 +53,19 @@ const PLAN_LIMITS: Record<PlanSlug, PlanLimits> = {
   },
 };
 
+export type WhatsAppAction =
+  | "send-rent-reminder"
+  | "send-announcement"
+  | "send-complaint-alert"
+  | "send-vacancy-alert";
+
+/** Actions that require Business or Enterprise plan */
+const GATED_WA_ACTIONS: WhatsAppAction[] = [
+  "send-announcement",
+  "send-complaint-alert",
+  "send-vacancy-alert",
+];
+
 export const useSubscriptionPlan = (ownerId?: string | null) => {
   const { user } = useAuth();
   const [planSlug, setPlanSlug] = useState<PlanSlug>("free");
@@ -75,7 +88,6 @@ export const useSubscriptionPlan = (ownerId?: string | null) => {
 
       if (data) {
         const periodEnd = data.current_period_end;
-        // If period has expired, treat as free regardless of status
         if (periodEnd && new Date(periodEnd) < new Date()) {
           setPlanSlug("free");
         } else {
@@ -91,12 +103,21 @@ export const useSubscriptionPlan = (ownerId?: string | null) => {
     fetchPlan();
   }, [user, ownerId]);
 
+  const isBusiness = planSlug === "business" || planSlug === "enterprise";
+
+  /** Returns true if the current plan allows the given WhatsApp action */
+  const canUseWhatsApp = (action: WhatsAppAction): boolean => {
+    if (!GATED_WA_ACTIONS.includes(action)) return true; // rent reminders → always OK
+    return isBusiness;
+  };
+
   return {
     planSlug,
     limits: PLAN_LIMITS[planSlug],
     loading,
-    isPro: planSlug === "pro" || planSlug === "business" || planSlug === "enterprise",
-    isBusiness: planSlug === "business" || planSlug === "enterprise",
+    isPro: planSlug === "pro" || isBusiness,
+    isBusiness,
     isEnterprise: planSlug === "enterprise",
+    canUseWhatsApp,
   };
 };

@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, origin, accept, x-requested-with',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
 };
 
 Deno.serve(async (req) => {
@@ -11,47 +12,55 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Parse body FIRST before consuming it elsewhere
+    const { plan_slug, billing_cycle } = await req.json();
+
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'No auth token provided' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Create user-scoped client for auth verification
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('Auth error:', JSON.stringify(userError));
+      return new Response(JSON.stringify({ error: `Auth failed: ${userError?.message || 'No user'}` }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const userId = claimsData.claims.sub;
-    const userEmail = claimsData.claims.email;
+    const userId = user.id;
 
-    const { plan_slug, billing_cycle } = await req.json();
+    // Service Role client for ALL database operations (bypasses RLS)
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
     const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID');
     const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-      throw new Error('Razorpay credentials not configured');
+      return new Response(JSON.stringify({ error: 'Razorpay keys missing from server config' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Get plan details
-    const { data: plan, error: planError } = await supabase
+    // Get plan details using service role
+    const { data: plan, error: planError } = await serviceClient
       .from('subscription_plans')
       .select('*')
       .eq('slug', plan_slug)
       .single();
 
     if (planError || !plan) {
-      return new Response(JSON.stringify({ error: 'Plan not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      console.error('Plan error:', JSON.stringify(planError));
+      return new Response(JSON.stringify({ error: `Plan '${plan_slug}' not found: ${planError?.message}` }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (plan.slug === 'free') {
-      // For free plan, just create a subscription record
-      const { error: subError } = await supabase.from('subscriptions').upsert({
+      // Use serviceClient for DB write too (bypasses RLS)
+      const { error: subError } = await serviceClient.from('subscriptions').upsert({
         user_id: userId,
         plan_id: plan.id,
         status: 'active',
@@ -60,14 +69,18 @@ Deno.serve(async (req) => {
         current_period_end: null,
       }, { onConflict: 'user_id' });
 
+      if (subError) {
+        console.error('Free sub upsert error:', JSON.stringify(subError));
+        return new Response(JSON.stringify({ error: `Free plan activation failed: ${subError.message}` }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
       return new Response(JSON.stringify({ success: true, free: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const amount = billing_cycle === 'yearly' ? plan.yearly_price : plan.monthly_price;
-    const period = billing_cycle === 'yearly' ? 'yearly' : 'monthly';
-    const interval = billing_cycle === 'yearly' ? 12 : 1;
+    const razorpayPeriod = billing_cycle === 'yearly' ? 'yearly' : 'monthly';
 
     // Create Razorpay Plan
     const razorpayAuth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
@@ -79,11 +92,11 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        period: 'monthly',
-        interval: interval,
+        period: razorpayPeriod,
+        interval: 1,
         item: {
-          name: `${plan.name} Plan (${period})`,
-          amount: amount * 100, // paise
+          name: `${plan.name} Plan (${billing_cycle})`,
+          amount: Math.round(amount * 100),
           currency: 'INR',
           description: plan.description,
         },
@@ -92,7 +105,7 @@ Deno.serve(async (req) => {
 
     const razorpayPlan = await planRes.json();
     if (!planRes.ok) {
-      throw new Error(`Razorpay plan creation failed [${planRes.status}]: ${JSON.stringify(razorpayPlan)}`);
+      return new Response(JSON.stringify({ error: `Razorpay plan failed: ${JSON.stringify(razorpayPlan)}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Create Razorpay Subscription
@@ -104,7 +117,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         plan_id: razorpayPlan.id,
-        total_count: billing_cycle === 'yearly' ? 10 : 120, // max cycles
+        total_count: billing_cycle === 'yearly' ? 10 : 120,
         quantity: 1,
         notes: {
           user_id: userId,
@@ -116,22 +129,8 @@ Deno.serve(async (req) => {
 
     const razorpaySub = await subRes.json();
     if (!subRes.ok) {
-      throw new Error(`Razorpay subscription creation failed [${subRes.status}]: ${JSON.stringify(razorpaySub)}`);
+      return new Response(JSON.stringify({ error: `Razorpay subscription failed: ${JSON.stringify(razorpaySub)}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-
-    // Store subscription in DB (pending until payment confirmed)
-    const serviceClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    await serviceClient.from('subscriptions').upsert({
-      user_id: userId,
-      plan_id: plan.id,
-      status: 'pending',
-      billing_cycle: billing_cycle,
-      razorpay_subscription_id: razorpaySub.id,
-    }, { onConflict: 'user_id' });
 
     return new Response(JSON.stringify({
       subscription_id: razorpaySub.id,
@@ -143,10 +142,10 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error:', error);
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
+    console.error('Unhandled error:', error);
+    const msg = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: `Server error: ${msg}` }), {
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

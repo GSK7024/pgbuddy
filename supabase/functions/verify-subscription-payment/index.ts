@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, origin, accept, x-requested-with',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
 };
 
 Deno.serve(async (req) => {
@@ -22,12 +23,12 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('Auth error:', userError);
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
     const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } = await req.json();
 
@@ -68,6 +69,23 @@ Deno.serve(async (req) => {
     );
 
     const billingCycle = razorpaySub.notes?.billing_cycle || 'monthly';
+    const planSlug = razorpaySub.notes?.plan_slug;
+
+    if (!planSlug) {
+      throw new Error(`Plan slug not found in Razorpay subscription notes: ${JSON.stringify(razorpaySub.notes)}`);
+    }
+
+    // Get the exact plan ID to assign
+    const { data: plan, error: planError } = await serviceClient
+      .from('subscription_plans')
+      .select('id')
+      .eq('slug', planSlug)
+      .single();
+
+    if (planError || !plan) {
+      throw new Error(`Plan not found for slug ${planSlug}`);
+    }
+
     const now = new Date();
     const periodEnd = new Date(now);
     if (billingCycle === 'yearly') {
@@ -76,20 +94,24 @@ Deno.serve(async (req) => {
       periodEnd.setMonth(periodEnd.getMonth() + 1);
     }
 
+    // Upsert the subscription now that payment is verified
+    // This safely overwrites their OLD subscription only after the NEW one clears!
     const { error: updateError } = await serviceClient
       .from('subscriptions')
-      .update({
+      .upsert({
+        user_id: userId,
+        plan_id: plan.id,
         status: 'active',
-        razorpay_payment_id,
+        billing_cycle: billingCycle,
+        razorpay_subscription_id: razorpay_subscription_id,
+        razorpay_payment_id: razorpay_payment_id,
         current_period_start: now.toISOString(),
         current_period_end: periodEnd.toISOString(),
         updated_at: now.toISOString(),
-      })
-      .eq('razorpay_subscription_id', razorpay_subscription_id)
-      .eq('user_id', userId);
+      }, { onConflict: 'user_id' });
 
     if (updateError) {
-      throw new Error(`Failed to update subscription: ${updateError.message}`);
+      throw new Error(`Failed to upsert verified subscription: ${updateError.message}`);
     }
 
     return new Response(JSON.stringify({ success: true }), {

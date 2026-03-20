@@ -5,7 +5,8 @@ type WhatsAppAction =
   | "send-rent-reminder"
   | "send-announcement"
   | "send-complaint-alert"
-  | "send-vacancy-alert";
+  | "send-vacancy-alert"
+  | "send-payment-approval";
 
 interface WhatsAppResult {
   sent?: number;
