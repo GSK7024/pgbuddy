@@ -156,24 +156,41 @@ Deno.serve(async (req) => {
         .from("tenant_assignments")
         .select("tenant_id, tenant_phone")
         .eq("property_id", property_id)
-        .eq("status", "active");
+        .eq("is_active", true);
 
+      // Build recipient list: use tenant_phone from assignment first, then fallback to profiles.phone
       const tenantIds = (assignments ?? []).map((a: any) => a.tenant_id).filter(Boolean);
-      const directPhones = (assignments ?? []).filter((a: any) => a.tenant_phone && !a.tenant_id).map((a: any) => a.tenant_phone);
-
-      let profilePhones: { phone: string; full_name: string }[] = [];
+      
+      // Build a map of assignment phones keyed by tenant_id
+      const assignPhoneMap: Record<string, string> = {};
+      for (const a of (assignments ?? [])) {
+        if (a.tenant_id && a.tenant_phone?.trim()) {
+          assignPhoneMap[a.tenant_id] = a.tenant_phone;
+        }
+      }
+      
+      // Get profile phones as fallback for registered tenants
+      let profilePhoneMap: Record<string, string> = {};
       if (tenantIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("phone, full_name")
+          .select("user_id, phone, full_name")
           .in("user_id", tenantIds);
-        profilePhones = (profiles ?? []).filter((p: any) => p.phone?.trim());
+        for (const p of (profiles ?? [])) {
+          if (p.phone?.trim()) profilePhoneMap[p.user_id] = p.phone;
+        }
       }
 
-      const allRecipients = [
-        ...profilePhones.map((p: any) => ({ phone: p.phone })),
-        ...directPhones.map((ph: string) => ({ phone: ph })),
-      ];
+      // Collect all unique phones: assignment phone > profile phone > direct phone (no tenant_id)
+      const allRecipients: { phone: string }[] = [];
+      const seenPhones = new Set<string>();
+      for (const a of (assignments ?? [])) {
+        const phone = a.tenant_phone?.trim() || (a.tenant_id ? profilePhoneMap[a.tenant_id] : null);
+        if (phone && !seenPhones.has(phone)) {
+          seenPhones.add(phone);
+          allRecipients.push({ phone });
+        }
+      }
 
       if (allRecipients.length === 0) {
         return new Response(
