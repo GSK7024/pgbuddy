@@ -17,29 +17,32 @@ function toE164(phone: string): string {
 // ── Helper: send a single WhatsApp message via Aisensy ──
 async function sendAisensy(
   to: string,
-  templateName: string,
+  campaignName: string,
   templateParams: string[],
   apiKey: string
 ): Promise<boolean> {
   const url = "https://backend.aisensy.com/campaign/t1/api/v2";
+  const payload = {
+    apiKey,
+    campaignName,
+    destination: to,
+    userName: to,
+    templateParams,
+    source: "new-landing-page",
+  };
+  console.log(`[Aisensy] Sending to ${to}, campaign=${campaignName}, params=`, JSON.stringify(templateParams));
   try {
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        apiKey,
-        campaignName: templateName,
-        destination: to,
-        userName: "PG Buddy",
-        templateParams,
-      }),
+      body: JSON.stringify(payload),
     });
+    const respText = await resp.text();
+    console.log(`[Aisensy] Response for ${to}:`, resp.status, respText);
     if (!resp.ok) {
-      const errText = await resp.text();
-      console.error(`Aisensy error for ${to}:`, errText);
+      console.error(`Aisensy error for ${to}:`, respText);
       return false;
     }
     return true;

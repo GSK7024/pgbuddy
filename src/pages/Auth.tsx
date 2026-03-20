@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Building2, Mail, Lock, User, ArrowLeft, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,7 +41,7 @@ const Auth = () => {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, role },
+            data: { full_name: fullName, role, phone },
           },
         });
         if (error) throw error;
@@ -140,21 +141,38 @@ const Auth = () => {
                   </div>
 
                   {/* Full name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="fullName"
-                        placeholder="Enter your full name"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                </>
+                   <div className="space-y-2">
+                     <Label htmlFor="fullName">Full Name</Label>
+                     <div className="relative">
+                       <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                       <Input
+                         id="fullName"
+                         placeholder="Enter your full name"
+                         value={fullName}
+                         onChange={(e) => setFullName(e.target.value)}
+                         className="pl-10"
+                         required
+                       />
+                     </div>
+                   </div>
+
+                   {/* Phone number */}
+                   <div className="space-y-2">
+                     <Label htmlFor="phone">Phone Number</Label>
+                     <div className="relative">
+                       <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                       <Input
+                         id="phone"
+                         type="tel"
+                         placeholder="e.g. 9876543210"
+                         value={phone}
+                         onChange={(e) => setPhone(e.target.value)}
+                         className="pl-10"
+                         required
+                       />
+                     </div>
+                   </div>
+                 </>
               )}
 
               {/* Email */}
