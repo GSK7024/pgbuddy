@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import RentReceipt from "@/components/RentReceipt";
+import { useWhatsAppNotify } from "@/hooks/useWhatsAppNotify";
 
 interface Payment {
   id: string;
@@ -39,6 +40,7 @@ interface PaymentInfo {
 const TenantPayments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { send: sendWhatsApp } = useWhatsAppNotify();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,6 +133,18 @@ const TenantPayments = () => {
     setProofDialogOpen(false);
     setProofFile(null);
     setProofRefNumber("");
+
+    // WhatsApp alert to owner + manager
+    const payment = payments.find(p => p.id === paymentId);
+    if (payment) {
+      sendWhatsApp("send-payment-approval", {
+        property_id: payment.property_id,
+        tenant_name: user.user_metadata?.full_name || user.email,
+        room_number: payment.rooms?.room_number || "N/A",
+        amount: payment.amount,
+        month: payment.month,
+      });
+    }
 
     // Refresh
     const { data } = await supabase

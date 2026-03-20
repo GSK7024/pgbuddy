@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 import OverLimitBanner from "@/components/OverLimitBanner";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { useWhatsAppNotify } from "@/hooks/useWhatsAppNotify";
+import { useSubscriptionPlan } from "@/hooks/useSubscriptionPlan";
 
 interface Payment {
   id: string;
@@ -54,6 +56,8 @@ interface ActiveAssignment {
 const Payments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { send: sendWhatsApp } = useWhatsAppNotify();
+  const { canUseWhatsApp } = useSubscriptionPlan();
   const { isReadOnly, isOverLimit, bedCount, bedLimit, limits } = useSubscriptionGuard();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -96,9 +100,9 @@ const Payments = () => {
       supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
     ]);
 
-    const payData = payRes.data ?? [];
-    const assignData = assignRes.data ?? [];
-    let propsData = propRes.data ?? [];
+    const payData = (payRes.data as any[]) ?? [];
+    const assignData = (assignRes.data as any[]) ?? [];
+    let propsData = (propRes.data as any[]) ?? [];
     
     // Fetch tenant names and phones for both payments and assignments
     const typedPayData = payData as any[];
@@ -128,13 +132,13 @@ const Payments = () => {
       approverProfiles?.forEach(p => { approverMap[p.user_id] = p.full_name; });
     }
 
-    let fetchedPayments = (payData || []).map((p: any) => ({
+    let fetchedPayments = (payData as any[]).map((p: any) => ({
       ...p,
       tenant_name: p.tenant_name || (p.tenant_id ? profilesMap[p.tenant_id]?.full_name : null),
       tenant_phone: p.tenant_phone || (p.tenant_id ? profilesMap[p.tenant_id]?.phone : null),
       approved_by_name: p.approved_by ? approverMap[p.approved_by] || "Owner/Manager" : null,
     }));
-    let fetchedAssignments = assignData.map(a => ({ 
+    let fetchedAssignments = (assignData as any[]).map((a: any) => ({ 
       ...a, 
       profiles: a.tenant_id ? profilesMap[a.tenant_id] : null 
     })) as ActiveAssignment[];
@@ -425,18 +429,19 @@ const Payments = () => {
   const selectedAssign = assignments.find(a => a.id === selectedAssignment);
 
   const sendWhatsAppReminder = (payment: Payment) => {
-    const phone = payment.tenant_phone?.replace(/[^0-9]/g, "");
-    if (!phone) {
-      toast({ title: "No phone number", description: "This tenant doesn't have a phone number on their profile.", variant: "destructive" });
+    if (!canUseWhatsApp("send-rent-reminder")) {
+      toast({ title: "Plan upgrade required", description: "WhatsApp reminders are available on Pro and Business plans.", variant: "destructive" });
       return;
     }
-    const formattedPhone = phone.startsWith("91") ? phone : `91${phone}`;
-    const tenantName = payment.tenant_name || "Tenant";
-    const propertyName = (payment as any).properties?.name || "your PG";
-    const roomNumber = (payment as any).rooms?.room_number || "";
-    const message = `Hi ${tenantName},\n\nThis is a friendly reminder that your rent of ₹${Number(payment.amount).toLocaleString()} for ${payment.month} (${propertyName}, Room ${roomNumber}) is pending.\n\nPlease make the payment at your earliest convenience.\n\nThank you!`;
-    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+
+    sendWhatsApp("send-rent-reminder", {
+      tenant_ids: payment.tenant_id ? [payment.tenant_id] : [],
+      tenant_phone: payment.tenant_phone,
+      property_name: (payment as any).properties?.name || "your PG",
+      room_number: (payment as any).rooms?.room_number || "N/A",
+      amount: payment.amount,
+      month: payment.month,
+    });
   };
 
   const filteredPayments = selectedPropertyFilter === "all" 
