@@ -57,13 +57,15 @@ export type WhatsAppAction =
   | "send-rent-reminder"
   | "send-announcement"
   | "send-complaint-alert"
-  | "send-vacancy-alert";
+  | "send-vacancy-alert"
+  | "send-mess-reminder";
 
 /** Actions that require Business or Enterprise plan */
 const GATED_WA_ACTIONS: WhatsAppAction[] = [
   "send-announcement",
   "send-complaint-alert",
   "send-vacancy-alert",
+  "send-mess-reminder",
 ];
 
 export const useSubscriptionPlan = (ownerId?: string | null) => {

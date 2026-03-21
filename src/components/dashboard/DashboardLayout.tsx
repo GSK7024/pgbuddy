@@ -160,7 +160,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md">
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold gradient-text tracking-tight">PG Manager</span>
+            <span className="text-lg font-bold gradient-text tracking-tight">PG Buddy</span>
           </Link>
         </div>
         <NavLinks />
@@ -173,7 +173,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-sm">
               <Building2 className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold gradient-text">PG Manager</span>
+            <span className="font-bold gradient-text">PG Buddy</span>
           </Link>
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-xl hover:bg-muted/50 transition-colors">
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

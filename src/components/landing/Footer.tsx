@@ -40,7 +40,7 @@ const Footer = () => {
               <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold">PG Manager</span>
+              <span className="text-lg font-bold">PG Buddy</span>
             </Link>
             <p className="text-background/60 mb-6 max-w-sm text-sm leading-relaxed">
               India's leading PG management platform. Simplifying property 
@@ -49,7 +49,7 @@ const Footer = () => {
             <div className="space-y-2.5 text-sm text-background/60">
               <div className="flex items-center gap-3 hover:text-background/80 transition-colors">
                 <Mail className="w-4 h-4" />
-                <span>support@pgmanager.in</span>
+                <span>support@pgbuddy.in</span>
               </div>
               <div className="flex items-center gap-3 hover:text-background/80 transition-colors">
                 <Phone className="w-4 h-4" />
@@ -85,7 +85,7 @@ const Footer = () => {
 
         <div className="pt-8 border-t border-background/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-background/40">
-            © {new Date().getFullYear()} PG Manager. All rights reserved.
+            © {new Date().getFullYear()} PG Buddy. All rights reserved.
           </p>
           <div className="flex items-center gap-3">
             {socialLinks.map((social) => (

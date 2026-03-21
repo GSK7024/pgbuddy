@@ -59,7 +59,7 @@ const Referrals = () => {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: "Join PG Manager",
+        title: "Join PG Buddy",
         text: "Manage your PG business like a pro! Use my referral link to sign up.",
         url: referralLink,
       });

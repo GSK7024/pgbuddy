@@ -33,7 +33,7 @@ const Navbar = () => {
             <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md">
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold gradient-text tracking-tight">PG Manager</span>
+            <span className="text-xl font-bold gradient-text tracking-tight">PG Buddy</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1">

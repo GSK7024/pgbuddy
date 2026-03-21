@@ -18,7 +18,7 @@ const Careers = () => (
 
     <div className="flex items-center gap-2 text-foreground">
       <Mail className="w-4 h-4" />
-      <a href="mailto:careers@pgmanager.in" className="text-primary hover:underline">careers@pgmanager.in</a>
+      <a href="mailto:careers@pgbuddy.in" className="text-primary hover:underline">careers@pgbuddy.in</a>
     </div>
   </StaticPageLayout>
 );

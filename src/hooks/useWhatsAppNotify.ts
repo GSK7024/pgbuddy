@@ -6,13 +6,16 @@ type WhatsAppAction =
   | "send-announcement"
   | "send-complaint-alert"
   | "send-vacancy-alert"
-  | "send-payment-approval";
+  | "send-payment-approval"
+  | "send-payment-received"
+  | "send-mess-reminder";
 
 interface WhatsAppResult {
   sent?: number;
   total?: number;
   reason?: string;
   error?: string;
+  message?: string;
 }
 
 /**

@@ -355,13 +355,33 @@ const Payments = () => {
     setGenerating(false);
   };
 
+  const sendPaymentWhatsApp = (payment: Payment) => {
+    if (!canUseWhatsApp("send-payment-received")) return;
+    
+    sendWhatsApp("send-payment-received", {
+      tenant_phone: payment.tenant_phone,
+      tenant_name: payment.tenant_name || "Tenant",
+      amount: payment.amount,
+      month: payment.month,
+      property_name: (payment as any).properties?.name || "your PG",
+      room_number: (payment as any).rooms?.room_number || "N/A",
+      receipt_url: `${window.location.origin}/receipt/${payment.id}`,
+      property_id: payment.property_id
+    });
+  };
+
   const markPaid = async (id: string) => {
-    await supabase.from("rent_payments").update({
+    const payment = payments.find(p => p.id === id);
+    const { error } = await supabase.from("rent_payments").update({
       status: "paid",
       payment_date: new Date().toISOString(),
     }).eq("id", id);
-    toast({ title: "Marked as paid" });
-    fetchData();
+    
+    if (!error) {
+      toast({ title: "Marked as paid" });
+      if (payment) sendPaymentWhatsApp(payment);
+      fetchData();
+    }
   };
 
   const approvePayment = async (payment: Payment) => {
@@ -371,12 +391,13 @@ const Payments = () => {
       status: "paid",
       payment_date: new Date().toISOString(),
       approved_by: user.id,
-      payment_method: payment.transaction_id ? "proof" : "proof",
+      payment_method: "proof",
     }).eq("id", payment.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Payment approved and marked as paid!" });
+      sendPaymentWhatsApp(payment);
       fetchData();
     }
     setActionLoading(false);
@@ -414,6 +435,16 @@ const Payments = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Payment recorded successfully!" });
+      const payment = payments.find(p => p.id === recordingPaymentId);
+      if (payment) {
+        sendPaymentWhatsApp({
+          ...payment,
+          amount: Number(recordedAmount),
+          payment_method: paymentMethod,
+          status: "paid",
+          id: recordingPaymentId
+        } as Payment);
+      }
       setRecordPaymentOpen(false);
       fetchData();
     }

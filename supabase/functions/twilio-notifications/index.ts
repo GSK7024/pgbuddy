@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     const { action } = payload;
 
     // ── Plan gating: gated actions require Business or Enterprise plan ──
-    const GATED_ACTIONS = ["send-announcement", "send-complaint-alert", "send-vacancy-alert"];
+    const GATED_ACTIONS = ["send-announcement", "send-complaint-alert", "send-vacancy-alert", "send-payment-approval", "send-payment-received", "send-mess-reminder"];
     if (GATED_ACTIONS.includes(action) && payload.property_id) {
       const { data: property } = await supabase
         .from("properties")
@@ -434,9 +434,72 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ════════════════════════════════════════════════
+    // ACTION 6: send-payment-received (NEW)
+    // Owner confirms payment → WhatsApp tenant with receipt link
+    // ════════════════════════════════════════════════
+    if (action === "send-payment-received") {
+      const { tenant_phone, tenant_name, amount, month, property_name, room_number, receipt_url } = payload;
+
+      if (!tenant_phone) {
+        return new Response(
+          JSON.stringify({ sent: 0, message: "No tenant phone number provided" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Template params: {{1}}=name, {{2}}=amount, {{3}}=month, {{4}}=property, {{5}}=room, {{6}}=receipt_link
+      const params = [
+        tenant_name || "Tenant",
+        String(amount || "0"),
+        month || "this month",
+        property_name || "Your PG",
+        room_number || "N/A",
+        receipt_url || "https://pgbuddy-zeta-rust.vercel.app",
+      ];
+
+      let sent = 0;
+      if (await sendAisensy(toE164(tenant_phone), "payment_received", params, AISENSY_API_KEY)) sent++;
+
+      return new Response(
+        JSON.stringify({ sent, total: 1 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ════════════════════════════════════════════════
+    // ACTION 7: send-mess-reminder (NEW)
+    // ════════════════════════════════════════════════
+    if (action === "send-mess-reminder") {
+      const { member_phone, member_name, amount, month, mess_name } = payload;
+
+      if (!member_phone) {
+        return new Response(
+          JSON.stringify({ sent: 0, message: "No phone number provided" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Template params: {{1}}=name, {{2}}=amount, {{3}}=month, {{4}}=mess_name
+      const params = [
+        member_name || "Member",
+        String(amount || "0"),
+        month || "this month",
+        mess_name || "Your PG Buddy Host",
+      ];
+
+      let sent = 0;
+      if (await sendAisensy(toE164(member_phone), "mess_reminder", params, AISENSY_API_KEY)) sent++;
+
+      return new Response(
+        JSON.stringify({ sent, total: 1 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ── Unknown action ──
     return new Response(
-      JSON.stringify({ error: "Unknown action. Supported: send-rent-reminder, send-announcement, send-complaint-alert, send-vacancy-alert, send-payment-approval" }),
+      JSON.stringify({ error: `Unknown action: ${action}. Supported: send-rent-reminder, send-announcement, send-complaint-alert, send-vacancy-alert, send-payment-approval, send-payment-received, send-mess-reminder` }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

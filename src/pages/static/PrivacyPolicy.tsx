@@ -9,7 +9,7 @@ const PrivacyPolicy = () => (
 
     <h2 className="text-xl font-semibold text-foreground">2. How We Use Your Information</h2>
     <ul className="list-disc pl-6 space-y-1">
-      <li>To provide and maintain the PG Manager platform</li>
+      <li>To provide and maintain the PG Buddy platform</li>
       <li>To process rent payments and send payment reminders</li>
       <li>To facilitate communication between owners and tenants</li>
       <li>To send important notifications about your account</li>
@@ -23,13 +23,13 @@ const PrivacyPolicy = () => (
     <p>We do not sell your personal data. Tenant information is shared only with their respective PG owner for management purposes. We may share data with law enforcement if required by law.</p>
 
     <h2 className="text-xl font-semibold text-foreground">5. Your Rights</h2>
-    <p>You can request access to, correction of, or deletion of your personal data at any time by contacting us at <a href="mailto:privacy@pgmanager.in" className="text-primary hover:underline">privacy@pgmanager.in</a>.</p>
+    <p>You can request access to, correction of, or deletion of your personal data at any time by contacting us at <a href="mailto:privacy@pgbuddy.in" className="text-primary hover:underline">privacy@pgbuddy.in</a>.</p>
 
     <h2 className="text-xl font-semibold text-foreground">6. Cookies</h2>
     <p>We use essential cookies for authentication and session management. No third-party tracking cookies are used.</p>
 
     <h2 className="text-xl font-semibold text-foreground">7. Contact</h2>
-    <p>For privacy-related questions, email <a href="mailto:privacy@pgmanager.in" className="text-primary hover:underline">privacy@pgmanager.in</a>.</p>
+    <p>For privacy-related questions, email <a href="mailto:privacy@pgbuddy.in" className="text-primary hover:underline">privacy@pgbuddy.in</a>.</p>
   </StaticPageLayout>
 );
 

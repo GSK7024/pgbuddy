@@ -150,12 +150,12 @@ const CityPGs = () => {
           <div className="max-w-3xl mx-auto prose prose-sm text-muted-foreground">
             <h2 className="text-lg font-semibold text-foreground">Finding PG Accommodation in {city}</h2>
             <p>
-              Looking for a PG in {city}? PG Manager helps you find verified, safe, and affordable paying guest 
+              Looking for a PG in {city}? PG Buddy helps you find verified, safe, and affordable paying guest 
               accommodations. Browse through our listings with detailed photos, amenities, pricing, and tenant reviews 
               to find the perfect place that suits your budget and lifestyle.
             </p>
             <p>
-              All PGs listed on PG Manager are verified by property owners who actively manage their properties 
+              All PGs listed on PG Buddy are verified by property owners who actively manage their properties 
               through our platform, ensuring up-to-date availability and transparent pricing.
             </p>
           </div>

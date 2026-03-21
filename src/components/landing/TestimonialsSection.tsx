@@ -8,7 +8,7 @@ const testimonials = [
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=rajesh",
     rating: 5,
     content:
-      "Managing 3 PG properties was a nightmare before PG Manager. Now I track everything from my phone. Rent collection is so smooth with UPI integration!",
+      "Managing 3 PG properties was a nightmare before PG Buddy. Now I track everything from my phone. Rent collection is so smooth with UPI integration!",
   },
   {
     name: "Priya Sharma",

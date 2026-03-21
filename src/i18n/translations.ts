@@ -2,7 +2,7 @@ export type Language = "en" | "hi" | "mr" | "ta" | "te" | "kn" | "ml" | "bn" | "
 
 export const translations: Record<Language, Record<string, string>> = {
   en: {
-    "app.name": "PG Manager",
+    "app.name": "PG Buddy",
     "nav.findPg": "Find PG",
     "nav.listPg": "List Your PG",
     "nav.about": "About",
@@ -81,7 +81,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
 
   hi: {
-    "app.name": "PG मैनेजर",
+    "app.name": "PG बडी",
     "nav.findPg": "PG खोजें",
     "nav.listPg": "अपना PG लिस्ट करें",
     "nav.about": "हमारे बारे में",
@@ -160,7 +160,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
 
   mr: {
-    "app.name": "PG मॅनेजर",
+    "app.name": "PG बडी",
     "nav.findPg": "PG शोधा",
     "nav.listPg": "तुमचा PG लिस्ट करा",
     "nav.about": "आमच्याबद्दल",
@@ -240,7 +240,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   // Tamil
   ta: {
-    "app.name": "PG மேனேஜர்",
+    "app.name": "PG படி",
     "nav.findPg": "PG கண்டுபிடி",
     "nav.listPg": "உங்கள் PG பதிவு செய்யுங்கள்",
     "nav.about": "எங்களைப் பற்றி",
@@ -320,7 +320,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   // Telugu
   te: {
-    "app.name": "PG మేనేజర్",
+    "app.name": "PG బడ్డీ",
     "nav.findPg": "PG కనుగొనండి",
     "nav.listPg": "మీ PG జాబితా చేయండి",
     "nav.about": "మా గురించి",
@@ -400,7 +400,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   // Kannada
   kn: {
-    "app.name": "PG ಮ್ಯಾನೇಜರ್",
+    "app.name": "PG ಬಡ್ಡಿ",
     "nav.findPg": "PG ಹುಡುಕಿ",
     "nav.listPg": "ನಿಮ್ಮ PG ಪಟ್ಟಿ ಮಾಡಿ",
     "nav.about": "ನಮ್ಮ ಬಗ್ಗೆ",
@@ -480,7 +480,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   // Malayalam
   ml: {
-    "app.name": "PG മാനേജർ",
+    "app.name": "PG ബഡി",
     "nav.findPg": "PG കണ്ടെത്തുക",
     "nav.listPg": "നിങ്ങളുടെ PG ലിസ്റ്റ് ചെയ്യുക",
     "nav.about": "ഞങ്ങളെക്കുറിച്ച്",
@@ -560,7 +560,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   // Bengali
   bn: {
-    "app.name": "PG ম্যানেজার",
+    "app.name": "PG বাডি",
     "nav.findPg": "PG খুঁজুন",
     "nav.listPg": "আপনার PG তালিকাভুক্ত করুন",
     "nav.about": "আমাদের সম্পর্কে",
@@ -640,7 +640,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   // Gujarati
   gu: {
-    "app.name": "PG મેનેજર",
+    "app.name": "PG બડી",
     "nav.findPg": "PG શોધો",
     "nav.listPg": "તમારું PG લિસ્ટ કરો",
     "nav.about": "અમારા વિશે",
@@ -720,7 +720,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   // Punjabi
   pa: {
-    "app.name": "PG ਮੈਨੇਜਰ",
+    "app.name": "PG ਬਡੀ",
     "nav.findPg": "PG ਲੱਭੋ",
     "nav.listPg": "ਆਪਣਾ PG ਲਿਸਟ ਕਰੋ",
     "nav.about": "ਸਾਡੇ ਬਾਰੇ",
@@ -799,7 +799,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
 
   or: {
-    "app.name": "PG ମ୍ୟାନେଜର",
+    "app.name": "PG ବଡ଼ି",
     "nav.findPg": "PG ଖୋଜନ୍ତୁ",
     "nav.listPg": "ଆପଣଙ୍କ PG ତାଲିକାଭୁକ୍ତ କରନ୍ତୁ",
     "nav.about": "ଆମ ବିଷୟରେ",
@@ -878,7 +878,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
 
   as: {
-    "app.name": "PG মেনেজাৰ",
+    "app.name": "PG বাডি",
     "nav.findPg": "PG বিচাৰক",
     "nav.listPg": "আপোনাৰ PG তালিকাভুক্ত কৰক",
     "nav.about": "আমাৰ বিষয়ে",

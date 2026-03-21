@@ -10,7 +10,7 @@ const topics = [
 
 const HelpCenter = () => (
   <StaticPageLayout title="Help Center">
-    <p>Find answers to common questions and learn how to get the most out of PG Manager.</p>
+    <p>Find answers to common questions and learn how to get the most out of PG Buddy.</p>
 
     <div className="space-y-6 mt-4">
       {topics.map((topic) => (
@@ -23,7 +23,7 @@ const HelpCenter = () => (
       ))}
     </div>
 
-    <p className="text-sm mt-4">Still need help? Email us at <a href="mailto:support@pgmanager.in" className="text-primary hover:underline">support@pgmanager.in</a></p>
+    <p className="text-sm mt-4">Still need help? Email us at <a href="mailto:support@pgbuddy.in" className="text-primary hover:underline">support@pgbuddy.in</a></p>
   </StaticPageLayout>
 );
 

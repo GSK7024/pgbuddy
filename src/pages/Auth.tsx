@@ -91,7 +91,7 @@ const Auth = () => {
           <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-md">
             <Building2 className="w-7 h-7 text-primary-foreground" />
           </div>
-          <span className="text-2xl font-bold gradient-text">PG Manager</span>
+          <span className="text-2xl font-bold gradient-text">PG Buddy</span>
         </div>
 
         <Card className="border-border/50 shadow-lg">
@@ -102,7 +102,7 @@ const Auth = () => {
             <CardDescription>
               {mode === "login"
                 ? "Sign in to your account"
-                : "Get started with PG Manager"}
+                : "Get started with PG Buddy"}
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -9,9 +9,51 @@ import MessPayments from "./MessPayments";
 import MessDashboard from "./MessDashboard";
 import MessExpenses from "./MessExpenses";
 import MessGuests from "./MessGuests";
+import { useSubscriptionPlan } from "@/hooks/useSubscriptionPlan";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { Lock, Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 
 const MessManagement = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { effectiveOwnerId } = useStaffAccess();
+  const { isPro, loading: planLoading } = useSubscriptionPlan(effectiveOwnerId);
+
+  if (!planLoading && !isPro) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <Card className="max-w-md w-full border-dashed border-2 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <Crown className="w-48 h-48" />
+            </div>
+            <CardContent className="pt-8 pb-8 px-6 text-center space-y-6 relative z-10">
+              <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                <Lock className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold font-heading">Mess Management is Locked</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Manage mess attendance, subscriptions, expenses, and automated billing seamlessly. 
+                  Upgrade to the <strong className="text-foreground">Pro Plan</strong> or higher to unlock this feature.
+                </p>
+              </div>
+              <div className="pt-2">
+                <Button asChild size="lg" className="w-full gradient-primary gap-2 font-bold shadow-md hover:shadow-lg transition-all">
+                  <Link to="/dashboard/subscription">
+                    <Crown className="w-4 h-4" />
+                    Upgrade to Pro
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

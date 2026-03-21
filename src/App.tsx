@@ -59,6 +59,7 @@ import MessMembers from "./pages/MessMembers";
 import MessAttendance from "./pages/MessAttendance";
 import MessPayments from "./pages/MessPayments";
 import MessManagement from "./pages/MessManagement";
+import PublicReceipt from "./pages/PublicReceipt";
 import AboutUs from "./pages/static/AboutUs";
 import Careers from "./pages/static/Careers";
 import Blog from "./pages/static/Blog";
@@ -146,6 +147,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/guide" element={<UserGuide />} />
               <Route path="/features" element={<Features />} />
+              <Route path="/receipt/:id" element={<PublicReceipt />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

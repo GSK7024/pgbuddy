@@ -37,7 +37,7 @@ const ListPG = () => {
               List & Manage Your PG with Ease
             </h1>
             <p className="text-muted-foreground text-lg mb-8">
-              Join hundreds of PG owners who use PG Manager to streamline their operations, track payments, and keep tenants happy.
+              Join hundreds of PG owners who use PG Buddy to streamline their operations, track payments, and keep tenants happy.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button size="lg" className="gradient-primary shadow-md" asChild>

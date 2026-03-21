@@ -12,6 +12,9 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { useWhatsAppNotify } from "@/hooks/useWhatsAppNotify";
+import { useSubscriptionPlan } from "@/hooks/useSubscriptionPlan";
+import { MessageSquare } from "lucide-react";
 
 interface PaymentRow {
   id: string;
@@ -25,6 +28,7 @@ interface PaymentRow {
   status: string;
   payment_date: string | null;
   payment_method: string | null;
+  member_phone: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -44,6 +48,9 @@ const MessPayments = ({ standalone = true }: { standalone?: boolean }) => {
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  
+  const { send: sendWhatsApp, loading: actionLoading } = useWhatsAppNotify();
+  const { canUseWhatsApp } = useSubscriptionPlan(effectiveOwnerId);
 
   // Generate month options (last 6 months)
   const monthOptions = Array.from({ length: 6 }, (_, i) => {
@@ -74,7 +81,7 @@ const MessPayments = ({ standalone = true }: { standalone?: boolean }) => {
     const memberIds = [...new Set((data as any[]).map(d => d.member_id))];
     const { data: members } = await supabase
       .from("mess_members" as any)
-      .select("id, full_name, plan_id")
+      .select("id, full_name, plan_id, phone")
       .in("id", memberIds);
 
     const { data: plans } = await supabase
@@ -90,6 +97,7 @@ const MessPayments = ({ standalone = true }: { standalone?: boolean }) => {
     setPayments((data as any[]).map(p => ({
       ...p,
       member_name: memberMap[p.member_id]?.full_name || "Unknown",
+      member_phone: memberMap[p.member_id]?.phone || null,
       plan_name: memberMap[p.member_id]?.plan_id ? (planMap[memberMap[p.member_id].plan_id] || "—") : "—",
     })));
     setLoading(false);
@@ -176,6 +184,59 @@ const MessPayments = ({ standalone = true }: { standalone?: boolean }) => {
     fetchPayments();
   };
 
+  const handeRemindPayment = async (payment: PaymentRow) => {
+    if (!canUseWhatsApp("send-mess-reminder")) {
+      toast({ title: "WhatsApp notifications require Business plan", variant: "destructive" });
+      return;
+    }
+    if (!payment.member_phone) {
+      toast({ title: "No phone number", description: "This member does not have a phone number saved.", variant: "destructive" });
+      return;
+    }
+
+    const res = await sendWhatsApp("send-mess-reminder", {
+      member_phone: payment.member_phone,
+      member_name: payment.member_name,
+      amount: payment.final_amount,
+      month: payment.month,
+      mess_name: "Your PG Buddy Host", 
+    });
+
+    if (res?.sent) {
+      toast({ title: "Reminder sent!" });
+    } else {
+      toast({ title: "Failed to send", description: res?.reason || res?.message || "Verify your Aisensy API key", variant: "destructive" });
+    }
+  };
+
+  const handleRemindAll = async () => {
+    if (!canUseWhatsApp("send-mess-reminder")) {
+      toast({ title: "WhatsApp notifications require Business plan", variant: "destructive" });
+      return;
+    }
+    const pendingWithPhones = payments.filter(p => p.status === "pending" && p.member_phone);
+    if (pendingWithPhones.length === 0) {
+      toast({ title: "No pending payments with phone numbers found", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: `Sending ${pendingWithPhones.length} reminders...` });
+    
+    let sentCount = 0;
+    for (const payment of pendingWithPhones) {
+      const res = await sendWhatsApp("send-mess-reminder", {
+        member_phone: payment.member_phone,
+        member_name: payment.member_name,
+        amount: payment.final_amount,
+        month: payment.month,
+        mess_name: "Your PG Buddy Host",
+      });
+      if (res?.sent) sentCount++;
+    }
+    
+    toast({ title: `Successfully sent ${sentCount} reminders!` });
+  };
+
   const stats = {
     total: payments.reduce((s, p) => s + p.final_amount, 0),
     collected: payments.filter(p => p.status === "paid").reduce((s, p) => s + p.final_amount, 0),
@@ -203,6 +264,10 @@ const MessPayments = ({ standalone = true }: { standalone?: boolean }) => {
                 ))}
               </SelectContent>
             </Select>
+            <Button onClick={handleRemindAll} disabled={actionLoading} variant="outline" className="gap-2">
+              <MessageSquare className="w-4 h-4 text-green-600" />
+              Remind All
+            </Button>
             <Button onClick={generateBills} disabled={generating} className="gradient-primary">
               {generating ? "Generating..." : "Generate Bills"}
             </Button>
@@ -255,9 +320,14 @@ const MessPayments = ({ standalone = true }: { standalone?: boolean }) => {
                   </div>
                   <div>
                     {p.status === "pending" ? (
-                      <Button size="sm" className="gradient-primary" onClick={() => { setMarkingId(p.id); setPaymentDate(format(new Date(), "yyyy-MM-dd")); }}>
-                        <Check className="w-3.5 h-3.5 mr-1" /> Mark Paid
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button size="icon" variant="outline" onClick={() => handeRemindPayment(p)} disabled={actionLoading} className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50">
+                          <MessageSquare className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" className="gradient-primary" onClick={() => { setMarkingId(p.id); setPaymentDate(format(new Date(), "yyyy-MM-dd")); }}>
+                          <Check className="w-3.5 h-3.5 mr-1" /> Mark Paid
+                        </Button>
+                      </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">{p.payment_date && new Date(p.payment_date).toLocaleDateString("en-IN")} • {p.payment_method}</span>
                     )}
