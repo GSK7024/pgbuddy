@@ -106,12 +106,12 @@ Deno.serve(async (req) => {
     // ACTION 1: send-rent-reminder
     // ════════════════════════════════════════════════
     if (action === "send-rent-reminder") {
-      const { tenant_ids, tenant_phone, property_name, room_number, amount, month } = payload;
+      const { tenant_ids, tenant_phone, tenant_name, property_name, room_number, amount, month } = payload;
 
       let recipients: { phone: string; full_name: string }[] = [];
 
       if (tenant_phone) {
-        recipients.push({ phone: tenant_phone, full_name: "Tenant" });
+        recipients.push({ phone: tenant_phone, full_name: tenant_name || "Tenant" });
       } else if (tenant_ids?.length) {
         const { data: profiles } = await supabase
           .from("profiles")

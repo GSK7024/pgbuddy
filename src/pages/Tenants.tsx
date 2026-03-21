@@ -93,6 +93,7 @@ const Tenants = () => {
   const [moveInDate, setMoveInDate] = useState(new Date().toISOString().split("T")[0]);
   const [customRent, setCustomRent] = useState("");
   const [assignPhone, setAssignPhone] = useState("");
+  const [assignName, setAssignName] = useState("");
   const [foundTenant, setFoundTenant] = useState<{ user_id: string; full_name: string } | null>(null);
   const [searching, setSearching] = useState(false);
   const [initialRentPaid, setInitialRentPaid] = useState(false);
@@ -107,6 +108,7 @@ const Tenants = () => {
   const [detailRent, setDetailRent] = useState("");
   const [rentChangeNote, setRentChangeNote] = useState("");
   const [tenantPhone, setTenantPhone] = useState("");
+  const [tenantName, setTenantName] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
 
   // Transfer / Swap state
@@ -259,6 +261,7 @@ const Tenants = () => {
     const { error: assignError } = await supabase.from("tenant_assignments").insert({
       tenant_id: foundTenant ? foundTenant.user_id : null,
       tenant_email: tenantEmail.trim(),
+      tenant_name: assignName.trim() || (foundTenant ? foundTenant.full_name : null),
       tenant_phone: assignPhone.trim(),
       property_id: propertyId,
       room_id: roomId,
@@ -281,6 +284,7 @@ const Tenants = () => {
       await supabase.from("rent_payments").insert({
         tenant_id: foundTenant ? foundTenant.user_id : null,
         tenant_email: tenantEmail.trim(),
+        tenant_name: assignName.trim() || (foundTenant ? foundTenant.full_name : null),
         tenant_phone: assignPhone.trim(),
         property_id: propertyId,
         room_id: roomId,
@@ -300,6 +304,7 @@ const Tenants = () => {
       await supabase.from("rent_payments").insert({
         tenant_id: foundTenant ? foundTenant.user_id : null,
         tenant_email: tenantEmail.trim(),
+        tenant_name: assignName.trim() || (foundTenant ? foundTenant.full_name : null),
         tenant_phone: assignPhone.trim(),
         property_id: propertyId,
         room_id: roomId,
@@ -326,7 +331,7 @@ const Tenants = () => {
   const resetForm = () => {
     setTenantEmail(""); setPropertyId(""); setRoomId("");
     setMoveInDate(new Date().toISOString().split("T")[0]);
-    setCustomRent(""); setAssignPhone(""); setFoundTenant(null);
+    setCustomRent(""); setAssignPhone(""); setAssignName(""); setFoundTenant(null);
     setInitialRentPaid(false);
     setDepositStatus("pending");
   };
@@ -351,7 +356,8 @@ const Tenants = () => {
     setIdProofNumber(a.id_proof_number ?? "");
     setTenantNotes(a.notes ?? "");
     setDetailRent(String(a.custom_rent ?? (a as any).rooms?.rent_amount ?? ""));
-    setTenantPhone(a.profiles?.phone ?? "");
+    setTenantPhone(a.profiles?.phone ?? a.tenant_phone ?? "");
+    setTenantName(a.profiles?.full_name ?? a.tenant_name ?? "");
     // Fetch documents and rent history in parallel
     const [docsRes, historyRes] = await Promise.all([
       supabase.storage.from("tenant-documents").list(a.id),
@@ -383,10 +389,19 @@ const Tenants = () => {
       id_proof_number: idProofNumber || null,
       notes: tenantNotes || null,
       custom_rent: rentValue,
+      tenant_name: tenantName.trim() || null,
+      tenant_phone: tenantPhone.trim() || null,
     }).eq("id", detailTenant.id);
 
+    if (!error && detailTenant.tenant_email) {
+      await supabase.from("rent_payments").update({
+        tenant_name: tenantName.trim() || null,
+        tenant_phone: tenantPhone.trim() || null,
+      }).eq("tenant_email", detailTenant.tenant_email).eq("status", "pending");
+    }
+
     // Update tenant phone in profiles
-    if (!error && tenantPhone !== (detailTenant.profiles?.phone ?? "")) {
+    if (!error && detailTenant.tenant_id && tenantPhone !== (detailTenant.profiles?.phone ?? "")) {
       await supabase.from("profiles").update({ phone: tenantPhone.trim() || null }).eq("user_id", detailTenant.tenant_id);
     }
 
@@ -636,6 +651,12 @@ const Tenants = () => {
                   {assignmentType === "new" && tenantEmail && !foundTenant && !searching && (
                     <div className="p-2 rounded-lg bg-warning/10 text-warning text-[10px] flex items-center gap-1.5">
                       <History className="w-3 h-3" /> They'll be automatically linked when they sign up.
+                    </div>
+                  )}
+                  {assignmentType === "new" && (
+                    <div className="space-y-2 mt-2">
+                      <Label>Tenant Full Name *</Label>
+                      <Input type="text" value={assignName} onChange={e => setAssignName(e.target.value)} placeholder="E.g. John Doe" required />
                     </div>
                   )}
                 </div>
@@ -931,6 +952,10 @@ const Tenants = () => {
                     <span className="text-muted-foreground block">Room</span>
                     <span className="font-medium">{(detailTenant as any).rooms?.room_number}</span>
                   </div>
+                   <div>
+                     <span className="text-muted-foreground block">Name</span>
+                     <Input className="h-8 text-sm" value={tenantName} onChange={e => setTenantName(e.target.value)} placeholder="Full Name" />
+                   </div>
                    <div>
                      <span className="text-muted-foreground block">Phone</span>
                      <Input className="h-8 text-sm" value={tenantPhone} onChange={e => setTenantPhone(e.target.value)} placeholder="+91 XXXXXXXXXX" />

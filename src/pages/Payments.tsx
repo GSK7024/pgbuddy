@@ -56,7 +56,7 @@ interface ActiveAssignment {
 const Payments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { send: sendWhatsApp } = useWhatsAppNotify();
+  const { send: sendWhatsApp, loading: isSendingWA } = useWhatsAppNotify();
   const { canUseWhatsApp } = useSubscriptionPlan();
   const { isReadOnly, isOverLimit, bedCount, bedLimit, limits } = useSubscriptionGuard();
   const { effectiveOwnerId, isStaff, accessiblePropertyIds, loading: staffLoading } = useStaffAccess();
@@ -644,8 +644,8 @@ const Payments = () => {
                               </Badge>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button size="sm" variant="outline" className="gap-1 text-success border-success hover:bg-success/10" onClick={() => sendWhatsAppReminder(p)}>
-                                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                              <Button size="sm" variant="outline" className="gap-1 text-success border-success hover:bg-success/10" onClick={() => sendWhatsAppReminder(p)} disabled={isSendingWA}>
+                                <MessageCircle className="w-3.5 h-3.5" /> {isSendingWA ? "..." : "WhatsApp"}
                               </Button>
                               <Button size="sm" className="gradient-primary" onClick={() => {
                                 setRecordingPaymentId(p.id);
