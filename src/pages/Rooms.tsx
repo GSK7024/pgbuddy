@@ -122,17 +122,23 @@ const Rooms = () => {
       return;
     }
 
-    const [roomRes, bedRes] = await Promise.all([
-      supabase.from("rooms").select("*, properties(name)").in("property_id", propIds).order("created_at", { ascending: false }),
-      supabase.from("beds").select("*").in("room_id", (await supabase.from("rooms").select("id").in("property_id", propIds)).data?.map(r => r.id) ?? []).order("bed_label", { ascending: true }),
-    ]);
+    const { data: roomData } = await supabase.from("rooms").select("*, properties(name)").in("property_id", propIds).order("created_at", { ascending: false });
+    const fetchedRooms = roomData ?? [];
+
+    // Fetch beds using room IDs (beds table has room_id, not property_id)
+    const roomIds = fetchedRooms.map(r => r.id);
+    let bedData: any[] = [];
+    if (roomIds.length > 0) {
+      const { data } = await supabase.from("beds").select("*").in("room_id", roomIds).order("bed_label", { ascending: true });
+      bedData = data ?? [];
+    }
 
     setProperties(fetchedProps);
-    setRooms(roomRes.data ?? []);
+    setRooms(fetchedRooms);
 
     // Build beds map grouped by room_id
     const map: Record<string, BedInfo[]> = {};
-    (bedRes.data ?? []).forEach((b: any) => {
+    bedData.forEach((b: any) => {
       if (!map[b.room_id]) map[b.room_id] = [];
       map[b.room_id].push({
         id: b.id,

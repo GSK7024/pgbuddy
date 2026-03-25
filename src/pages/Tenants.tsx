@@ -148,12 +148,20 @@ const Tenants = () => {
     }
 
     // 2. Now fetch everything scoped to these property IDs
-    const [assignRes, roomRes, subRes, bedRes] = await Promise.all([
+    const [assignRes, roomRes, subRes] = await Promise.all([
       supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").in("property_id", propIds).order("created_at", { ascending: false }),
       supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant").in("property_id", propIds),
       supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", effectiveOwnerId).eq("status", "active").maybeSingle(),
-      (supabase as any).from("beds").select("*").in("property_id", propIds).eq("is_vacant", true).order("bed_label", { ascending: true }),
     ]);
+
+    // 3. Fetch beds using room IDs (beds table has room_id, not property_id)
+    const fetchedRooms = roomRes.data ?? [];
+    const roomIds = fetchedRooms.map(r => r.id);
+    let fetchedBeds: BedOption[] = [];
+    if (roomIds.length > 0) {
+      const { data: bedData } = await (supabase as any).from("beds").select("*").in("room_id", roomIds).eq("is_vacant", true).order("bed_label", { ascending: true });
+      fetchedBeds = (bedData ?? []) as BedOption[];
+    }
 
     const data = assignRes.data ?? [];
     const tenantIds = [...new Set(data.map(a => a.tenant_id))];
@@ -164,12 +172,11 @@ const Tenants = () => {
     }
 
     const fetchedAssignments = data.map(a => ({ ...a, profiles: a.tenant_id ? profilesMap[a.tenant_id] : null }));
-    const fetchedRooms = roomRes.data ?? [];
 
     setAssignments(fetchedAssignments);
     setProperties(fetchedProps);
     setRooms(fetchedRooms);
-    setAllBeds((bedRes.data ?? []) as unknown as BedOption[]);
+    setAllBeds(fetchedBeds);
 
     // Set tenant limit from subscription
     const limit = (subRes.data as any)?.subscription_plans?.tenant_limit;
