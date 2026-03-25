@@ -6,48 +6,46 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ── Helper: normalise phone to E.164 (India default) ──
-function toE164(phone: string): string {
-  const clean = phone.replace(/[\s\-()whatsapp:]/g, "");
-  if (clean.startsWith("+")) return clean;
-  if (clean.startsWith("91") && clean.length >= 12) return "+" + clean;
-  return "+91" + clean;
-}
-
-// ── Helper: send a single WhatsApp message via Aisensy ──
-async function sendAisensy(
+// ── Helper: send a single WhatsApp message via Interakt ──
+async function sendInterakt(
   to: string,
-  campaignName: string,
-  templateParams: string[],
+  templateName: string,
+  bodyValues: string[],
   apiKey: string
 ): Promise<boolean> {
-  const url = "https://backend.aisensy.com/campaign/t1/api/v2";
+  const cleanPhone = to.replace(/\D/g, "").slice(-10);
+  const url = "https://api.interakt.ai/v1/public/message/";
   const payload = {
-    apiKey,
-    campaignName,
-    destination: to,
-    userName: to,
-    templateParams,
-    source: "new-landing-page",
+    countryCode: "+91",
+    phoneNumber: cleanPhone,
+    callbackData: "pg_notification",
+    type: "Template",
+    template: {
+      name: templateName,
+      languageCode: "en",
+      bodyValues,
+    },
   };
-  console.log(`[Aisensy] Sending to ${to}, campaign=${campaignName}, params=`, JSON.stringify(templateParams));
+  
+  console.log(`[Interakt] Sending to ${cleanPhone}, template=${templateName}, params=`, JSON.stringify(bodyValues));
   try {
     const resp = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Basic ${apiKey}`
       },
       body: JSON.stringify(payload),
     });
     const respText = await resp.text();
-    console.log(`[Aisensy] Response for ${to}:`, resp.status, respText);
+    console.log(`[Interakt] Response for ${cleanPhone}:`, resp.status, respText);
     if (!resp.ok) {
-      console.error(`Aisensy error for ${to}:`, respText);
+      console.error(`Interakt error for ${cleanPhone}:`, respText);
       return false;
     }
     return true;
   } catch (err: any) {
-    console.error(`Failed to message ${to}:`, err.message);
+    console.error(`Failed to message ${cleanPhone}:`, err.message);
     return false;
   }
 }
@@ -58,11 +56,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const AISENSY_API_KEY = Deno.env.get("AISENSY_API_KEY");
-    if (!AISENSY_API_KEY) {
-      console.error("AISENSY_API_KEY not configured");
+    const INTERAKT_API_KEY = Deno.env.get("INTERAKT_API_KEY");
+    if (!INTERAKT_API_KEY) {
+      console.error("INTERAKT_API_KEY not configured");
       return new Response(
-        JSON.stringify({ sent: 0, reason: "api_key_missing", message: "Aisensy API key not configured" }),
+        JSON.stringify({ sent: 0, reason: "api_key_missing", message: "Interakt API key not configured" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -76,6 +74,8 @@ Deno.serve(async (req) => {
     const { action } = payload;
 
     // ── Plan gating: gated actions require Business or Enterprise plan ──
+    // Plan gating temporarily disabled
+    /*
     const GATED_ACTIONS = ["send-announcement", "send-complaint-alert", "send-vacancy-alert", "send-payment-approval", "send-payment-received", "send-mess-reminder"];
     if (GATED_ACTIONS.includes(action) && payload.property_id) {
       const { data: property } = await supabase
@@ -101,6 +101,7 @@ Deno.serve(async (req) => {
         }
       }
     }
+    */
 
     // ════════════════════════════════════════════════
     // ACTION 1: send-rent-reminder
@@ -137,7 +138,7 @@ Deno.serve(async (req) => {
           room_number || "N/A",
           month || "this month",
         ];
-        if (await sendAisensy(toE164(t.phone), "rent_reminder", params, AISENSY_API_KEY)) sent++;
+        if (await sendInterakt(t.phone, "rent_reminder", params, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
@@ -199,6 +200,7 @@ Deno.serve(async (req) => {
         );
       }
 
+      console.log(`[Announcements] Found ${allRecipients.length} recipients. Sending using pg_announcement...`);
       let sent = 0;
       for (const r of allRecipients) {
         // Template params: {{1}}=title, {{2}}=content, {{3}}=property
@@ -207,11 +209,41 @@ Deno.serve(async (req) => {
           content || "Please check your PG Buddy app for details.",
           property_name || "Your PG",
         ];
-        if (await sendAisensy(toE164(r.phone), "pg_announcement", params, AISENSY_API_KEY)) sent++;
+        if (await sendInterakt(r.phone, "announcement", params, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
         JSON.stringify({ sent, total: allRecipients.length }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ════════════════════════════════════════════════
+    // ACTION 2.5: send-welcome-message (NEW)
+    // ════════════════════════════════════════════════
+    if (action === "send-welcome-message") {
+      const { tenant_phone, tenant_name, property_name } = payload;
+
+      if (!tenant_phone) {
+        return new Response(
+          JSON.stringify({ sent: 0, message: "No phone number provided" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Template params: {{1}}=TenantName, {{2}}=Property, {{3}}=Room, {{4}}=Website
+      const params = [
+        tenant_name || "Tenant",
+        property_name || "PG Buddy",
+        payload.room_number || "N/A",
+        "https://pgbuddy-zeta-rust.vercel.app"
+      ];
+
+      let sent = 0;
+      if (await sendInterakt(tenant_phone, "welcome_tenant", params, INTERAKT_API_KEY)) sent++;
+
+      return new Response(
+        JSON.stringify({ sent, total: 1 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -246,7 +278,8 @@ Deno.serve(async (req) => {
         .select("staff_user_id")
         .eq("owner_id", property.owner_id)
         .eq("status", "active")
-        .in("role", ["manager"]);
+        .or(`property_id.eq.${property_id},property_id.is.null`)
+        .in("role", ["manager", "caretaker"]);
 
       const managerIds = (staff ?? []).map((s: any) => s.staff_user_id);
       let managerPhones: any[] = [];
@@ -270,6 +303,7 @@ Deno.serve(async (req) => {
         );
       }
 
+      console.log(`[ComplaintAlert] Sending to ${recipients.length} recipients (Owner/Managers).`);
       let sent = 0;
       for (const r of recipients) {
         // Template params: {{1}}=tenant, {{2}}=property, {{3}}=room, {{4}}=issue, {{5}}=category
@@ -280,7 +314,7 @@ Deno.serve(async (req) => {
           title || "Issue reported",
           category || "General",
         ];
-        if (await sendAisensy(toE164(r.phone), "complaint_alert", params, AISENSY_API_KEY)) sent++;
+        if (await sendInterakt(r.phone, "complaint_alert", params, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
@@ -351,7 +385,7 @@ Deno.serve(async (req) => {
           property.name || "Your PG",
           expected_move_out || "Not specified",
         ];
-        if (await sendAisensy(toE164(r.phone), "vacancy_alert", params, AISENSY_API_KEY)) sent++;
+        if (await sendInterakt(r.phone, "announcement", params, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
@@ -425,7 +459,7 @@ Deno.serve(async (req) => {
           String(amount || "0"),
           month || "this month",
         ];
-        if (await sendAisensy(toE164(r.phone), "payment_approval", params, AISENSY_API_KEY)) sent++;
+        if (await sendInterakt(r.phone, "payment_approval", params, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
@@ -459,7 +493,7 @@ Deno.serve(async (req) => {
       ];
 
       let sent = 0;
-      if (await sendAisensy(toE164(tenant_phone), "payment_received", params, AISENSY_API_KEY)) sent++;
+      if (await sendInterakt(tenant_phone, "payment_received", params, INTERAKT_API_KEY)) sent++;
 
       return new Response(
         JSON.stringify({ sent, total: 1 }),
@@ -489,7 +523,7 @@ Deno.serve(async (req) => {
       ];
 
       let sent = 0;
-      if (await sendAisensy(toE164(member_phone), "mess_reminder", params, AISENSY_API_KEY)) sent++;
+      if (await sendInterakt(member_phone, "announcement", params, INTERAKT_API_KEY)) sent++;
 
       return new Response(
         JSON.stringify({ sent, total: 1 }),

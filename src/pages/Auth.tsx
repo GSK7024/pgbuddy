@@ -15,10 +15,10 @@ const Auth = () => {
   const isSignup = searchParams.get("mode") === "signup";
   const [mode, setMode] = useState<"login" | "signup">(isSignup ? "signup" : "login");
   const [role, setRole] = useState<"owner" | "tenant">("tenant");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showOtp, setShowOtp] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,35 +35,34 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, role, phone },
-          },
+      const cleanPhone = phone.replace(/\D/g, "");
+      if (cleanPhone.length < 10) throw new Error("Please enter a valid 10-digit mobile number.");
+      const formattedPhone = `+91${cleanPhone.slice(-10)}`;
+
+      if (!showOtp) {
+        // Send OTP via WhatsApp Edge Function (triggering Supabase OTP)
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: formattedPhone,
+          options: mode === "signup" ? {
+            data: { full_name: fullName, role, phone: formattedPhone },
+          } : undefined,
         });
         if (error) throw error;
 
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account before logging in.",
-        });
-        setMode("login");
+        setShowOtp(true);
+        toast({ title: "Code sent!", description: "Check your WhatsApp for the 6-digit code." });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        // Verify code
+        if (!otp || otp.length < 6) throw new Error("Please enter the 6-digit code.");
+        const { error } = await supabase.auth.verifyOtp({
+          phone: formattedPhone,
+          token: otp,
+          type: 'sms',
         });
         if (error) throw error;
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -107,108 +106,101 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === "signup" && (
+              {!showOtp ? (
                 <>
-                  {/* Role selection */}
+                  {mode === "signup" && (
+                    <>
+                      {/* Role selection */}
+                      <div className="space-y-2">
+                        <Label>I am a</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setRole("owner")}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${
+                              role === "owner"
+                                ? "border-primary bg-primary/10 text-primary font-semibold"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <Building2 className="w-5 h-5 mx-auto mb-1" />
+                            PG Owner
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRole("tenant")}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${
+                              role === "tenant"
+                                ? "border-primary bg-primary/10 text-primary font-semibold"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <User className="w-5 h-5 mx-auto mb-1" />
+                            Tenant
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Full name */}
+                      <div className="space-y-2">
+                        <Label htmlFor="fullName">Full Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="fullName"
+                            placeholder="Enter your full name"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Phone number */}
                   <div className="space-y-2">
-                    <Label>I am a</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setRole("owner")}
-                        className={`p-3 rounded-xl border-2 text-center transition-all ${
-                          role === "owner"
-                            ? "border-primary bg-primary/10 text-primary font-semibold"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <Building2 className="w-5 h-5 mx-auto mb-1" />
-                        PG Owner
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRole("tenant")}
-                        className={`p-3 rounded-xl border-2 text-center transition-all ${
-                          role === "tenant"
-                            ? "border-primary bg-primary/10 text-primary font-semibold"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <User className="w-5 h-5 mx-auto mb-1" />
-                        Tenant
-                      </button>
+                    <Label htmlFor="phone">Phone Number (WhatsApp)</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="10-digit mobile number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="pl-10"
+                        required
+                        maxLength={10}
+                      />
                     </div>
                   </div>
-
-                  {/* Full name */}
-                   <div className="space-y-2">
-                     <Label htmlFor="fullName">Full Name</Label>
-                     <div className="relative">
-                       <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                       <Input
-                         id="fullName"
-                         placeholder="Enter your full name"
-                         value={fullName}
-                         onChange={(e) => setFullName(e.target.value)}
-                         className="pl-10"
-                         required
-                       />
-                     </div>
-                   </div>
-
-                   {/* Phone number */}
-                   <div className="space-y-2">
-                     <Label htmlFor="phone">Phone Number</Label>
-                     <div className="relative">
-                       <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                       <Input
-                         id="phone"
-                         type="tel"
-                         placeholder="e.g. 9876543210"
-                         value={phone}
-                         onChange={(e) => setPhone(e.target.value)}
-                         className="pl-10"
-                         required
-                       />
-                     </div>
-                   </div>
-                 </>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-3 bg-muted rounded-lg text-sm text-center">
+                    Enter the 6-digit code sent via WhatsApp to <b>+91 {phone}</b>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Verification Code</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="otp"
+                        type="text"
+                        placeholder="000000"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                        className="pl-10 tracking-widest text-center"
+                        required
+                        maxLength={6}
+                      />
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => setShowOtp(false)} className="text-sm text-primary hover:underline block w-full text-center">Change Number?</button>
+                </div>
               )}
-
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    minLength={6}
-                  />
-                </div>
-              </div>
 
               <Button
                 type="submit"
@@ -217,37 +209,12 @@ const Auth = () => {
               >
                 {loading
                   ? "Please wait..."
+                  : showOtp
+                  ? "Verify & Sign In"
                   : mode === "login"
-                  ? "Sign In"
-                  : "Create Account"}
+                  ? "Send WhatsApp Code"
+                  : "Send WhatsApp Code"}
               </Button>
-
-              {mode === "login" && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!email) {
-                      toast({ title: "Enter your email", description: "Please enter your email address first.", variant: "destructive" });
-                      return;
-                    }
-                    setLoading(true);
-                    try {
-                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: `${window.location.origin}/auth`,
-                      });
-                      if (error) throw error;
-                      toast({ title: "Check your email", description: "We've sent you a password reset link." });
-                    } catch (error: any) {
-                      toast({ title: "Error", description: error.message, variant: "destructive" });
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  className="w-full text-sm text-primary hover:underline"
-                >
-                  Forgot password?
-                </button>
-              )}
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
@@ -255,7 +222,10 @@ const Auth = () => {
                 <>
                   Don't have an account?{" "}
                   <button
-                    onClick={() => setMode("signup")}
+                    onClick={() => {
+                        setMode("signup");
+                        setShowOtp(false);
+                    }}
                     className="text-primary font-semibold hover:underline"
                   >
                     Sign Up
@@ -265,7 +235,10 @@ const Auth = () => {
                 <>
                   Already have an account?{" "}
                   <button
-                    onClick={() => setMode("login")}
+                    onClick={() => {
+                        setMode("login");
+                        setShowOtp(false);
+                    }}
                     className="text-primary font-semibold hover:underline"
                   >
                     Sign In

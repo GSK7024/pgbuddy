@@ -5,10 +5,12 @@ import { Menu, X, Home, Building2, Users, LogIn, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -51,15 +53,25 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-2">
             <LanguageSwitcher />
             <ThemeToggle />
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/auth">
-                <LogIn className="w-4 h-4 mr-1.5" />
-                Login
-              </Link>
-            </Button>
-            <Button size="sm" className="gradient-primary shadow-md hover:shadow-glow transition-all duration-300" asChild>
-              <Link to="/auth?mode=signup">Get Started</Link>
-            </Button>
+            {!loading && (
+              user ? (
+                <Button size="sm" className="gradient-primary shadow-md hover:shadow-glow transition-all duration-300" asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/auth">
+                      <LogIn className="w-4 h-4 mr-1.5" />
+                      Login
+                    </Link>
+                  </Button>
+                  <Button size="sm" className="gradient-primary shadow-md hover:shadow-glow transition-all duration-300" asChild>
+                    <Link to="/auth?mode=signup">Get Started</Link>
+                  </Button>
+                </>
+              )
+            )}
           </div>
 
           <button
@@ -93,12 +105,22 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="pt-3 border-t border-border/50 flex flex-col gap-2">
-                <Button variant="outline" className="w-full" size="sm" asChild>
-                  <Link to="/auth" onClick={() => setIsOpen(false)}>Login</Link>
-                </Button>
-                <Button className="w-full gradient-primary" size="sm" asChild>
-                  <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>Get Started</Link>
-                </Button>
+                {!loading && (
+                  user ? (
+                    <Button className="w-full gradient-primary" size="sm" asChild>
+                      <Link to="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                    </Button>
+                  ) : (
+                    <>
+                      <Button variant="outline" className="w-full" size="sm" asChild>
+                        <Link to="/auth" onClick={() => setIsOpen(false)}>Login</Link>
+                      </Button>
+                      <Button className="w-full gradient-primary" size="sm" asChild>
+                        <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>Get Started</Link>
+                      </Button>
+                    </>
+                  )
+                )}
               </div>
             </div>
           </motion.div>

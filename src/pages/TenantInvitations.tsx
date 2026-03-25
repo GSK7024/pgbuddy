@@ -46,13 +46,29 @@ const TenantInvitations = () => {
 
   const fetchData = async () => {
     if (!effectiveOwnerId) return;
-    const [invRes, propRes, roomRes] = await Promise.all([
-      supabase.from("tenant_invitations").select("*, rooms(room_number), properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
-      supabase.from("rooms").select("id, room_number, property_id, is_vacant"),
+
+    // Fetch properties first to scope everything
+    const { data: propData } = await supabase
+      .from("properties")
+      .select("id, name")
+      .eq("owner_id", effectiveOwnerId);
+    const fetchedProps = propData ?? [];
+    const propIds = fetchedProps.map(p => p.id);
+
+    if (propIds.length === 0) {
+      setInvitations([]);
+      setProperties([]);
+      setRooms([]);
+      setLoading(false);
+      return;
+    }
+
+    const [invRes, roomRes] = await Promise.all([
+      supabase.from("tenant_invitations").select("*, rooms(room_number), properties(name)").in("property_id", propIds).order("created_at", { ascending: false }),
+      supabase.from("rooms").select("id, room_number, property_id, is_vacant").in("property_id", propIds),
     ]);
     setInvitations(invRes.data ?? []);
-    setProperties(propRes.data ?? []);
+    setProperties(fetchedProps);
     setRooms(roomRes.data ?? []);
     setLoading(false);
   };

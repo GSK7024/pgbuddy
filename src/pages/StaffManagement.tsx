@@ -16,6 +16,7 @@ interface StaffMember {
   id: string;
   staff_user_id: string | null;
   invited_email: string | null;
+  invited_phone: string | null;
   role: string;
   property_id: string | null;
   status: string;
@@ -46,7 +47,7 @@ const StaffManagement = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePhone, setInvitePhone] = useState("");
   const [inviteRole, setInviteRole] = useState<string>("caretaker");
   const [invitePropertyId, setInvitePropertyId] = useState<string>("all");
   const [submitting, setSubmitting] = useState(false);
@@ -72,17 +73,20 @@ const StaffManagement = () => {
   useEffect(() => { fetchData(); }, [user]);
 
   const handleInvite = async () => {
-    if (!user || !inviteEmail.trim()) return;
+    if (!user || !invitePhone.trim()) return;
     setSubmitting(true);
 
-    // Look up user by email
-    const { data: found } = await supabase.rpc("find_user_by_email", { _email: inviteEmail.trim() });
+    const cleanPhone = invitePhone.replace(/\D/g, "");
+    const formattedPhone = cleanPhone.length >= 10 ? `+91${cleanPhone.slice(-10)}` : invitePhone;
+
+    // Look up user by phone
+    const { data: found } = await supabase.rpc("find_user_by_phone", { _phone: formattedPhone });
     const staffUserId = found?.[0]?.user_id || null;
 
     const { error } = await supabase.from("staff_members").insert({
       owner_id: user.id,
       staff_user_id: staffUserId,
-      invited_email: inviteEmail.trim(),
+      invited_phone: invitePhone.trim(),
       role: inviteRole as any,
       property_id: invitePropertyId === "all" ? null : invitePropertyId,
       status: staffUserId ? "active" : "pending",
@@ -91,9 +95,9 @@ const StaffManagement = () => {
     if (error) {
       toast({ title: "Failed to add staff", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: staffUserId ? "Staff member added!" : "Invitation sent!", description: staffUserId ? "They now have access based on their role." : "They'll get access once they sign up with this email." });
+      toast({ title: staffUserId ? "Staff member added!" : "Invitation sent!", description: staffUserId ? "They now have access based on their role." : "They'll get access once they sign up with this phone number." });
       setShowInvite(false);
-      setInviteEmail("");
+      setInvitePhone("");
       setInviteRole("caretaker");
       setInvitePropertyId("all");
       fetchData();
@@ -140,14 +144,14 @@ const StaffManagement = () => {
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Email Address</Label>
+                  <Label>Phone Number (WhatsApp)</Label>
                   <Input
-                    type="email"
-                    placeholder="staff@example.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
+                    type="tel"
+                    placeholder="10-digit mobile number"
+                    value={invitePhone}
+                    onChange={(e) => setInvitePhone(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">If this person has an account, they'll get immediate access. Otherwise, they'll get access when they sign up.</p>
+                  <p className="text-xs text-muted-foreground">If this person has an account, they'll get immediate access. Otherwise, they'll get access when they sign up with this number.</p>
                 </div>
 
                 <div className="space-y-2">
@@ -197,7 +201,7 @@ const StaffManagement = () => {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowInvite(false)}>Cancel</Button>
-                <Button onClick={handleInvite} disabled={!inviteEmail.trim() || submitting}>
+                <Button onClick={handleInvite} disabled={!invitePhone.trim() || submitting}>
                   {submitting ? "Inviting..." : "Send Invite"}
                 </Button>
               </DialogFooter>
@@ -253,8 +257,8 @@ const StaffManagement = () => {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-medium truncate">
-                              <Mail className="w-3 h-3 inline mr-1" />
-                              {s.invited_email || "Unknown"}
+                              <Globe className="w-3 h-3 inline mr-1" />
+                              {s.invited_phone || s.invited_email || "Unknown"}
                             </p>
                             <StatusIcon className={`w-4 h-4 shrink-0 ${statusConf.color}`} />
                           </div>

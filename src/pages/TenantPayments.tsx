@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Upload, QrCode, Building2 } from "lucide-react";
+import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Upload, QrCode, Building2, Copy, Download, Smartphone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,32 @@ const TenantPayments = () => {
   };
 
   const totalPending = payments.filter(p => p.status === "pending").reduce((s, p) => s + Number(p.amount), 0);
-  const upiQrUrl = paymentInfo?.upi_id ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${encodeURIComponent(paymentInfo.upi_id)}&pn=${encodeURIComponent(paymentInfo.account_holder || "PG Owner")}` : null;
+  
+  const upiDeepLink = paymentInfo?.upi_id ? `upi://pay?pa=${encodeURIComponent(paymentInfo.upi_id)}&pn=${encodeURIComponent(paymentInfo.account_holder || "PG Owner")}` : null;
+  const upiQrUrl = upiDeepLink ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiDeepLink)}` : null;
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied to clipboard!" });
+  };
+
+  const downloadQR = async () => {
+    if (!upiQrUrl) return;
+    try {
+      const response = await fetch(upiQrUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `PG_Buddy_UPI_QR.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({ title: "Download failed", variant: "destructive" });
+    }
+  };
 
   return (
     <TenantLayout>
@@ -188,10 +213,29 @@ const TenantPayments = () => {
                     <div className="space-y-3">
                       <h3 className="font-semibold flex items-center gap-2"><QrCode className="w-4 h-4 text-primary" /> UPI Payment</h3>
                       {upiQrUrl && (
-                        <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50">
-                          <img src={upiQrUrl} alt="UPI QR" className="w-40 h-40 rounded-lg" />
-                          <p className="text-sm font-medium">{paymentInfo.upi_id}</p>
-                          <p className="text-xs text-muted-foreground">Scan with any UPI app to pay</p>
+                        <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-muted/50 text-center">
+                          <img src={upiQrUrl} alt="UPI QR" className="w-40 h-40 rounded-lg shadow-sm" />
+                          <div className="flex items-center gap-2 w-full justify-center">
+                            <Button size="sm" variant="outline" onClick={downloadQR} className="gap-2 text-xs">
+                              <Download className="w-3 h-3" /> Save QR
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2 bg-background px-3 py-1.5 rounded border shadow-sm mt-1">
+                            <span className="text-sm font-medium">{paymentInfo.upi_id}</span>
+                            <button onClick={() => copyToClipboard(paymentInfo.upi_id!)} className="text-muted-foreground hover:text-primary transition-colors">
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
+                          
+                          {/* Mobile Deep Link Button */}
+                          <Button 
+                            className="w-full gap-2 mt-2 gradient-primary" 
+                            onClick={() => {
+                              if (upiDeepLink) window.location.href = upiDeepLink;
+                            }}
+                          >
+                            <Smartphone className="w-4 h-4" /> Pay via Installed App (GPay, PhonePe, etc)
+                          </Button>
                         </div>
                       )}
                     </div>

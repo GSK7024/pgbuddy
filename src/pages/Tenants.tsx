@@ -86,7 +86,6 @@ const Tenants = () => {
   const [lastRentStatus, setLastRentStatus] = useState<{ status: string; amount: number } | null>(null);
 
   // Form - assign
-  const [tenantEmail, setTenantEmail] = useState("");
   const [propertyId, setPropertyId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [bedId, setBedId] = useState("");
@@ -109,6 +108,7 @@ const Tenants = () => {
   const [rentChangeNote, setRentChangeNote] = useState("");
   const [tenantPhone, setTenantPhone] = useState("");
   const [tenantName, setTenantName] = useState("");
+  const [tenantEmail, setTenantEmail] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
 
   // Transfer / Swap state
@@ -122,12 +122,37 @@ const Tenants = () => {
 
   const fetchData = async () => {
     if (!effectiveOwnerId) return;
-    const [assignRes, propRes, roomRes, subRes, bedRes] = await Promise.all([
-      supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").order("created_at", { ascending: false }),
-      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
-      supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant"),
+
+    // 1. Fetch owner's properties first
+    const { data: propData } = await supabase
+      .from("properties")
+      .select("id, name")
+      .eq("owner_id", effectiveOwnerId);
+
+    let fetchedProps = propData ?? [];
+
+    // For staff, further restrict to their accessible properties
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      fetchedProps = fetchedProps.filter(p => accessiblePropertyIds.includes(p.id));
+    }
+
+    const propIds = fetchedProps.map(p => p.id);
+
+    if (propIds.length === 0) {
+      setAssignments([]);
+      setProperties([]);
+      setRooms([]);
+      setAllBeds([]);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Now fetch everything scoped to these property IDs
+    const [assignRes, roomRes, subRes, bedRes] = await Promise.all([
+      supabase.from("tenant_assignments").select("*, rooms(room_number, rent_amount), properties(name)").in("property_id", propIds).order("created_at", { ascending: false }),
+      supabase.from("rooms").select("id, room_number, property_id, capacity, rent_amount, is_vacant").in("property_id", propIds),
       supabase.from("subscriptions").select("*, subscription_plans(tenant_limit)").eq("user_id", effectiveOwnerId).eq("status", "active").maybeSingle(),
-      (supabase as any).from("beds").select("*").eq("is_vacant", true).order("bed_label", { ascending: true }),
+      (supabase as any).from("beds").select("*").in("property_id", propIds).eq("is_vacant", true).order("bed_label", { ascending: true }),
     ]);
 
     const data = assignRes.data ?? [];
@@ -138,15 +163,9 @@ const Tenants = () => {
       profiles?.forEach(p => { profilesMap[p.user_id] = p; });
     }
 
-    let fetchedAssignments = data.map(a => ({ ...a, profiles: a.tenant_id ? profilesMap[a.tenant_id] : null }));
-    let fetchedProps = propRes.data ?? [];
-    let fetchedRooms = roomRes.data ?? [];
-    // Staff can only see their assigned properties
-    if (isStaff && accessiblePropertyIds.length > 0) {
-      fetchedProps = fetchedProps.filter(p => accessiblePropertyIds.includes(p.id));
-      fetchedRooms = fetchedRooms.filter(r => accessiblePropertyIds.includes(r.property_id));
-      fetchedAssignments = fetchedAssignments.filter(a => accessiblePropertyIds.includes(a.property_id));
-    }
+    const fetchedAssignments = data.map(a => ({ ...a, profiles: a.tenant_id ? profilesMap[a.tenant_id] : null }));
+    const fetchedRooms = roomRes.data ?? [];
+
     setAssignments(fetchedAssignments);
     setProperties(fetchedProps);
     setRooms(fetchedRooms);
@@ -200,13 +219,17 @@ const Tenants = () => {
   const vacantBedsForRoom = roomId ? allBeds.filter(b => b.room_id === roomId) : [];
 
   const searchTenant = async () => {
-    if (!tenantEmail.trim()) return;
+    if (!assignPhone.trim()) return;
     setSearching(true);
     setFoundTenant(null);
     setLastRentStatus(null);
-    const { data, error } = await supabase.rpc("find_user_by_email", { _email: tenantEmail.trim() });
+
+    const cleanPhone = assignPhone.replace(/\D/g, "");
+    const formattedPhone = cleanPhone.length >= 10 ? `+91${cleanPhone.slice(-10)}` : assignPhone;
+
+    const { data, error } = await supabase.rpc("find_user_by_phone", { _phone: formattedPhone });
     if (error || !data || data.length === 0) {
-      toast({ title: "Email not registered yet", description: "You can still assign the room; they'll be linked once they sign up." });
+      toast({ title: "Phone number not registered yet", description: "You can still assign the room; they'll be linked once they sign up." });
     } else {
       setFoundTenant(data[0]);
       // Check last rent status
@@ -241,7 +264,7 @@ const Tenants = () => {
 
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !tenantEmail || !propertyId || !roomId) return;
+    if (!user || !assignPhone || !propertyId || !roomId) return;
 
     // Check tenant limit
     const activeTenants = assignments.filter(a => a.is_active).length;
@@ -283,7 +306,7 @@ const Tenants = () => {
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       await supabase.from("rent_payments").insert({
         tenant_id: foundTenant ? foundTenant.user_id : null,
-        tenant_email: tenantEmail.trim(),
+        tenant_email: null,
         tenant_name: assignName.trim() || (foundTenant ? foundTenant.full_name : null),
         tenant_phone: assignPhone.trim(),
         property_id: propertyId,
@@ -303,7 +326,7 @@ const Tenants = () => {
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       await supabase.from("rent_payments").insert({
         tenant_id: foundTenant ? foundTenant.user_id : null,
-        tenant_email: tenantEmail.trim(),
+        tenant_email: null,
         tenant_name: assignName.trim() || (foundTenant ? foundTenant.full_name : null),
         tenant_phone: assignPhone.trim(),
         property_id: propertyId,
@@ -321,6 +344,22 @@ const Tenants = () => {
       await (supabase as any).from("beds").update({ is_vacant: false }).eq("id", bedId);
     }
     await updateRoomVacancy(roomId);
+    
+    // Fire welcome message via Edge Function
+    if (assignPhone.trim() && propertyId) {
+      const propName = properties.find(p => p.id === propertyId)?.name || "PG Buddy";
+      const roomNum = rooms.find(r => r.id === roomId)?.room_number || "N/A";
+      supabase.functions.invoke("twilio-notifications", {
+        body: {
+          action: "send-welcome-message",
+          tenant_phone: assignPhone.trim(),
+          tenant_name: assignName.trim() || foundTenant?.full_name || "Tenant",
+          property_name: propName,
+          room_number: roomNum,
+        }
+      }).catch(err => console.error("Welcome msg error:", err));
+    }
+
     toast({ title: "Tenant assigned successfully!" });
     setDialogOpen(false);
     resetForm();
@@ -329,9 +368,9 @@ const Tenants = () => {
   };
 
   const resetForm = () => {
-    setTenantEmail(""); setPropertyId(""); setRoomId("");
+    setPropertyId(""); setRoomId("");
     setMoveInDate(new Date().toISOString().split("T")[0]);
-    setCustomRent(""); setAssignPhone(""); setAssignName(""); setFoundTenant(null);
+    setCustomRent(""); setAssignPhone(""); setAssignName(""); setTenantEmail(""); setFoundTenant(null);
     setInitialRentPaid(false);
     setDepositStatus("pending");
   };
@@ -393,11 +432,19 @@ const Tenants = () => {
       tenant_phone: tenantPhone.trim() || null,
     }).eq("id", detailTenant.id);
 
-    if (!error && detailTenant.tenant_email) {
-      await supabase.from("rent_payments").update({
-        tenant_name: tenantName.trim() || null,
-        tenant_phone: tenantPhone.trim() || null,
-      }).eq("tenant_email", detailTenant.tenant_email).eq("status", "pending");
+    // Sync rent_payments just in case (we use tenantPhone to match now, or email if legacy)
+    if (!error) {
+      if (detailTenant.tenant_phone) {
+        await supabase.from("rent_payments").update({
+          tenant_name: tenantName.trim() || null,
+          tenant_phone: tenantPhone.trim() || null,
+        }).eq("tenant_phone", detailTenant.tenant_phone).eq("status", "pending");
+      } else if (detailTenant.tenant_email) {
+        await supabase.from("rent_payments").update({
+          tenant_name: tenantName.trim() || null,
+          tenant_phone: tenantPhone.trim() || null,
+        }).eq("tenant_email", detailTenant.tenant_email).eq("status", "pending");
+      }
     }
 
     // Update tenant phone in profiles
@@ -587,7 +634,7 @@ const Tenants = () => {
               <DialogTrigger asChild>
                 <Button className="gradient-primary gap-2" disabled={isReadOnly}><Plus className="w-4 h-4" /> Assign Tenant</Button>
               </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[85vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Assign Tenant to Room</DialogTitle></DialogHeader>
               {tenantLimit !== -1 && assignments.filter(a => a.is_active).length >= tenantLimit ? (
                 <div className="space-y-4 text-center py-4">
@@ -613,14 +660,14 @@ const Tenants = () => {
                     className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${assignmentType === "new" ? "bg-background shadow-sm" : "hover:text-primary"}`}
                     onClick={() => { setAssignmentType("new"); resetForm(); setAssignmentType("new"); }}
                   >
-                    New Tenant (Email Only)
+                    New Tenant
                   </button>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Tenant Email *</Label>
+                  <Label>Tenant Phone Number *</Label>
                   <div className="flex gap-2">
-                    <Input type="email" value={tenantEmail} onChange={e => { setTenantEmail(e.target.value); setFoundTenant(null); }} placeholder="tenant@example.com" required />
+                    <Input type="tel" value={assignPhone} onChange={e => { setAssignPhone(e.target.value); setFoundTenant(null); }} placeholder="10-digit mobile number" required />
                     {assignmentType === "existing" && (
                       <Button type="button" variant="outline" onClick={searchTenant} disabled={searching}>
                         <Search className="w-4 h-4" />
@@ -648,16 +695,22 @@ const Tenants = () => {
                       )}
                     </div>
                   )}
-                  {assignmentType === "new" && tenantEmail && !foundTenant && !searching && (
+                  {assignmentType === "new" && assignPhone && !foundTenant && !searching && (
                     <div className="p-2 rounded-lg bg-warning/10 text-warning text-[10px] flex items-center gap-1.5">
                       <History className="w-3 h-3" /> They'll be automatically linked when they sign up.
                     </div>
                   )}
                   {assignmentType === "new" && (
-                    <div className="space-y-2 mt-2">
-                      <Label>Tenant Full Name *</Label>
-                      <Input type="text" value={assignName} onChange={e => setAssignName(e.target.value)} placeholder="E.g. John Doe" required />
-                    </div>
+                    <>
+                      <div className="space-y-2 mt-2">
+                        <Label>Tenant Full Name *</Label>
+                        <Input type="text" value={assignName} onChange={e => setAssignName(e.target.value)} placeholder="E.g. John Doe" required />
+                      </div>
+                      <div className="space-y-2 mt-2">
+                        <Label>Tenant Email (Optional)</Label>
+                        <Input type="email" value={tenantEmail} onChange={e => setTenantEmail(e.target.value)} placeholder="john@example.com" />
+                      </div>
+                    </>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -722,14 +775,10 @@ const Tenants = () => {
                     <Input type="date" value={moveInDate} onChange={e => setMoveInDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Phone Number</Label>
-                    <Input type="tel" value={assignPhone} onChange={e => setAssignPhone(e.target.value)} placeholder="+91 XXXXXXXXXX" />
-                  </div>
-                </div>
-                  <div className="space-y-2">
                     <Label>Rent (₹)</Label>
                     <Input type="number" value={customRent} onChange={e => setCustomRent(e.target.value)} placeholder="Room default" />
                   </div>
+                </div>
 
                   {bedId && (() => {
                     const selectedBedConf = allBeds.find(b => b.id === bedId);
@@ -762,7 +811,7 @@ const Tenants = () => {
                   </Label>
                 </div>
 
-                <Button type="submit" className="w-full gradient-primary" disabled={!tenantEmail || !propertyId || !roomId || assigning}>
+                <Button type="submit" className="w-full gradient-primary" disabled={assigning || !propertyId || !roomId || !assignPhone}>
                   {assigning ? "Assigning..." : "Assign Tenant"}
                 </Button>
               </form>
@@ -831,7 +880,9 @@ const Tenants = () => {
             const matchesProperty = filterPropertyId === "all" || a.property_id === filterPropertyId;
             const matchesSearch = !query ||
               (a.profiles?.full_name || "").toLowerCase().includes(query) ||
-              (a.profiles?.phone || "").toLowerCase().includes(query);
+              (a.profiles?.phone || "").toLowerCase().includes(query) ||
+              (a.tenant_name || "").toLowerCase().includes(query) ||
+              (a.tenant_phone || "").toLowerCase().includes(query);
             return matchesProperty && matchesSearch;
           });
           const sortFn = (a: TenantAssignment, b: TenantAssignment) => {
@@ -858,10 +909,10 @@ const Tenants = () => {
                       ) : (
                         <History className="w-5 h-5 text-warning" />
                       )}
-                      {a.profiles?.full_name || a.tenant_email || "Unknown Tenant"}
+                      {a.profiles?.full_name || a.tenant_name || a.tenant_email || "Unknown Tenant"}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {a.profiles?.phone || (a.tenant_id ? "No phone" : "Pending Registration")}
+                      {a.profiles?.phone || a.tenant_phone || "Pending Registration"}
                     </p>
                   </div>
                   <Badge variant={a.is_active ? "default" : "secondary"} className={a.is_active ? "bg-success" : ""}>

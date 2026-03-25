@@ -48,6 +48,7 @@ interface ActiveAssignment {
   property_id: string;
   tenant_phone?: string | null;
   room_id: string;
+  custom_rent?: number | null;
   rooms: { room_number: string; rent_amount: number } | null;
   properties: { name: string } | null;
   profiles?: { full_name: string };
@@ -94,22 +95,43 @@ const Payments = () => {
 
   const fetchData = async () => {
     if (!user || !effectiveOwnerId) return;
-    const [payRes, assignRes, propRes] = await Promise.all([
-      supabase.from("rent_payments").select("*, rooms(room_number), properties(name)").order("created_at", { ascending: false }),
-      supabase.from("tenant_assignments").select("id, tenant_id, tenant_email, tenant_phone, property_id, room_id, rooms(room_number, rent_amount), properties(name)").eq("is_active", true),
-      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
+
+    // 1. Fetch properties first to scope everything
+    const { data: propData } = await supabase
+      .from("properties")
+      .select("id, name")
+      .eq("owner_id", effectiveOwnerId);
+
+    let propsData = (propData as any[]) ?? [];
+    if (isStaff && accessiblePropertyIds.length > 0) {
+      propsData = propsData.filter(p => accessiblePropertyIds.includes(p.id));
+      if (selectedPropertyFilter === "all" && propsData.length === 1) {
+        setSelectedPropertyFilter(propsData[0].id);
+      }
+    }
+    const propIds = propsData.map(p => p.id);
+
+    if (propIds.length === 0) {
+      setProperties([]);
+      setPayments([]);
+      setAssignments([]);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Fetch payments and assignments scoped by property IDs
+    const [payRes, assignRes] = await Promise.all([
+      supabase.from("rent_payments").select("*, rooms(room_number), properties(name)").in("property_id", propIds).order("created_at", { ascending: false }),
+      supabase.from("tenant_assignments").select("id, tenant_id, tenant_email, tenant_phone, property_id, room_id, custom_rent, rooms(room_number, rent_amount), properties(name)").eq("is_active", true).in("property_id", propIds),
     ]);
 
     const payData = (payRes.data as any[]) ?? [];
     const assignData = (assignRes.data as any[]) ?? [];
-    let propsData = (propRes.data as any[]) ?? [];
     
-    // Fetch tenant names and phones for both payments and assignments
-    const typedPayData = payData as any[];
-    const typedAssignData = assignData as any[];
+    // Fetch tenant names and phones
     const allTenantIds = [...new Set([
-      ...typedPayData.map(p => p.tenant_id),
-      ...typedAssignData.map(a => a.tenant_id)
+      ...payData.map(p => p.tenant_id),
+      ...assignData.map(a => a.tenant_id)
     ])].filter(Boolean) as string[];
 
     let profilesMap: Record<string, any> = {};
@@ -122,7 +144,7 @@ const Payments = () => {
     }
 
     // Resolve approved_by names
-    const approverIds = [...new Set(typedPayData.map(p => p.approved_by).filter(Boolean))] as string[];
+    const approverIds = [...new Set(payData.map(p => p.approved_by).filter(Boolean))] as string[];
     let approverMap: Record<string, string> = {};
     if (approverIds.length > 0) {
       const { data: approverProfiles } = await supabase
@@ -132,26 +154,16 @@ const Payments = () => {
       approverProfiles?.forEach(p => { approverMap[p.user_id] = p.full_name; });
     }
 
-    let fetchedPayments = (payData as any[]).map((p: any) => ({
+    const fetchedPayments = payData.map((p: any) => ({
       ...p,
       tenant_name: p.tenant_name || (p.tenant_id ? profilesMap[p.tenant_id]?.full_name : null),
       tenant_phone: p.tenant_phone || (p.tenant_id ? profilesMap[p.tenant_id]?.phone : null),
       approved_by_name: p.approved_by ? approverMap[p.approved_by] || "Owner/Manager" : null,
     }));
-    let fetchedAssignments = (assignData as any[]).map((a: any) => ({ 
+    const fetchedAssignments = assignData.map((a: any) => ({ 
       ...a, 
       profiles: a.tenant_id ? profilesMap[a.tenant_id] : null 
     })) as ActiveAssignment[];
-
-    // Staff scoping
-    if (isStaff && accessiblePropertyIds.length > 0) {
-      fetchedPayments = fetchedPayments.filter(p => accessiblePropertyIds.includes(p.property_id));
-      fetchedAssignments = fetchedAssignments.filter(a => accessiblePropertyIds.includes(a.property_id));
-      propsData = propsData.filter(p => accessiblePropertyIds.includes(p.id));
-      if (selectedPropertyFilter === "all" && propsData.length === 1) {
-        setSelectedPropertyFilter(propsData[0].id);
-      }
-    }
 
     setProperties(propsData);
     setPayments(fetchedPayments);
@@ -196,29 +208,28 @@ const Payments = () => {
   const autoBilling = async (currentAssignments: any[], currentPayments: any[]) => {
     const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
     
-    // Match payments by tenant_id OR tenant_email for the current month AND are rent types
+    // Match payments by tenant_id, tenant_email, OR tenant_phone for the current month (rent only)
     const existingForMonth = currentPayments.filter(p => p.month === currentMonth && p.payment_type !== "deposit");
     const existingTenantIds = new Set(existingForMonth.map(p => p.tenant_id).filter(Boolean));
     const existingEmails = new Set(existingForMonth.map(p => p.tenant_email).filter(Boolean));
+    const existingPhones = new Set(existingForMonth.map(p => p.tenant_phone).filter(Boolean));
 
     const missingAssignments = currentAssignments.filter(a => {
-      // If we have a tenant_id, check by ID
       if (a.tenant_id && existingTenantIds.has(a.tenant_id)) return false;
-      // If no ID or ID check passed, check by email
       if (a.tenant_email && existingEmails.has(a.tenant_email)) return false;
+      if (a.tenant_phone && existingPhones.has(a.tenant_phone)) return false;
       return true;
     });
 
     if (missingAssignments.length === 0) return;
 
-    // Generate records for missing ones
     const records = missingAssignments.map(a => ({
       tenant_id: a.tenant_id,
       tenant_email: a.tenant_email,
       tenant_phone: a.tenant_phone,
       property_id: a.property_id,
       room_id: a.room_id,
-      amount: Number(a.rooms?.rent_amount ?? 0),
+      amount: Number(a.custom_rent ?? a.rooms?.rent_amount ?? 0),
       month: currentMonth,
       status: "pending",
       payment_type: "rent",
@@ -226,18 +237,8 @@ const Payments = () => {
 
     const { error } = await supabase.from("rent_payments").insert(records);
     if (!error) {
-      // Re-fetch to show new records
-      const { data: updatedPay } = await supabase.from("rent_payments").select("*, rooms(room_number), properties(name)").order("created_at", { ascending: false });
-      if (updatedPay) {
-        // Find existing profiles again (or rely on profilesMap from fetchData)
-        setPayments(updatedPay.map(p => ({
-          ...p,
-          tenant_name: (p as any).tenant_name || (p.tenant_id ? (p as any).tenant_id : null), // simplified for quick update
-          tenant_phone: (p as any).tenant_phone || null,
-        })));
-        // Full refresh to get proper names correctly mapped
-        fetchData();
-      }
+      // Simple re-fetch without recursion
+      fetchData();
     }
   };
 
@@ -304,22 +305,22 @@ const Payments = () => {
     setGenerating(true);
 
     // Fetch existing payments for this month
-    const tenantIds = assignments.map(a => a.tenant_id).filter(Boolean);
-    const tenantEmails = assignments.map(a => a.tenant_email).filter(Boolean);
-    
     const { data: existing } = await supabase
       .from("rent_payments")
-      .select("tenant_id, tenant_email")
+      .select("tenant_id, tenant_email, tenant_phone")
       .eq("month", month)
       .eq("payment_type", "rent");
 
     const existingRent = (existing as any[]) ?? [];
     const existingTenantIds = new Set(existingRent.map(e => e.tenant_id).filter(Boolean));
     const existingEmails = new Set(existingRent.map(e => e.tenant_email).filter(Boolean));
+    const existingPhones = new Set(existingRent.map(e => e.tenant_phone).filter(Boolean));
     
     const newAssignments = assignments.filter(a => {
-      if (a.tenant_id) return !existingTenantIds.has(a.tenant_id);
-      return !existingEmails.has(a.tenant_email);
+      if (a.tenant_id && existingTenantIds.has(a.tenant_id)) return false;
+      if (a.tenant_email && existingEmails.has(a.tenant_email)) return false;
+      if (a.tenant_phone && existingPhones.has(a.tenant_phone)) return false;
+      return true;
     });
 
     if (newAssignments.length === 0) {
@@ -334,7 +335,7 @@ const Payments = () => {
       tenant_phone: a.tenant_phone,
       property_id: a.property_id,
       room_id: a.room_id,
-      amount: Number(a.rooms?.rent_amount ?? 0),
+      amount: Number((a as any).custom_rent ?? a.rooms?.rent_amount ?? 0),
       month,
       status: "pending",
       payment_type: "rent",
@@ -563,10 +564,10 @@ const Payments = () => {
 
                     {selectedAssign && (
                       <div className="space-y-2">
-                        <Label>Amount (₹) — default: ₹{Number(selectedAssign.rooms?.rent_amount ?? 0).toLocaleString()}</Label>
+                        <Label>Amount (₹) — default: ₹{Number(selectedAssign.custom_rent ?? selectedAssign.rooms?.rent_amount ?? 0).toLocaleString()}</Label>
                         <Input
                           type="number"
-                          placeholder={String(selectedAssign.rooms?.rent_amount ?? 0)}
+                          placeholder={String(selectedAssign.custom_rent ?? selectedAssign.rooms?.rent_amount ?? 0)}
                           value={amount}
                           onChange={e => setAmount(e.target.value)}
                         />
@@ -629,7 +630,12 @@ const Payments = () => {
                           <div className="flex items-center gap-4">
                             {statusIcon(p.status)}
                             <div>
-                              <p className="font-medium">{(p as any).properties?.name} · Room {(p as any).rooms?.room_number}</p>
+                              <p className="font-medium">
+                                {(p as any).properties?.name} · Room {(p as any).rooms?.room_number}
+                                {p.payment_type === "deposit" && (
+                                  <Badge variant="outline" className="ml-2 text-[10px] bg-primary/10 text-primary border-primary/20">Security Deposit</Badge>
+                                )}
+                              </p>
                               <p className="text-sm font-medium">{p.tenant_name || p.tenant_email}</p>
                               <p className="text-xs text-muted-foreground">{p.month}</p>
                             </div>

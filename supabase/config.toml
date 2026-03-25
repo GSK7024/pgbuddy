@@ -1,4 +1,4 @@
-project_id = "smcdsmwrtrwxdlmrndhk"
+project_id = "vcpohetbsyyjqqkzuzxj"
 
 [functions.rent-reminders]
 verify_jwt = false
@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.twilio-notifications]
 verify_jwt = false
+
+[functions.send-sms-otp]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-sms-otp/deno.json"
+entrypoint = "./functions/send-sms-otp/index.ts"

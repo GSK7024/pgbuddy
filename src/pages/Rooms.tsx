@@ -102,20 +102,33 @@ const Rooms = () => {
 
   const fetchData = async () => {
     if (!effectiveOwnerId) return;
-    const [propRes, roomRes, bedRes] = await Promise.all([
-      supabase.from("properties").select("id, name").eq("owner_id", effectiveOwnerId),
-      supabase.from("rooms").select("*, properties(name)").order("created_at", { ascending: false }),
-      supabase.from("beds").select("*").order("bed_label", { ascending: true }),
-    ]);
-    let fetchedProps = propRes.data ?? [];
-    let fetchedRooms = roomRes.data ?? [];
-    // Staff can only see their assigned properties
+
+    // Fetch properties first to scope everything
+    const { data: propData } = await supabase
+      .from("properties")
+      .select("id, name")
+      .eq("owner_id", effectiveOwnerId);
+
+    let fetchedProps = propData ?? [];
     if (isStaff && accessiblePropertyIds.length > 0) {
       fetchedProps = fetchedProps.filter(p => accessiblePropertyIds.includes(p.id));
-      fetchedRooms = fetchedRooms.filter((r: any) => accessiblePropertyIds.includes(r.property_id));
     }
+    const propIds = fetchedProps.map(p => p.id);
+
+    if (propIds.length === 0) {
+      setProperties([]);
+      setRooms([]);
+      setLoading(false);
+      return;
+    }
+
+    const [roomRes, bedRes] = await Promise.all([
+      supabase.from("rooms").select("*, properties(name)").in("property_id", propIds).order("created_at", { ascending: false }),
+      supabase.from("beds").select("*").in("room_id", (await supabase.from("rooms").select("id").in("property_id", propIds)).data?.map(r => r.id) ?? []).order("bed_label", { ascending: true }),
+    ]);
+
     setProperties(fetchedProps);
-    setRooms(fetchedRooms);
+    setRooms(roomRes.data ?? []);
 
     // Build beds map grouped by room_id
     const map: Record<string, BedInfo[]> = {};
@@ -379,8 +392,53 @@ const Rooms = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("rooms").delete().eq("id", id);
-    if (!error) { toast({ title: "Room deleted" }); fetchData(); refetchBedCount(); }
+    setSubmitting(true);
+    try {
+      // 1. Check if there are active tenant assignments for this room
+      const { data: activeAssignments, error: assignError } = await supabase
+        .from("tenant_assignments")
+        .select("id")
+        .eq("room_id", id)
+        .eq("is_active", true);
+
+      if (assignError) throw assignError;
+      if (activeAssignments && activeAssignments.length > 0) {
+        toast({
+          title: "Cannot delete room",
+          description: "There are active tenants assigned to this room. Please move them out first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 2. Delete all beds in this room first (to avoid foreign key issues)
+      const { error: bedDeleteError } = await supabase
+        .from("beds")
+        .delete()
+        .eq("room_id", id);
+      
+      if (bedDeleteError) throw bedDeleteError;
+
+      // 3. Finally delete the room
+      const { error: roomDeleteError } = await supabase
+        .from("rooms")
+        .delete()
+        .eq("id", id);
+      
+      if (roomDeleteError) throw roomDeleteError;
+
+      toast({ title: "Room deleted successfully" });
+      fetchData();
+      refetchBedCount();
+    } catch (err: any) {
+      toast({
+        title: "Deletion failed",
+        description: err.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const toggleExpand = (roomId: string) => {

@@ -2,8 +2,11 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Search, Building2, Users, Shield, Sparkles, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const HeroSection = () => {
+  const { user, loading } = useAuth();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Animated gradient background */}
@@ -66,28 +69,46 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14"
           >
-            <Button
-              size="lg"
-              className="gradient-primary text-base px-8 py-6 shadow-lg hover:shadow-glow transition-all duration-300 group rounded-xl"
-              asChild
-            >
-              <Link to="/auth?mode=signup">
-                <Sparkles className="w-5 h-5 mr-2" />
-                Get Started
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-base px-8 py-6 border-2 hover:bg-primary/5 rounded-xl"
-              asChild
-            >
-              <Link to="/auth">
-                <LogIn className="w-5 h-5 mr-2" />
-                Login
-              </Link>
-            </Button>
+            {!loading && (
+              user ? (
+                <Button
+                  size="lg"
+                  className="gradient-primary text-base px-8 py-6 shadow-lg hover:shadow-glow transition-all duration-300 group rounded-xl"
+                  asChild
+                >
+                  <Link to="/dashboard">
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Go to Dashboard
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    className="gradient-primary text-base px-8 py-6 shadow-lg hover:shadow-glow transition-all duration-300 group rounded-xl"
+                    asChild
+                  >
+                    <Link to="/auth?mode=signup">
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Get Started
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-base px-8 py-6 border-2 hover:bg-primary/5 rounded-xl"
+                    asChild
+                  >
+                    <Link to="/auth">
+                      <LogIn className="w-5 h-5 mr-2" />
+                      Login
+                    </Link>
+                  </Button>
+                </>
+              )
+            )}
           </motion.div>
 
           {/* Stats */}
