@@ -531,9 +531,38 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ════════════════════════════════════════════════
+    // ACTION 8: send-welcome-message
+    // ════════════════════════════════════════════════
+    if (action === "send-welcome-message") {
+      const { tenant_phone, tenant_name, property_name, room_number } = payload;
+
+      if (!tenant_phone) {
+        return new Response(
+          JSON.stringify({ sent: 0, message: "No phone number provided" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Template params: {{1}}=name, {{2}}=property, {{3}}=room
+      const params = [
+        tenant_name || "Tenant",
+        property_name || "your PG",
+        room_number || "N/A",
+      ];
+
+      let sent = 0;
+      if (await sendInterakt(tenant_phone, "welcome_template", params, INTERAKT_API_KEY)) sent++;
+
+      return new Response(
+        JSON.stringify({ sent, total: 1 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ── Unknown action ──
     return new Response(
-      JSON.stringify({ error: `Unknown action: ${action}. Supported: send-rent-reminder, send-announcement, send-complaint-alert, send-vacancy-alert, send-payment-approval, send-payment-received, send-mess-reminder` }),
+      JSON.stringify({ error: `Unknown action: ${action}. Supported: send-rent-reminder, send-announcement, send-complaint-alert, send-vacancy-alert, send-payment-approval, send-payment-received, send-mess-reminder, send-welcome-message` }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

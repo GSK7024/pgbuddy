@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Plus, MessageCircle, FileText, History } from "lucide-react";
+import { CreditCard, IndianRupee, CheckCircle, Clock, AlertTriangle, Plus, MessageCircle, FileText, History, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,11 @@ const Payments = () => {
 
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string>("all");
+
+  // Demo reminder
+  const [demoOpen, setDemoOpen] = useState(false);
+  const [demoPhone, setDemoPhone] = useState("");
+  const [demoSending, setDemoSending] = useState(false);
 
   // Form
   const [manualType, setManualType] = useState<"rent" | "deposit">("rent");
@@ -480,6 +485,31 @@ const Payments = () => {
     ? payments 
     : payments.filter(p => p.property_id === selectedPropertyFilter);
 
+  const sendDemoReminder = async () => {
+    if (!demoPhone.trim()) return;
+    setDemoSending(true);
+    const propName = properties.length > 0 ? properties[0].name : "Your PG";
+    try {
+      await supabase.functions.invoke("twilio-notifications", {
+        body: {
+          action: "send-rent-reminder",
+          tenant_phone: demoPhone.trim(),
+          tenant_name: "Demo Tenant",
+          property_name: propName,
+          room_number: "101",
+          amount: 5000,
+          month: new Date().toLocaleString("en-IN", { month: "long", year: "numeric" }),
+        }
+      });
+      toast({ title: "Demo sent! ✅", description: `Check WhatsApp on ${demoPhone.trim()}` });
+      setDemoOpen(false);
+      setDemoPhone("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setDemoSending(false);
+  };
+
   const pendingPayments = filteredPayments.filter(p => (p.status === "pending" || p.status === "overdue") && !p.proof_url);
   const approvalPayments = filteredPayments.filter(p => (p.status === "pending" || p.status === "overdue") && p.proof_url);
   const paidPayments = filteredPayments.filter(p => p.status === "paid");
@@ -516,6 +546,26 @@ const Payments = () => {
               </Badge>
             )}
             <div className="flex gap-2">
+              <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 text-success border-success/30 hover:bg-success/10">
+                    <Send className="w-4 h-4" /> Send Demo
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader><DialogTitle className="flex items-center gap-2"><Send className="w-5 h-5 text-success" /> Send Demo Reminder</DialogTitle></DialogHeader>
+                  <p className="text-sm text-muted-foreground">Enter any phone number to send a sample rent reminder via WhatsApp. Great for showing PG owners what their tenants will receive!</p>
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label>Phone Number *</Label>
+                      <Input type="tel" value={demoPhone} onChange={e => setDemoPhone(e.target.value)} placeholder="e.g. 9876543210" />
+                    </div>
+                    <Button onClick={sendDemoReminder} className="w-full gradient-primary gap-2" disabled={demoSending || !demoPhone.trim()}>
+                      <MessageCircle className="w-4 h-4" /> {demoSending ? "Sending..." : "Send WhatsApp Demo"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button onClick={() => fetchData()} variant="outline" size="icon" title="Refresh Billing">
                 <Plus className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
