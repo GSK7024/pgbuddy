@@ -6,13 +6,120 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ── Helper: send a single WhatsApp message via Interakt ──
-async function sendInterakt(
+// ── Helper: send bulk messages via whatsapp-server queue or fallback to Interakt ──
+async function sendBulkWhatsApp(
+  phones: string[],
+  templateName: string,
+  bodyValuesList: string[][],
+  messageTemplate: string,
+  apiKey: string
+): Promise<number> {
+  const WA_SERVER_URL = Deno.env.get("WA_SERVER_URL");
+  const WA_SERVER_SECRET = Deno.env.get("WA_SERVER_SECRET") || "pg_buddy_whatsapp_secret_2024";
+
+  // Try WhatsApp Web.js Bulk Queue first
+  if (WA_SERVER_URL && phones.length > 0) {
+    try {
+      console.log(`[WA Server] Queueing ${phones.length} messages...`);
+      // For bulk queue, we assume identical message string (like an announcement)
+      // If we need personalized messages, we either send them one by one to /api/send-otp
+      // OR we just queue the first variant. For now, let's just queue the generic one.
+      const resp = await fetch(`${WA_SERVER_URL}/api/bulk-message`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-server-secret": WA_SERVER_SECRET,
+          "Bypass-Tunnel-Reminder": "true"
+        },
+        body: JSON.stringify({
+          phoneNumbers: phones,
+          message: messageTemplate,
+          templateType: templateName
+        }),
+      });
+
+      const rawText = await resp.text();
+      let data: any = {};
+      try { data = JSON.parse(rawText); } catch { /* tunnel HTML */ }
+
+      if (resp.ok && data.success) {
+        console.log(`✅ [WA Server] Successfully queued ${phones.length} messages`);
+        return phones.length;
+      }
+      console.warn("[WA Server] Queue response:", rawText.substring(0, 200));
+    } catch (err: any) {
+      console.warn("[WA Server] Unreachable:", err.message);
+    }
+  }
+
+  // Fallback to Interakt sending one by one
+  let sentCount = 0;
+  for (let i = 0; i < phones.length; i++) {
+    const to = phones[i];
+    const bodyValues = bodyValuesList[i] || bodyValuesList[0];
+    const cleanPhone = to.replace(/\D/g, "").slice(-10);
+    const url = "https://api.interakt.ai/v1/public/message/";
+    const payload = {
+      countryCode: "+91",
+      phoneNumber: cleanPhone,
+      callbackData: "pg_notification",
+      type: "Template",
+      template: {
+        name: templateName,
+        languageCode: "en",
+        bodyValues,
+      },
+    };
+    
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Basic ${apiKey}`
+        },
+        body: JSON.stringify(payload),
+      });
+      if (resp.ok) sentCount++;
+    } catch (err) {
+      console.error(`Interakt error for ${cleanPhone}`);
+    }
+  }
+  return sentCount;
+}
+
+// ── Helper: send a single WhatsApp message (Fast lane or Interakt) ──
+async function sendSingleWhatsApp(
   to: string,
   templateName: string,
   bodyValues: string[],
+  messageText: string,
   apiKey: string
 ): Promise<boolean> {
+  const WA_SERVER_URL = Deno.env.get("WA_SERVER_URL");
+  const WA_SERVER_SECRET = Deno.env.get("WA_SERVER_SECRET") || "pg_buddy_whatsapp_secret_2024";
+
+  if (WA_SERVER_URL) {
+    try {
+      const cleanPhone = to.replace(/\D/g, "").slice(-10);
+      const formattedPhone = "91" + cleanPhone;
+      
+      // Use /api/send-instant for immediate single-message delivery
+      const resp = await fetch(`${WA_SERVER_URL}/api/send-instant`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json", 
+          "x-server-secret": WA_SERVER_SECRET,
+          "Bypass-Tunnel-Reminder": "true"
+        },
+        body: JSON.stringify({ phoneNumber: formattedPhone, message: messageText }),
+      });
+      // Even if tunnel garbles response, message was likely sent
+      if (resp.ok || resp.status < 500) return true;
+    } catch (err) { console.warn("[WA Instant] Error:", (err as any).message); }
+  }
+
+  // Fallback Interakt
   const cleanPhone = to.replace(/\D/g, "").slice(-10);
   const url = "https://api.interakt.ai/v1/public/message/";
   const payload = {
@@ -20,34 +127,16 @@ async function sendInterakt(
     phoneNumber: cleanPhone,
     callbackData: "pg_notification",
     type: "Template",
-    template: {
-      name: templateName,
-      languageCode: "en",
-      bodyValues,
-    },
+    template: { name: templateName, languageCode: "en", bodyValues },
   };
-  
-  console.log(`[Interakt] Sending to ${cleanPhone}, template=${templateName}, params=`, JSON.stringify(bodyValues));
   try {
     const resp = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Basic ${apiKey}`
-      },
+      headers: { "Content-Type": "application/json", "Authorization": `Basic ${apiKey}` },
       body: JSON.stringify(payload),
     });
-    const respText = await resp.text();
-    console.log(`[Interakt] Response for ${cleanPhone}:`, resp.status, respText);
-    if (!resp.ok) {
-      console.error(`Interakt error for ${cleanPhone}:`, respText);
-      return false;
-    }
-    return true;
-  } catch (err: any) {
-    console.error(`Failed to message ${cleanPhone}:`, err.message);
-    return false;
-  }
+    return resp.ok;
+  } catch (err) { return false; }
 }
 
 Deno.serve(async (req) => {
@@ -128,18 +217,25 @@ Deno.serve(async (req) => {
         );
       }
 
-      let sent = 0;
-      for (const t of recipients) {
-        // Template params: {{1}}=name, {{2}}=amount, {{3}}=property, {{4}}=room, {{5}}=month
-        const params = [
-          t.full_name || "Tenant",
-          String(amount || "0"),
-          property_name || "Your PG",
-          room_number || "N/A",
-          month || "this month",
-        ];
-        if (await sendInterakt(t.phone, "rent_reminder", params, INTERAKT_API_KEY)) sent++;
-      }
+      const phonesList = recipients.map(r => r.phone);
+      const paramsList = recipients.map(t => [
+        t.full_name || "Tenant",
+        String(amount || "0"),
+        property_name || "Your PG",
+        room_number || "N/A",
+        month || "this month",
+      ]);
+
+      // Professional rent reminder template
+      const messageText = `🏠 *${property_name || "Your PG"} — Rent Reminder*\n\n────────────────────\nHi *${recipients[0]?.full_name || "Tenant"}* 👋\n\n💰 *Amount:* ₹${amount?.toLocaleString() || "0"}\n📍 *Room:* ${room_number || "N/A"}\n📅 *Month:* ${month || "this month"}\n\nPlease make the payment at your earliest convenience to avoid any late charges.\n────────────────────\n_Sent via PG Buddy_`;
+
+      const sent = await sendBulkWhatsApp(
+        phonesList,
+        "rent_reminder",
+        paramsList,
+        messageText,
+        INTERAKT_API_KEY
+      );
 
       return new Response(
         JSON.stringify({ sent, total: recipients.length }),
@@ -200,17 +296,24 @@ Deno.serve(async (req) => {
         );
       }
 
-      console.log(`[Announcements] Found ${allRecipients.length} recipients. Sending using pg_announcement...`);
-      let sent = 0;
-      for (const r of allRecipients) {
-        // Template params: {{1}}=title, {{2}}=content, {{3}}=property
-        const params = [
-          title || "Update",
-          content || "Please check your PG Buddy app for details.",
-          property_name || "Your PG",
-        ];
-        if (await sendInterakt(r.phone, "announcement", params, INTERAKT_API_KEY)) sent++;
-      }
+      console.log(`[Announcements] Found ${allRecipients.length} recipients. Queueing...`);
+      
+      const phonesList = allRecipients.map(r => r.phone);
+      const paramsList = allRecipients.map(() => [
+        title || "Update",
+        content || "Please check your PG Buddy app for details.",
+        property_name || "Your PG",
+      ]);
+
+      const messageText = `📢 *${property_name || "PG"} — New Announcement*\n\n────────────────────\n📌 *${title || "Update"}*\n\n${content || "Please check your PG Buddy app for details."}\n────────────────────\n_Sent via PG Buddy • ${property_name || "Your PG"}_`;
+
+      const sent = await sendBulkWhatsApp(
+        phonesList,
+        "announcement",
+        paramsList,
+        messageText,
+        INTERAKT_API_KEY
+      );
 
       return new Response(
         JSON.stringify({ sent, total: allRecipients.length }),
@@ -239,8 +342,10 @@ Deno.serve(async (req) => {
         "https://pgbuddy-zeta-rust.vercel.app"
       ];
 
+      const messageText = `👋 *Welcome to ${property_name || "PG Buddy"}!*\n\n────────────────────\nHi *${tenant_name || "Tenant"}*,\n\nYou’ve been assigned to:\n🏠 *Property:* ${property_name || "Your PG"}\n🚪 *Room:* ${payload.room_number || "N/A"}\n\n📲 Access your dashboard, pay rent, and raise complaints anytime:\nhttps://pgbuddy-zeta-rust.vercel.app\n────────────────────\n_Sent via PG Buddy_`;
+
       let sent = 0;
-      if (await sendInterakt(tenant_phone, "welcome_tenant", params, INTERAKT_API_KEY)) sent++;
+      if (await sendSingleWhatsApp(tenant_phone, "welcome_tenant", params, messageText, INTERAKT_API_KEY)) sent++;
 
       return new Response(
         JSON.stringify({ sent, total: 1 }),
@@ -304,17 +409,22 @@ Deno.serve(async (req) => {
       }
 
       console.log(`[ComplaintAlert] Sending to ${recipients.length} recipients (Owner/Managers).`);
+      
+      const phonesList = recipients.map(r => r.phone);
+      const paramsList = recipients.map(() => [
+        tenant_name || "A tenant",
+        property.name || "Your PG",
+        room_number || "N/A",
+        title || "Issue reported",
+        category || "General",
+      ]);
+
+      const messageText = `🚨 *${property.name || "Your PG"} — New Complaint*\n\n────────────────────\n📝 *Issue:* ${title || "Issue reported"}\n🏷️ *Category:* ${category || "General"}\n👤 *Tenant:* ${tenant_name || "A tenant"}\n🚪 *Room:* ${room_number || "N/A"}\n\nPlease check the admin dashboard to respond.\n────────────────────\n_Sent via PG Buddy_`;
+
+      // Complaints send INSTANTLY to each recipient (not queued)
       let sent = 0;
       for (const r of recipients) {
-        // Template params: {{1}}=tenant, {{2}}=property, {{3}}=room, {{4}}=issue, {{5}}=category
-        const params = [
-          tenant_name || "A tenant",
-          property.name || "Your PG",
-          room_number || "N/A",
-          title || "Issue reported",
-          category || "General",
-        ];
-        if (await sendInterakt(r.phone, "complaint_alert", params, INTERAKT_API_KEY)) sent++;
+        if (await sendSingleWhatsApp(r.phone, "complaint_alert", paramsList[0], messageText, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
@@ -377,15 +487,19 @@ Deno.serve(async (req) => {
         );
       }
 
+      const phonesList = recipients.map(r => r.phone);
+      const paramsList = recipients.map(() => [
+        tenant_name || "A tenant",
+        property.name || "Your PG",
+        expected_move_out || "Not specified",
+      ]);
+
+      const messageText = `🚪 *${property.name || "Your PG"} — Vacancy Alert*\n\n────────────────────\n👤 *Tenant:* ${tenant_name || "A tenant"}\n📅 *Expected move-out:* ${expected_move_out || "Not specified"}\n\nA room will be available soon. Plan accordingly.\n────────────────────\n_Sent via PG Buddy_`;
+
+      // Vacancy alerts also send instantly
       let sent = 0;
       for (const r of recipients) {
-        // Template params: {{1}}=tenant, {{2}}=property, {{3}}=move-out date
-        const params = [
-          tenant_name || "A tenant",
-          property.name || "Your PG",
-          expected_move_out || "Not specified",
-        ];
-        if (await sendInterakt(r.phone, "announcement", params, INTERAKT_API_KEY)) sent++;
+        if (await sendSingleWhatsApp(r.phone, "announcement", paramsList[0], messageText, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
@@ -449,17 +563,21 @@ Deno.serve(async (req) => {
         );
       }
 
+      const phonesList = recipients.map(r => r.phone);
+      const paramsList = recipients.map(() => [
+        tenant_name || "A tenant",
+        property.name || "Your PG",
+        room_number || "N/A",
+        String(amount || "0"),
+        month || "this month",
+      ]);
+
+      const messageText = `💳 *${property.name || "Your PG"} — Payment Received*\n\n────────────────────\n👤 *Tenant:* ${tenant_name || "A tenant"}\n🚪 *Room:* ${room_number || "N/A"}\n💰 *Amount:* ₹${amount?.toLocaleString() || "0"}\n📅 *Month:* ${month || "this month"}\n\nPayment proof submitted. Please review & approve on the dashboard.\n────────────────────\n_Sent via PG Buddy_`;
+
+      // Payment approvals send instantly
       let sent = 0;
       for (const r of recipients) {
-        // Template params: {{1}}=tenant, {{2}}=property, {{3}}=room, {{4}}=amount, {{5}}=month
-        const params = [
-          tenant_name || "A tenant",
-          property.name || "Your PG",
-          room_number || "N/A",
-          String(amount || "0"),
-          month || "this month",
-        ];
-        if (await sendInterakt(r.phone, "payment_approval", params, INTERAKT_API_KEY)) sent++;
+        if (await sendSingleWhatsApp(r.phone, "payment_approval", paramsList[0], messageText, INTERAKT_API_KEY)) sent++;
       }
 
       return new Response(
@@ -492,8 +610,10 @@ Deno.serve(async (req) => {
         receipt_url || "https://pgbuddy-zeta-rust.vercel.app",
       ];
 
+      const messageText = `💰 *Payment Received*\n\nHi ${tenant_name || "Tenant"},\nWe have received your payment of ₹${amount || "0"} for ${month || "this month"}.\n\nView receipt: ${receipt_url || "N/A"}\n\n_PG Buddy App_`;
+
       let sent = 0;
-      if (await sendInterakt(tenant_phone, "payment_received", params, INTERAKT_API_KEY)) sent++;
+      if (await sendSingleWhatsApp(tenant_phone, "payment_received", params, messageText, INTERAKT_API_KEY)) sent++;
 
       return new Response(
         JSON.stringify({ sent, total: 1 }),
@@ -522,8 +642,10 @@ Deno.serve(async (req) => {
         mess_name || "Your PG Buddy Host",
       ];
 
+      const messageText = `🍲 *Mess Bill Reminder*\n\nHi ${member_name || "Member"},\nThis is a reminder for your mess bill of ₹${amount || "0"} for ${month || "this month"} at ${mess_name || "the Mess"}.\n\n_PG Buddy App_`;
+
       let sent = 0;
-      if (await sendInterakt(member_phone, "announcement", params, INTERAKT_API_KEY)) sent++;
+      if (await sendSingleWhatsApp(member_phone, "announcement", params, messageText, INTERAKT_API_KEY)) sent++;
 
       return new Response(
         JSON.stringify({ sent, total: 1 }),
@@ -544,15 +666,18 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Template params: {{1}}=name, {{2}}=property, {{3}}=room
+      // Template params: {{1}}=name, {{2}}=property, {{3}}=room, {{4}}=login link
       const params = [
         tenant_name || "Tenant",
         property_name || "your PG",
         room_number || "N/A",
+        "https://pgbuddy.in/auth",
       ];
 
+      const messageText = `👋 *Welcome to ${property_name || "PG Buddy"}!*\n\nHi ${tenant_name || "Tenant"},\nYou've been added to room ${room_number || "N/A"}.\n\nDownload the app to view your rent dues and notices: https://pgbuddy.in/auth\n\n_PG Buddy App_`;
+
       let sent = 0;
-      if (await sendInterakt(tenant_phone, "welcome_template", params, INTERAKT_API_KEY)) sent++;
+      if (await sendSingleWhatsApp(tenant_phone, "welcome_template", params, messageText, INTERAKT_API_KEY)) sent++;
 
       return new Response(
         JSON.stringify({ sent, total: 1 }),

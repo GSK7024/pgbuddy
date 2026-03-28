@@ -60,6 +60,12 @@ const Auth = () => {
           type: 'sms',
         });
         if (error) throw error;
+        toast({ title: "Success!", description: "Logged in successfully! Loading dashboard..." });
+        
+        // Force a basic navigation fallback if role takes too long
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 2000);
       }
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });

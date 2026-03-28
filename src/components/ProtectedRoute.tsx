@@ -23,7 +23,17 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (requiredRole && role !== requiredRole) {
-    return <Navigate to={role === "owner" ? "/dashboard" : "/tenant"} replace />;
+    const targetPath = role === "owner" ? "/dashboard" : "/tenant";
+    if (window.location.pathname === targetPath) {
+      // If we are already here but don't have the role (e.g. role is null), 
+      // just let it render or show an error state to avoid infinite loops.
+      // But actually, for PG Buddy, null role defaults to tenant view until assigned.
+      if (role === null && requiredRole === "tenant") {
+        return <>{children}</>;
+      }
+      return <div>Access Denied. Your profile lacks the required permissions.</div>;
+    }
+    return <Navigate to={targetPath} replace />;
   }
 
   return <>{children}</>;

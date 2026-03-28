@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Building2, Users, Shield, Sparkles, LogIn } from "lucide-react";
+import { ArrowRight, Search, Building2, Users, Shield, Sparkles, LogIn, Download, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Capacitor } from "@capacitor/core";
 
 const HeroSection = () => {
   const { user, loading } = useAuth();
@@ -71,17 +72,32 @@ const HeroSection = () => {
           >
             {!loading && (
               user ? (
-                <Button
-                  size="lg"
-                  className="gradient-primary text-base px-8 py-6 shadow-lg hover:shadow-glow transition-all duration-300 group rounded-xl"
-                  asChild
-                >
-                  <Link to="/dashboard">
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    Go to Dashboard
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
+                <>
+                  <Button
+                    size="lg"
+                    className="gradient-primary text-base px-8 py-6 shadow-lg hover:shadow-glow transition-all duration-300 group rounded-xl"
+                    asChild
+                  >
+                    <Link to="/dashboard">
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Go to Dashboard
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                  {!Capacitor.isNativePlatform() && (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="text-base px-8 py-6 border-2 hover:bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400 rounded-xl group"
+                      asChild
+                    >
+                      <a href="/pg-buddy.apk" download>
+                        <Download className="w-5 h-5 mr-2 group-hover:animate-bounce" />
+                        Download App
+                      </a>
+                    </Button>
+                  )}
+                </>
               ) : (
                 <>
                   <Button
@@ -106,6 +122,19 @@ const HeroSection = () => {
                       Login
                     </Link>
                   </Button>
+                  {!Capacitor.isNativePlatform() && (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="text-base px-8 py-6 border-2 hover:bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400 rounded-xl group"
+                      asChild
+                    >
+                      <a href="/pg-buddy.apk" download>
+                        <Download className="w-5 h-5 mr-2 group-hover:animate-bounce" />
+                        Download App
+                      </a>
+                    </Button>
+                  )}
                 </>
               )
             )}

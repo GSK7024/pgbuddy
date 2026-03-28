@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+whatsapp-server/whatsapp_session/
+START_WHATSAPP.bat
+STOP_WHATSAPP.bat
+tunnel.log
+

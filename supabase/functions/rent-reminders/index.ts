@@ -153,6 +153,7 @@ Deno.serve(async (req) => {
                   headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${serviceRoleKey}`,
+                    "Bypass-Tunnel-Reminder": "true"
                   },
                   body: JSON.stringify({
                     action: "send-rent-reminder",
