@@ -2,6 +2,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import { ErrorBoundary } from "./ErrorBoundary";
 import "./index.css";
+import { getAppName } from "./lib/branding";
+
+document.title = getAppName() + " - Management Portal";
 
 // Register push notification service worker
 if ("serviceWorker" in navigator) {

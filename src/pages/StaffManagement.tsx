@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Plus, Shield, Calculator, Wrench, Trash2, Building2, Globe, Mail, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Users, Plus, Shield, Calculator, Wrench, Trash2, Building2, Globe, Mail, CheckCircle, Clock, XCircle, Zap, Droplet, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,9 @@ const roleConfig = {
   manager: { label: "Manager", icon: Shield, color: "bg-primary/10 text-primary", desc: "Full access (properties, tenants, payments, complaints, visitors)" },
   accountant: { label: "Accountant", icon: Calculator, color: "bg-warning/10 text-warning", desc: "Payments, expenses, utility bills" },
   caretaker: { label: "Caretaker", icon: Wrench, color: "bg-success/10 text-success", desc: "Complaints, visitors, announcements" },
+  plumber: { label: "Plumber", icon: Droplet, color: "bg-blue-500/10 text-blue-500", desc: "Receives plumbing complaints directly" },
+  electrician: { label: "Electrician", icon: Zap, color: "bg-yellow-500/10 text-yellow-500", desc: "Receives electrical complaints directly" },
+  cleaner: { label: "Cleaner", icon: Sparkles, color: "bg-cyan-500/10 text-cyan-500", desc: "Receives cleaning complaints directly" },
 };
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string }> = {

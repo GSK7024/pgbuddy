@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
     // ACTION 3: send-complaint-alert
     // ════════════════════════════════════════════════
     if (action === "send-complaint-alert") {
-      const { property_id, title, category, tenant_name, room_number } = payload;
+      const { property_id, title, category, tenant_name, room_number, tenant_phone } = payload;
 
       const { data: property } = await supabase
         .from("properties")
@@ -378,15 +378,30 @@ Deno.serve(async (req) => {
         .eq("user_id", property.owner_id)
         .single();
 
+      // Map complaint categories to specific vendor roles
+      const categoryToRole: Record<string, string> = {
+        "plumbing": "plumber",
+        "electrical": "electrician",
+        "cleaning": "cleaner",
+      };
+      const matchingRole = categoryToRole[(category || "").toLowerCase()] || null;
+      
+      const rolesToNotify = ["manager", "caretaker"];
+      if (matchingRole) {
+         rolesToNotify.push(matchingRole);
+      }
+
+      // Fetch staff, including "pending" status so unregistered vendors get SMS
       const { data: staff } = await supabase
         .from("staff_members")
-        .select("staff_user_id")
+        .select("staff_user_id, invited_phone")
         .eq("owner_id", property.owner_id)
-        .eq("status", "active")
+        .in("status", ["active", "pending"])
         .or(`property_id.eq.${property_id},property_id.is.null`)
-        .in("role", ["manager", "caretaker"]);
+        .in("role", rolesToNotify);
 
-      const managerIds = (staff ?? []).map((s: any) => s.staff_user_id);
+      // Extract registered staff IDs
+      const managerIds = (staff ?? []).map((s: any) => s.staff_user_id).filter(Boolean);
       let managerPhones: any[] = [];
       if (managerIds.length > 0) {
         const { data: mProfiles } = await supabase
@@ -396,10 +411,27 @@ Deno.serve(async (req) => {
         managerPhones = (mProfiles ?? []).filter((p: any) => p.phone?.trim());
       }
 
-      const recipients = [
+      // Extract directly invited vendor phones (bypassing profile creation)
+      const invitedPhones = (staff ?? [])
+         .filter((s: any) => !s.staff_user_id && s.invited_phone?.trim())
+         .map((s: any) => ({ phone: s.invited_phone.trim() }));
+
+      const recipientsRaw = [
         ...(ownerProfile?.phone ? [{ phone: ownerProfile.phone }] : []),
         ...managerPhones.map((p: any) => ({ phone: p.phone })),
+        ...invitedPhones,
+        ...(tenant_phone ? [{ phone: tenant_phone }] : []),
       ];
+
+      // Deduplicate phone numbers
+      const seenRaw = new Set();
+      const recipients = [];
+      for (const r of recipientsRaw) {
+        if (!seenRaw.has(r.phone)) {
+           seenRaw.add(r.phone);
+           recipients.push(r);
+        }
+      }
 
       if (recipients.length === 0) {
         return new Response(
@@ -419,7 +451,7 @@ Deno.serve(async (req) => {
         category || "General",
       ]);
 
-      const messageText = `🚨 *${property.name || "Your PG"} — New Complaint*\n\n────────────────────\n📝 *Issue:* ${title || "Issue reported"}\n🏷️ *Category:* ${category || "General"}\n👤 *Tenant:* ${tenant_name || "A tenant"}\n🚪 *Room:* ${room_number || "N/A"}\n\nPlease check the admin dashboard to respond.\n────────────────────\n_Sent via PG Buddy_`;
+      const messageText = `🚨 *${property.name || "Your PG"} — Complaint Logged*\n\n────────────────────\n📝 *Issue:* ${title || "Issue reported"}\n🏷️ *Category:* ${category || "General"}\n👤 *Tenant:* ${tenant_name || "A tenant"}\n🚪 *Room:* ${room_number || "N/A"}\n\nThe staff has been notified and will resolve this shortly.\n────────────────────\n_Sent via PG Buddy_`;
 
       // Complaints send INSTANTLY to each recipient (not queued)
       let sent = 0;
@@ -600,6 +632,17 @@ Deno.serve(async (req) => {
         );
       }
 
+      let finalUrl = receipt_url || "https://pgbuddy-zeta-rust.vercel.app";
+      if (finalUrl.includes('localhost') || finalUrl.includes('192.168.') || finalUrl.includes('127.0.0.1') || finalUrl.includes('10.0.')) {
+        // Extract the path (e.g., /receipt/uuid) and prepend the production domain
+        const urlParts = finalUrl.split('/receipt/');
+        if (urlParts.length > 1) {
+          finalUrl = `https://pgbuddy-zeta-rust.vercel.app/receipt/${urlParts[1]}`;
+        } else {
+          finalUrl = "https://pgbuddy-zeta-rust.vercel.app";
+        }
+      }
+
       // Template params: {{1}}=name, {{2}}=amount, {{3}}=month, {{4}}=property, {{5}}=room, {{6}}=receipt_link
       const params = [
         tenant_name || "Tenant",
@@ -607,10 +650,10 @@ Deno.serve(async (req) => {
         month || "this month",
         property_name || "Your PG",
         room_number || "N/A",
-        receipt_url || "https://pgbuddy-zeta-rust.vercel.app",
+        finalUrl,
       ];
 
-      const messageText = `💰 *Payment Received*\n\nHi ${tenant_name || "Tenant"},\nWe have received your payment of ₹${amount || "0"} for ${month || "this month"}.\n\nView receipt: ${receipt_url || "N/A"}\n\n_PG Buddy App_`;
+      const messageText = `💰 *Payment Received*\n\nHi ${tenant_name || "Tenant"},\nWe have received your payment of ₹${amount || "0"} for ${month || "this month"}.\n\nView receipt: ${finalUrl}\n\n_PG Buddy App_`;
 
       let sent = 0;
       if (await sendSingleWhatsApp(tenant_phone, "payment_received", params, messageText, INTERAKT_API_KEY)) sent++;

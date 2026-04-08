@@ -371,7 +371,9 @@ const Payments = () => {
       month: payment.month,
       property_name: (payment as any).properties?.name || "your PG",
       room_number: (payment as any).rooms?.room_number || "N/A",
-      receipt_url: `${window.location.origin}/receipt/${payment.id}`,
+      receipt_url: window.location.origin.includes('localhost') 
+        ? `https://pgbuddy-zeta-rust.vercel.app/receipt/${payment.id}` 
+        : `${window.location.origin}/receipt/${payment.id}`,
       property_id: payment.property_id
     });
   };

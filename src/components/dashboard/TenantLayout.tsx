@@ -12,6 +12,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
+import { getAppName, getAppLogo, isWhiteLabel } from "@/lib/branding";
 
 const getSidebarLinks = (t: (k: string) => string) => [
   { name: t("tenant.myRoom"), href: "/tenant", icon: LayoutDashboard },
@@ -105,11 +106,15 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-border/50 bg-card/80 backdrop-blur-sm fixed h-full z-30">
         <div className="p-5 border-b border-border/50 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-              <Building2 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold gradient-text tracking-tight">PG Buddy</span>
+          <Link to="/" className="flex items-center gap-3">
+            {isWhiteLabel ? (
+              <img src={getAppLogo()} alt={getAppName()} className="h-12 w-auto object-contain object-center drop-shadow-md" />
+            ) : (
+              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md">
+                <Building2 className="w-5 h-5 text-primary-foreground" />
+              </div>
+            )}
+            <span className="text-lg font-bold gradient-text tracking-tight">{getAppName()}</span>
           </Link>
           <NotificationBell />
         </div>
@@ -119,11 +124,15 @@ const TenantLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 glass border-b border-border/50">
         <div className="flex items-center justify-between px-4 h-14">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-sm">
-              <Building2 className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold gradient-text">PG Buddy</span>
+          <Link to="/" className="flex items-center gap-3">
+            {isWhiteLabel ? (
+              <img src={getAppLogo()} alt={getAppName()} className="h-10 w-auto object-contain object-center drop-shadow-sm" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-sm">
+                <Building2 className="w-4 h-4 text-primary-foreground" />
+              </div>
+            )}
+            <span className="font-bold gradient-text">{getAppName()}</span>
           </Link>
           <div className="flex items-center gap-1">
             <NotificationBell />

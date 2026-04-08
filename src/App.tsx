@@ -10,6 +10,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import { isWhiteLabel } from "@/lib/branding";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
 import Rooms from "./pages/Rooms";
@@ -86,7 +87,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={isWhiteLabel ? <Auth /> : <Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/browse" element={<BrowsePG />} />

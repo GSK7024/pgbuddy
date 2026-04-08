@@ -107,6 +107,7 @@ const TenantComplaints = () => {
         title,
         category,
         tenant_name: user.user_metadata?.full_name || user.email,
+        tenant_phone: user.phone,
         room_number: assignment.room_number,
       });
     }
@@ -127,7 +128,7 @@ const TenantComplaints = () => {
             <h1 className="text-2xl font-bold">My Complaints</h1>
             <p className="text-muted-foreground">File and track maintenance requests</p>
           </div>
-          {assignment && (
+          {assignment ? (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary gap-2">
@@ -162,6 +163,15 @@ const TenantComplaints = () => {
                 </form>
               </DialogContent>
             </Dialog>
+          ) : (
+             <Button 
+               variant="outline" 
+               className="gap-2 cursor-not-allowed opacity-50"
+               title="You must be assigned to a room to file a complaint"
+               onClick={() => toast({ title: "Not Assigned", description: "You need an active room assignment to file complaints.", variant: "destructive" })}
+             >
+               <Plus className="w-4 h-4" /> File Complaint
+             </Button>
           )}
         </div>
 

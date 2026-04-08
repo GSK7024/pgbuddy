@@ -29,15 +29,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchRole = async (userId: string) => {
-    // Auto-link pending staff invitations for this user's email
-    await supabase.rpc("claim_staff_invitation");
+    try {
+      // Auto-link pending staff invitations for this user's email
+      const { error: rpcError } = await supabase.rpc("claim_staff_invitation");
+      if (rpcError) console.error("RPC claim_staff_invitation error:", rpcError);
 
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-    setRole((data?.role as UserRole) ?? null);
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error("Error fetching user role:", error);
+      }
+      setRole((data?.role as UserRole) ?? null);
+    } catch (err) {
+      console.error("Unexpected error in fetchRole:", err);
+      setRole(null);
+    }
   };
 
   useEffect(() => {
@@ -47,11 +57,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           // Use setTimeout to avoid potential deadlocks with Supabase auth
-          setTimeout(() => fetchRole(session.user.id), 0);
+          setTimeout(async () => {
+            try {
+              await fetchRole(session.user.id);
+            } finally {
+              setLoading(false);
+            }
+          }, 0);
         } else {
           setRole(null);
+          setLoading(false);
         }
-        setLoading(false);
         
         // Redirect to reset password page on recovery event
         if (event === "PASSWORD_RECOVERY") {
@@ -60,13 +76,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRole(session.user.id);
+        try {
+          await fetchRole(session.user.id);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

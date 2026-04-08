@@ -307,24 +307,22 @@ const Tenants = () => {
       return;
     }
 
-    // Auto-generate paid rent if requested
-    if (initialRentPaid) {
-      const now = new Date();
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      await supabase.from("rent_payments").insert({
-        tenant_id: foundTenant ? foundTenant.user_id : null,
-        tenant_email: null,
-        tenant_name: assignName.trim() || (foundTenant ? foundTenant.full_name : null),
-        tenant_phone: assignPhone.trim(),
-        property_id: propertyId,
-        room_id: roomId,
-        amount: rentValue || (rooms.find(r => r.id === roomId)?.rent_amount ?? 0),
-        month: currentMonth,
-        status: "paid",
-        payment_date: new Date().toISOString(),
-        payment_type: "rent",
-      });
-    }
+    // Auto-generate rent record (Paid or Pending)
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    await supabase.from("rent_payments").insert({
+      tenant_id: foundTenant ? foundTenant.user_id : null,
+      tenant_email: null,
+      tenant_name: assignName.trim() || (foundTenant ? foundTenant.full_name : null),
+      tenant_phone: assignPhone.trim(),
+      property_id: propertyId,
+      room_id: roomId,
+      amount: rentValue || (rooms.find(r => r.id === roomId)?.rent_amount ?? 0),
+      month: currentMonth,
+      status: initialRentPaid ? "paid" : "pending",
+      payment_date: initialRentPaid ? new Date().toISOString() : null,
+      payment_type: "rent",
+    });
 
     // Auto-generate Deposit record if applicable
     const selectedBedRaw = allBeds.find(b => b.id === bedId);
