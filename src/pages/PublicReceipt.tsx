@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { format } from "date-fns";
 import { CheckCircle, IndianRupee, Printer, Home, Download } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,22 +29,35 @@ const PublicReceipt = () => {
     const fetchPayment = async () => {
       if (!id) return;
       
-      const { data, error } = await supabase
-        .from("rent_payments")
-        .select(`
-          id, amount, month, payment_date, status, payment_method, transaction_id,
-          properties(name),
-          rooms(room_number),
-          profiles:tenant_id(full_name)
-        `)
-        .eq("id", id)
-        .single();
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        
+        const res = await fetch(
+          `${supabaseUrl}/functions/v1/get-receipt?id=${id}`,
+          {
+            headers: {
+              "Authorization": `Bearer ${anonKey}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-      if (error || !data) {
-        console.error("Error fetching payment:", error);
+        if (!res.ok) {
+          setError(true);
+          setLoading(false);
+          return;
+        }
+
+        const json = await res.json();
+        if (json.receipt) {
+          setPayment(json.receipt as PaymentData);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        console.error("Error fetching receipt:", err);
         setError(true);
-      } else {
-        setPayment(data as unknown as PaymentData);
       }
       setLoading(false);
     };
