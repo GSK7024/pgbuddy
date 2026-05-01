@@ -22,36 +22,72 @@ serve(async (req) => {
       );
     }
 
-    // Use service role to bypass RLS
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // First, fetch the basic payment data
     const { data, error } = await supabase
       .from("rent_payments")
-      .select(`
-        id, amount, month, payment_date, status, payment_method, transaction_id,
-        tenant_name,
-        properties(name),
-        rooms(room_number),
-        profiles:tenant_id(full_name)
-      `)
+      .select("id, amount, month, payment_date, status, payment_method, transaction_id, tenant_name, tenant_id, property_id, room_id")
       .eq("id", receiptId)
       .single();
 
-    if (error || !data) {
+    if (error) {
+      console.error("DB Error:", JSON.stringify(error));
+      return new Response(
+        JSON.stringify({ error: "Receipt not found", detail: error.message }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!data) {
       return new Response(
         JSON.stringify({ error: "Receipt not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Fetch related data separately to avoid join issues
+    let propertyName = null;
+    let roomNumber = null;
+    let tenantFullName = data.tenant_name || null;
+
+    if (data.property_id) {
+      const { data: prop } = await supabase.from("properties").select("name").eq("id", data.property_id).single();
+      propertyName = prop?.name || null;
+    }
+
+    if (data.room_id) {
+      const { data: room } = await supabase.from("rooms").select("room_number").eq("id", data.room_id).single();
+      roomNumber = room?.room_number || null;
+    }
+
+    if (data.tenant_id && !tenantFullName) {
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", data.tenant_id).single();
+      tenantFullName = profile?.full_name || null;
+    }
+
+    const receipt = {
+      id: data.id,
+      amount: data.amount,
+      month: data.month,
+      payment_date: data.payment_date,
+      status: data.status,
+      payment_method: data.payment_method,
+      transaction_id: data.transaction_id,
+      properties: propertyName ? { name: propertyName } : null,
+      rooms: roomNumber ? { room_number: roomNumber } : null,
+      profiles: tenantFullName ? { full_name: tenantFullName } : null,
+    };
+
     return new Response(
-      JSON.stringify({ receipt: data }),
+      JSON.stringify({ receipt }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    console.error("Unexpected error:", err);
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
