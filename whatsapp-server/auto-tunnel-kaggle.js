@@ -2,11 +2,11 @@ const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// ── Detect Environment ────────────────────────────────────────────────────────
+// Detect Environment
 const isKaggle = process.env.KAGGLE_DATA_PROXY_URL !== undefined;
 const isDocker = fs.existsSync('/.dockerenv');
 
-// ── Get Working Directory ─────────────────────────────────────────────────────
+// Get Working Directory
 const workDir = process.env.PROJECT_DIR || process.cwd();
 const logFile = path.join(process.env.TEMP || '/tmp', 'tunnel-log.txt');
 
@@ -21,21 +21,21 @@ function log(message) {
     }
 }
 
-log(`🚀 Starting tunnel in ${isKaggle ? 'KAGGLE' : isDocker ? 'DOCKER' : 'LOCAL'} environment`);
-log(`📁 Working directory: ${workDir}`);
+log(`Starting tunnel in ${isKaggle ? 'KAGGLE' : isDocker ? 'DOCKER' : 'LOCAL'} environment`);
+log(`Working directory: ${workDir}`);
 
-// ── Configuration ────────────────────────────────────────────────────────────
+// Configuration
 const PORT = process.env.PORT || 3001;
 const TUNNEL_URL = `http://localhost:${PORT}`;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_PROJECT_ID = process.env.SUPABASE_PROJECT_ID;
 
 if (!SUPABASE_URL || !SUPABASE_PROJECT_ID) {
-    log('⚠️  WARNING: SUPABASE_URL or SUPABASE_PROJECT_ID not set. Will save to .env.local');
+    log('WARNING: SUPABASE_URL or SUPABASE_PROJECT_ID not set. Will save to .env.local');
 }
 
-// ── Start Cloudflare Tunnel ───────────────────────────────────────────────────
-log(`🌐 Tunneling to ${TUNNEL_URL}...`);
+// Start Cloudflare Tunnel
+log(`Tunneling to ${TUNNEL_URL}...`);
 
 const cf = spawn('cloudflared', ['tunnel', '--url', TUNNEL_URL], { 
     shell: true,
@@ -45,7 +45,7 @@ const cf = spawn('cloudflared', ['tunnel', '--url', TUNNEL_URL], {
 let urlFound = false;
 let timeoutId;
 
-// ── Capture Tunnel URL ────────────────────────────────────────────────────────
+// Capture Tunnel URL
 function handleTunnelOutput(data, source) {
     const text = data.toString();
     
@@ -60,7 +60,7 @@ function handleTunnelOutput(data, source) {
         clearTimeout(timeoutId);
         
         const url = match[1];
-        log(`\n🎯 Found Cloudflare URL: ${url}\n`);
+        log(`Found Cloudflare URL: ${url}`);
         
         updateSecrets(url);
     }
@@ -69,24 +69,24 @@ function handleTunnelOutput(data, source) {
 cf.stdout.on('data', (data) => handleTunnelOutput(data, 'stdout'));
 cf.stderr.on('data', (data) => handleTunnelOutput(data, 'stderr'));
 
-// ── Update Supabase Secrets ───────────────────────────────────────────────────
+// Update Supabase Secrets
 function updateSecrets(url) {
-    log('🔄 Updating secrets...');
+    log('Updating secrets...');
     
     // Method 1: Try Supabase CLI (requires authentication)
     if (SUPABASE_URL && SUPABASE_PROJECT_ID) {
         try {
-            log('📤 Attempting to set Supabase secret via CLI...');
+            log('Attempting to set Supabase secret via CLI...');
             execSync(`npx supabase secrets set WA_SERVER_URL=${url}`, {
                 cwd: workDir,
                 stdio: 'inherit',
                 timeout: 30000
             });
-            log('✅ Successfully updated Supabase secret!');
+            log('Successfully updated Supabase secret!');
             return;
         } catch (e) {
-            log(`⚠️  Supabase CLI failed: ${e.message}`);
-            log('💾 Falling back to local .env file...');
+            log(`Supabase CLI failed: ${e.message}`);
+            log('Falling back to local .env file...');
         }
     }
     
@@ -95,9 +95,9 @@ function updateSecrets(url) {
         const envFile = path.join(workDir, '.env.local');
         const envContent = `WA_SERVER_URL=${url}\nUPDATED_AT=${new Date().toISOString()}\n`;
         fs.writeFileSync(envFile, envContent);
-        log(`✅ Saved to ${envFile}`);
+        log(`Saved to ${envFile}`);
     } catch (e) {
-        log(`❌ Failed to save .env.local: ${e.message}`);
+        log(`Failed to save .env.local: ${e.message}`);
     }
     
     // Method 3: Save to temp location for Kaggle
@@ -105,20 +105,20 @@ function updateSecrets(url) {
         try {
             const kaggleTunnelFile = '/tmp/wa_server_url.txt';
             fs.writeFileSync(kaggleTunnelFile, url);
-            log(`✅ Saved to ${kaggleTunnelFile} (Kaggle temp)`);
+            log(`Saved to ${kaggleTunnelFile} (Kaggle temp)`);
         } catch (e) {
-            log(`⚠️  Could not save to Kaggle temp: ${e.message}`);
+            log(`Could not save to Kaggle temp: ${e.message}`);
         }
     }
     
-    log('✅ Tunnel URL saved and ready!');
-    log('🔁 Keeping tunnel alive...');
+    log('Tunnel URL saved and ready!');
+    log('Keeping tunnel alive...');
 }
 
-// ── Timeout Handler (5 minutes) ───────────────────────────────────────────────
+// Timeout Handler (5 minutes)
 timeoutId = setTimeout(() => {
     if (!urlFound) {
-        log('❌ TIMEOUT: No tunnel URL found after 5 minutes');
+        log('TIMEOUT: No tunnel URL found after 5 minutes');
         log('Troubleshooting tips:');
         log('  1. Check if cloudflared is installed: npm install -g @cloudflare/wrangler');
         log('  2. Check if port 3001 is accessible');
@@ -127,34 +127,34 @@ timeoutId = setTimeout(() => {
     }
 }, 5 * 60 * 1000);
 
-// ── Exit Handler ──────────────────────────────────────────────────────────────
+// Exit Handler
 cf.on('close', (code) => {
-    log(`\n⚠️  Cloudflared exited with code ${code}`);
+    log(`Cloudflared exited with code ${code}`);
     if (!urlFound) {
-        log('❌ Tunnel failed to start. Check logs above.');
+        log('Tunnel failed to start. Check logs above.');
         process.exit(code || 1);
     } else {
-        log('✅ Tunnel closed gracefully');
+        log('Tunnel closed gracefully');
         process.exit(0);
     }
 });
 
 cf.on('error', (err) => {
-    log(`❌ Tunnel error: ${err.message}`);
+    log(`Tunnel error: ${err.message}`);
     log('Make sure cloudflared is installed:');
     log('  npm install -g @cloudflare/wrangler');
     process.exit(1);
 });
 
-// ── Graceful Shutdown ─────────────────────────────────────────────────────────
+// Graceful Shutdown
 process.on('SIGINT', () => {
-    log('\n🛑 Shutting down gracefully...');
+    log('Shutting down gracefully...');
     cf.kill();
 });
 
 process.on('SIGTERM', () => {
-    log('\n🛑 Received SIGTERM, shutting down...');
+    log('Received SIGTERM, shutting down...');
     cf.kill();
 });
 
-log('✨ Tunnel script initialized. Waiting for URL...');
+log('Tunnel script initialized. Waiting for URL...');
