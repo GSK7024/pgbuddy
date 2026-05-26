@@ -29,3 +29,6 @@ START_WHATSAPP.bat
 STOP_WHATSAPP.bat
 tunnel.log
 
+\
+whatsapp-server/.env
+supabase/.temp/\

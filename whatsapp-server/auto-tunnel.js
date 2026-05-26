@@ -1,5 +1,7 @@
 const { spawn, execSync } = require('child_process');
 const fs = require('fs');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 console.log("Starting cloudflared tunnel...");
 
@@ -20,7 +22,7 @@ cf.stderr.on('data', (data) => {
         try {
             // we must run this in the root project directory, so use cwd
             execSync(`npx supabase secrets set WA_SERVER_URL=${url}`, {
-                cwd: 'C:\\Users\\gkgk7\\OneDrive\\Desktop\\PG_buddy',
+                cwd: path.join(__dirname, '..'),
                 stdio: 'inherit'
             });
             console.log("✅ Successfully updated Supabase!");

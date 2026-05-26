@@ -30,7 +30,7 @@ serve(async (req) => {
     // First, fetch the basic payment data
     const { data, error } = await supabase
       .from("rent_payments")
-      .select("id, amount, month, payment_date, status, payment_method, transaction_id, tenant_name, tenant_id, property_id, room_id")
+      .select("id, amount, month, payment_date, status, payment_type, payment_method, transaction_id, tenant_name, tenant_id, property_id, room_id")
       .eq("id", receiptId)
       .single();
 
@@ -51,12 +51,24 @@ serve(async (req) => {
 
     // Fetch related data separately to avoid join issues
     let propertyName = null;
+    let propertyAddress = null;
+    let ownerId = null;
+    let ownerName = null;
+    let ownerPhone = null;
     let roomNumber = null;
     let tenantFullName = data.tenant_name || null;
 
     if (data.property_id) {
-      const { data: prop } = await supabase.from("properties").select("name").eq("id", data.property_id).single();
+      const { data: prop } = await supabase.from("properties").select("name, address, owner_id").eq("id", data.property_id).single();
       propertyName = prop?.name || null;
+      propertyAddress = prop?.address || null;
+      ownerId = prop?.owner_id || null;
+    }
+
+    if (ownerId) {
+      const { data: ownerProfile } = await supabase.from("profiles").select("full_name, phone").eq("user_id", ownerId).single();
+      ownerName = ownerProfile?.full_name || null;
+      ownerPhone = ownerProfile?.phone || null;
     }
 
     if (data.room_id) {
@@ -75,9 +87,10 @@ serve(async (req) => {
       month: data.month,
       payment_date: data.payment_date,
       status: data.status,
+      payment_type: data.payment_type,
       payment_method: data.payment_method,
       transaction_id: data.transaction_id,
-      properties: propertyName ? { name: propertyName } : null,
+      properties: propertyName ? { name: propertyName, address: propertyAddress, owner_name: ownerName, owner_phone: ownerPhone } : null,
       rooms: roomNumber ? { room_number: roomNumber } : null,
       profiles: tenantFullName ? { full_name: tenantFullName } : null,
     };
