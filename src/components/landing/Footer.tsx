@@ -49,15 +49,15 @@ const Footer = () => {
             <div className="space-y-2.5 text-sm text-background/60">
               <div className="flex items-center gap-3 hover:text-background/80 transition-colors">
                 <Mail className="w-4 h-4" />
-                <span>support@pgbuddy.in</span>
+                <span>gkgk7024@gmail.com</span>
               </div>
               <div className="flex items-center gap-3 hover:text-background/80 transition-colors">
                 <Phone className="w-4 h-4" />
-                <span>+91 98765 43210</span>
+                <span>8108813284</span>
               </div>
               <div className="flex items-center gap-3 hover:text-background/80 transition-colors">
                 <MapPin className="w-4 h-4" />
-                <span>Bangalore, India</span>
+                <span>Pune, Maharashtra, India</span>
               </div>
             </div>
           </div>
