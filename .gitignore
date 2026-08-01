@@ -32,3 +32,8 @@ tunnel.log
 \
 whatsapp-server/.env
 supabase/.temp/\
+
+# never commit real secrets
+.env
+.env.*
+!.env.example
