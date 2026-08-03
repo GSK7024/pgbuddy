@@ -37,3 +37,10 @@ supabase/.temp/\
 .env
 .env.*
 !.env.example
+
+# secrets & build artifacts (added during cleanup)
+pgbuddy_key
+*.key
+*key*.csv
+rzp-key*
+vite.config.ts.timestamp-*.mjs
